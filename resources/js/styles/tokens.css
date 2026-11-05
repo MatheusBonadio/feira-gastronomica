@@ -1,0 +1,263 @@
+/* ---------------------------------------------------------------------------
+ * Design system da Feira Gastronômica — tokens (fonte única).
+ * Descrição completa em DESIGN.md.
+ *
+ *  - Telas e componentes usam só estes tokens (bg-superficie, text-tinta,
+ *    border-linha, bg-primaria, bg-rosa-suave...). Nada de cor crua.
+ *  - Modo escuro: os mesmos nomes trocam de valor sob .dark.
+ *  - Cores com hex do bloco :root também são lidas por App\Support\Tema
+ *    para os PDFs (o dompdf não entende var()).
+ * --------------------------------------------------------------------------- */
+
+:root {
+  /* Superfícies: tudo branco, separado por bordas finas (sem sombras pesadas). */
+  --fundo: #ffffff;
+  --superficie: #ffffff;
+  --superficie-suave: #f7f7f8;
+  --superficie-hover: #f4f4f5;
+  --superficie-ativa: #ececee;
+  --linha: #e8e8eb;
+  --linha-forte: #d9d9de;
+
+  /* Texto */
+  --tinta: #18181b;
+  --tinta-media: #52525b;
+  --tinta-suave: #71717a;
+  --tinta-fraca: #a1a1aa;
+
+  /* Identidade UNAERP: azul-marinho (principal) e amarelo (secundária). */
+  --primaria: #003087;
+  --primaria-hover: #00246a;
+  --primaria-tinta: #ffffff;
+  --primaria-suave: #e8eef8;
+  --primaria-texto: #003087;
+  --secundaria: #ecdd12;
+  --secundaria-hover: #d8ca0c;
+  --secundaria-tinta: #1f1a00;
+  --secundaria-suave: #fcf8d2;
+  --foco: #6f8fd0;
+  /* Véu atrás de diálogos e da gaveta do menu. */
+  --veu: rgb(9 9 11 / 0.4);
+
+  /* Pastéis de status e destaque (chips, agenda, calendário). */
+  --rosa: #e879f9;
+  --rosa-suave: #f8d4fc;
+  --rosa-tinta: #86198f;
+  --verde: #4ade80;
+  --verde-suave: #c9f7d9;
+  --verde-tinta: #166534;
+  --azul: #60a5fa;
+  --azul-suave: #cfe3fe;
+  --azul-tinta: #1e3a8a;
+  --marinho: #1e3a8a;
+  --ambar: #f59e0b;
+  --ambar-suave: #fdecc8;
+  --ambar-tinta: #92400e;
+  --vermelho: #dc2626;
+  --vermelho-suave: #fde2e2;
+  --vermelho-tinta: #991b1b;
+
+  /* Valores financeiros */
+  --positivo: #15803d;
+  --negativo: #dc2626;
+
+  /* Gráficos (ordem de uso) */
+  --grafico-1: #003087;
+  --grafico-2: #ecdd12;
+  --grafico-3: #4ade80;
+  --grafico-4: #e879f9;
+  --grafico-5: #60a5fa;
+  --grafico-6: #f59e0b;
+  --grafico-grade: #eeeef0;
+
+  /* Impressão (PDF) */
+  --impressao-titulo: #18181b;
+  --impressao-cabecalho: #003087;
+  --impressao-destaque: #b8ac0c;
+  --impressao-borda: #e8e8eb;
+  --impressao-zebra: #f7f7f8;
+}
+
+.dark {
+  --fundo: #0b0b0d;
+  --superficie: #131316;
+  --superficie-suave: #1a1a1e;
+  --superficie-hover: #1f1f24;
+  --superficie-ativa: #27272d;
+  --linha: #26262c;
+  --linha-forte: #34343b;
+
+  --tinta: #f4f4f5;
+  --tinta-media: #c4c4cb;
+  --tinta-suave: #9a9aa3;
+  --tinta-fraca: #6b6b74;
+
+  --primaria: #2b57b8;
+  --primaria-hover: #3a67c9;
+  --primaria-tinta: #ffffff;
+  --primaria-suave: #0f1f44;
+  --primaria-texto: #8fb0f0;
+  --secundaria: #ecdd12;
+  --secundaria-hover: #f3e640;
+  --secundaria-tinta: #1f1a00;
+  --secundaria-suave: #3a360a;
+  --foco: #4a72c8;
+  --veu: rgb(0 0 0 / 0.6);
+
+  --rosa: #f0abfc;
+  --rosa-suave: #4a1d4f;
+  --rosa-tinta: #f5d0fe;
+  --verde: #4ade80;
+  --verde-suave: #14361f;
+  --verde-tinta: #bbf7d0;
+  --azul: #93c5fd;
+  --azul-suave: #172a4d;
+  --azul-tinta: #bfdbfe;
+  --marinho: #93c5fd;
+  --ambar: #fbbf24;
+  --ambar-suave: #3d2c0a;
+  --ambar-tinta: #fde68a;
+  --vermelho: #f87171;
+  --vermelho-suave: #3f1414;
+  --vermelho-tinta: #fecaca;
+
+  --positivo: #4ade80;
+  --negativo: #f87171;
+
+  --grafico-1: #5b87e0;
+  --grafico-2: #ecdd12;
+  --grafico-3: #4ade80;
+  --grafico-4: #f0abfc;
+  --grafico-5: #93c5fd;
+  --grafico-6: #fbbf24;
+  --grafico-grade: #232328;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-superficie-suave: var(--superficie-suave);
+  --color-superficie-hover: var(--superficie-hover);
+  --color-superficie-ativa: var(--superficie-ativa);
+  --color-linha: var(--linha);
+  --color-linha-forte: var(--linha-forte);
+  --color-tinta: var(--tinta);
+  --color-tinta-media: var(--tinta-media);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-tinta-fraca: var(--tinta-fraca);
+  --color-primaria: var(--primaria);
+  --color-primaria-hover: var(--primaria-hover);
+  --color-primaria-tinta: var(--primaria-tinta);
+  --color-primaria-suave: var(--primaria-suave);
+  --color-primaria-texto: var(--primaria-texto);
+  --color-secundaria: var(--secundaria);
+  --color-secundaria-hover: var(--secundaria-hover);
+  --color-secundaria-tinta: var(--secundaria-tinta);
+  --color-secundaria-suave: var(--secundaria-suave);
+  --color-foco: var(--foco);
+  --color-veu: var(--veu);
+  --color-rosa: var(--rosa);
+  --color-rosa-suave: var(--rosa-suave);
+  --color-rosa-tinta: var(--rosa-tinta);
+  --color-verde: var(--verde);
+  --color-verde-suave: var(--verde-suave);
+  --color-verde-tinta: var(--verde-tinta);
+  --color-azul: var(--azul);
+  --color-azul-suave: var(--azul-suave);
+  --color-azul-tinta: var(--azul-tinta);
+  --color-marinho: var(--marinho);
+  --color-ambar: var(--ambar);
+  --color-ambar-suave: var(--ambar-suave);
+  --color-ambar-tinta: var(--ambar-tinta);
+  --color-vermelho: var(--vermelho);
+  --color-vermelho-suave: var(--vermelho-suave);
+  --color-vermelho-tinta: var(--vermelho-tinta);
+  --color-positivo: var(--positivo);
+  --color-negativo: var(--negativo);
+  --color-grafico-1: var(--grafico-1);
+  --color-grafico-2: var(--grafico-2);
+  --color-grafico-3: var(--grafico-3);
+  --color-grafico-4: var(--grafico-4);
+  --color-grafico-5: var(--grafico-5);
+  --color-grafico-6: var(--grafico-6);
+  --color-grafico-grade: var(--grafico-grade);
+}
+
+@theme {
+  /* Escala tipográfica (Inter): densa, como a referência. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-rotulo: 0.75rem;
+  --text-rotulo--line-height: 1rem;
+  --text-corpo: 0.8125rem;
+  --text-corpo--line-height: 1.25rem;
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.25rem;
+  --text-titulo: 1rem;
+  --text-titulo--line-height: 1.5rem;
+  --text-numero: 1.375rem;
+  --text-numero--line-height: 1.75rem;
+  --text-cabecalho: 1.5rem;
+  --text-cabecalho--line-height: 2rem;
+  /* Marca "Feira Gastronômica" (Fraunces) na sidebar: quebra em 2 linhas se faltar espaço. */
+  --text-marca: 1.1875rem;
+  --text-marca--line-height: 1.375rem;
+  --text-saudacao: 1.875rem;
+  --text-saudacao--line-height: 2.25rem;
+  --text-saudacao--letter-spacing: -0.02em;
+
+  /* Forma */
+  --radius-controle: 0.5rem;
+  --radius-cartao: 0.875rem;
+
+  /* Sombras discretas: só botões e camadas flutuantes. */
+  --shadow-botao: 0 1px 2px 0 rgb(16 24 40 / 0.06), inset 0 1px 0 0 rgb(255 255 255 / 0.12);
+  --shadow-flutuante: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 2px 6px -2px rgb(16 24 40 / 0.08);
+
+  /* Medidas de layout */
+  --spacing-sidebar: 15.5rem;
+  --spacing-topbar: 3.75rem;
+  --spacing-toque: 3rem;
+
+  --animate-surgir: surgir 160ms ease-out;
+  @keyframes surgir {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Camadas do Radix: véu esmaece; folha sobe (celular) ou entra pela lateral. */
+  --animate-esmaecer: esmaecer 150ms ease-out;
+  @keyframes esmaecer {
+    from { opacity: 0; }
+  }
+  --animate-subir: subir 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  @keyframes subir {
+    from { transform: translateY(100%); }
+  }
+  --animate-entrar-inicio: entrar-inicio 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  @keyframes entrar-inicio {
+    from { transform: translateX(-100%); }
+  }
+  --animate-entrar-fim: entrar-fim 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  @keyframes entrar-fim {
+    from { transform: translateX(100%); }
+  }
+
+  /* Tempo real: linha que acabou de chegar acende em amarelo e esmaece. */
+  --animate-chegar: chegar 2.4s ease-out;
+  @keyframes chegar {
+    0%, 30% { background-color: var(--secundaria-suave); }
+    100% { background-color: transparent; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

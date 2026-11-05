@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter/opsz.css";
+@import "@fontsource-variable/fraunces";
+@import "./tokens.css";
+
+@source "../";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  /* O tamanho do texto vai no body: no html ele mudaria a base do rem e
+     encolheria toda a escala (espaços, alturas, fontes) em 12,5%. */
+  html {
+    @apply bg-fundo font-sans text-tinta antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  body {
+    @apply text-ui;
+  }
+
+  ::selection {
+    @apply bg-primaria-suave text-tinta;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-foco;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer opacity-60;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+/* Barra de rolagem fina nas áreas internas (sidebar, tabelas largas). */
+@utility rolagem-fina {
+  scrollbar-width: thin;
+  scrollbar-color: var(--linha-forte) transparent;
+}
