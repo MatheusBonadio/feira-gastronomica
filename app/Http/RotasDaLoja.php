@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http;
+
+use App\Http\Controllers\Loja;
+use Illuminate\Support\Facades\Route;
+
+/**
+ * Telas de uma barraquinha, registradas para os dois perfis com os mesmos
+ * controllers. A barraquinha em foco vem de App\Support\Loja: da sessão para
+ * a barraquinha e do parâmetro {barraquinha} para o admin.
+ */
+class RotasDaLoja
+{
+    public static function registrar(bool $admin): void
+    {
+        Route::get('/', [Loja\PainelController::class, 'index'])->name('painel');
+        // Assinatura do estado do painel para a atualização em tempo real.
+        Route::get('pulso', [Loja\PainelController::class, 'pulso'])->name('pulso');
+
+        Route::resource('itens', Loja\ItemController::class)->except('show')->parameters(['itens' => 'item']);
+        Route::resource('combos', Loja\ComboController::class)->except('show');
+        Route::patch('combos/{combo}/alternar', [Loja\ComboController::class, 'alternar'])->name('combos.alternar');
+
+        Route::get('vendas', [Loja\VendaController::class, 'index'])->name('vendas.index');
+        if (! $admin) {
+            // O admin consulta e corrige (cancela), mas quem registra a venda é a barraquinha.
+            Route::get('vendas/nova', [Loja\VendaController::class, 'create'])->name('vendas.create');
+            Route::post('vendas', [Loja\VendaController::class, 'store'])->name('vendas.store');
+            Route::post('vendas/simular', [Loja\VendaController::class, 'simular'])->name('vendas.simular');
+        }
+        Route::get('vendas/{venda}', [Loja\VendaController::class, 'show'])->name('vendas.show');
+        Route::patch('vendas/{venda}/cancelar', [Loja\VendaController::class, 'cancelar'])->name('vendas.cancelar');
+
+        Route::resource('lancamentos', Loja\LancamentoController::class)->except('show');
+        Route::get('lancamentos/{lancamento}/comprovante', [Loja\LancamentoController::class, 'comprovante'])->name('lancamentos.comprovante');
+
+        if (! $admin) {
+            Route::get('relatorios', [Loja\RelatorioController::class, 'index'])->name('relatorios.index');
+            Route::get('relatorios/exportar', [Loja\RelatorioController::class, 'exportar'])->name('relatorios.exportar');
+        }
+    }
+}
