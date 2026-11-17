@@ -1,0 +1,160 @@
+# Feira Gastronômica UNAERP
+
+Gestão de vendas e caixa das barraquinhas da Feira Gastronômica (UNAERP / Projeto PEG),
+conforme a _Especificação Funcional – App de Gestão da Feira Gastronômica_ (27/10/2026).
+
+- O **admin** (professor) cria as feiras, define quantas barraquinhas participam, cria e
+  redefine os acessos, e acompanha vendas, saídas, saldos e o consolidado de cada edição.
+- Cada **barraquinha** cadastra itens e combos, registra vendas no PDV, lança entradas e
+  saídas e exporta os próprios relatórios, sem nunca ver dados de outra barraquinha.
+
+## Stack
+
+| Camada     | Tecnologia                                                                           |
+| ---------- | ------------------------------------------------------------------------------------ |
+| Back-end   | PHP 8.2+, Laravel 12, sessão nativa (sem JWT)                                        |
+| Front-end  | React 19 + TypeScript via Inertia.js v3 (monolito, sem API separada)                 |
+| UI         | Radix Primitives (acessibilidade) + Tailwind CSS v4 (tokens), ícones Tabler, fontes Inter e Fraunces (`DESIGN.md`) |
+| Banco      | MySQL 8 ou MariaDB 10.4+, com RLS por views + triggers                               |
+| Relatórios | XLSX e CSV próprios, PDF com dompdf                                                  |
+| Testes     | PHPUnit 11 (SQLite em memória e MySQL/MariaDB com RLS)                               |
+
+Dependências auditadas: `composer audit` e `npm audit` sem vulnerabilidades conhecidas.
+
+## Como rodar (XAMPP)
+
+```bash
+composer install
+npm install
+cp .env.example .env          # ajuste DB_* e APP_URL
+php artisan key:generate
+# crie o banco "feira_gastronomica" (utf8mb4) no MySQL/MariaDB
+php artisan migrate --seed
+npm run build                 # ou "npm run dev" durante o desenvolvimento
+```
+
+Acessos de demonstração (seeder; senha em `FEIRA_SENHA_DEMO`):
+
+| Perfil           | Usuário                                                         | Senha       |
+| ---------------- | --------------------------------------------------------------- | ----------- |
+| Admin            | `coordenacao`                                                   | `feira2027` |
+| Barraquinha 2027 | `senhor-dos-pasteis-2027`, `crepeuna-2027`, `pizzarito-2027`... | `feira2027` |
+
+Dados carregados:
+
+- **Feira 2026 (encerrada)**: os 11 totais do anexo da especificação (vendas, custos,
+  despesas). O consolidado bate com o relatório: R$ 164.172,67 em vendas, resultado de
+  R$ 21.674,75, margem de 13,2%.
+- **Feira 2027 (aberta)**: 12 vagas (11 barraquinhas e 1 em branco), itens e combos dos
+  exemplos do relatório (Combo do Guerreiro, O Hobbit e o Dragão, Eu Mereço, Combo
+  família, Combo com molho) e algumas vendas.
+
+Recriar o banco do zero (as tabelas protegidas são views, daí o `--drop-views`):
+
+```bash
+php artisan migrate:fresh --drop-views --seed
+```
+
+## Testes
+
+```bash
+composer test                                                    # SQLite (camada da aplicação)
+DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes \
+    php vendor/bin/phpunit                                       # MySQL/MariaDB, inclui RLS
+npx tsc --noEmit                                                 # tipos do front
+```
+
+Os testes cobrem a tabela de exemplos de classificação da seção 7, isolamento entre
+barraquinhas, autenticação (mensagem genérica, bloqueio após 5 tentativas, troca de senha),
+combos, feiras, relatórios, indicadores contra o anexo de 2026, RLS no banco e a
+completude das traduções.
+
+## Como as exigências foram atendidas
+
+### Isolamento total (em duas camadas)
+
+1. **Aplicação**: o escopo global `BarraquinhaScope` filtra toda consulta da barraquinha
+   pelo id da sessão, nunca por parâmetro da tela. Link ou id alterado para dado de outra
+   barraquinha responde _403 Acesso negado_ e grava auditoria (`PertenceABarraquinha`).
+   A barraquinha também não recebe no navegador nem os nomes das rotas do admin (Ziggy por grupo).
+2. **Banco (RLS)**: o MySQL não tem RLS nativo. Cada tabela com `barraquinha_id` vira
+   `<tabela>_base` e ganha uma **view atualizável** com o nome original, filtrada pelas
+   variáveis de sessão `@app_perfil` e `@app_barraquinha_id`. `WITH CHECK OPTION` impede
+   gravar em nome de outra barraquinha; triggers deixam feiras e barraquinhas só para o
+   admin e tornam a auditoria imutável. Ver `app/Support/Rls/RlsMysql.php`.
+
+    Em produção, a aplicação deve conectar com um usuário que **só acessa as views**:
+
+    ```bash
+    php artisan feira:rls-permissoes feira_app   # imprime os GRANTs
+    ```
+
+### Design system e tema
+
+Descrito em [`DESIGN.md`](DESIGN.md). Toda cor, fonte, raio e medida vem de
+`resources/js/styles/tokens.css`: azul-marinho UNAERP `#003087` como cor principal e
+amarelo `#ecdd12` como secundária (sempre com texto escuro). As telas usam só classes de
+token (`bg-superficie`, `text-tinta-suave`, `bg-primaria`); o modo escuro troca os valores
+pela classe `.dark`. Os PDFs leem as mesmas cores em hex (`App\Support\Tema`).
+
+Todas as telas são responsivas de 360px a 1920px: no celular as tabelas viram cartões, os
+filtros se recolhem e a barraquinha ganha um botão flutuante de **Nova venda**.
+
+### Painel em tempo real
+
+Os painéis da feira e da barraquinha se atualizam sozinhos, sem servidor de WebSocket:
+o navegador consulta um *pulso* (assinatura das vendas e lançamentos) a cada 3 segundos e,
+quando ele muda, recarrega só os dados do painel (recarga parcial do Inertia). Pausa com a
+aba escondida. Detalhes na seção 8 do `DESIGN.md`.
+
+### Internacionalização
+
+Português (padrão) e inglês, escolhidos pelo usuário (guardado no perfil).
+As chaves são as próprias frases em português, tanto no PHP (`__()`) quanto no React (`t()`).
+O dicionário inglês está em `lang/en.json`, e o `TraducoesTest` falha se alguma frase
+ficar sem tradução. Moeda, números e datas são formatados por `Intl` no navegador e por
+`lang/*/formato.php` nas exportações.
+
+### Pontos em aberto da especificação (decisões adotadas)
+
+| #   | Ponto                                | Decisão                                                                                                                       |
+| --- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Admin registra vendas?               | Não. Consulta e corrige (cancela com motivo); o PDV é da barraquinha.                                                         |
+| 2   | Controle de estoque?                 | Opcional por item: a baixa é calculada (inclui itens vendidos em combos), mostra "Restam N"/"Esgotado", sem bloquear a venda. |
+| 3   | Formas de pagamento e taxa de cartão | Dinheiro, Pix e Cartão. A taxa de cartão é lançada como despesa (categoria própria).                                          |
+| 4   | Pré-venda                            | Registrada no PDV pelo canal Pré-venda, com preço próprio por item. Sem fluxo de retirada.                                    |
+| 5   | Desconto de combo                    | Os dois: preço fechado ou percentual; a tela calcula o outro valor.                                                           |
+| 6   | Item em mais de um combo             | Maior desconto para o cliente; no empate, o combo que cobre mais itens. Combo mais caro que a soma avulsa nunca é aplicado.   |
+| 7   | Vários operadores                    | Um login por barraquinha (cada venda grava o operador, pronto para ampliar).                                                  |
+| 8   | Modo offline                         | Não implementado. Cada tela do PDV baixa poucos KB; validar a rede do local.                                                  |
+
+### Outras regras
+
+Senhas com hash (bcrypt); o admin só gera outra, nunca vê a existente. A senha gerada
+aparece uma única vez, num _flash_ do Inertia que não entra no histórico do navegador.
+Redefinir ou bloquear encerra as sessões abertas. Primeira entrada com senha gerada
+exige troca. Sessão expira por inatividade (`SESSION_LIFETIME`). Feira encerrada
+bloqueia lançamentos e congela relatórios. Vendas guardam o preço e a tag da época.
+
+## Estrutura
+
+```
+app/
+  Enums/                 Canal, FormaPagamento, LancamentoCategoria (grupos), AcaoAuditoria...
+  Http/Controllers/      Admin/ (feiras, barraquinhas, auditoria) · Loja/ (telas dos dois perfis)
+  Http/Apresentacao.php  models → props enxutas para o React
+  Http/RotasDaLoja.php   mesmas rotas em /barraquinha/... e /admin/barraquinhas/{id}/...
+  Services/              Vendas/ClassificadorVenda (Comum × Combo N), Financeiro/, Relatorios/
+  Support/               ContextoRls, Rls/RlsMysql, Loja, Formato, Tema, Xlsx/XlsxWriter
+resources/js/
+  pages/                 páginas Inertia (admin/, loja/, auth/)
+  components/ui/         kit: botão, campos, cartão, tabela (modo cartão), diálogo, menu...
+  components/painel/     filtros, widgets do painel, selo "Ao vivo"
+  components/graficos/   gráficos SVG (área, barras, rosca, sparkline)
+  components/app/        shell (sidebar, topo, gaveta), paleta de comandos, tema
+  hooks/useTempoReal.ts  pulso + recarga parcial do painel
+  styles/tokens.css      design system (fonte única de cores, fontes e medidas)
+lang/en.json             dicionário inglês (chaves em português)
+DESIGN.md                design system · AGENTS.md: regras de interface para agentes
+```
+
