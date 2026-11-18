@@ -5,15 +5,25 @@ import { Menu, type ItemMenu } from "@/components/ui/menu";
 import { TRACO, type Icone } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 
-export type Variante = "primario" | "secundario" | "destaque" | "suave" | "fantasma" | "perigo";
+/**
+ * primario  azul UNAERP (ação principal do conteúdo)
+ * secundario branco com borda fina ("+ Add card")
+ * superficie branco sem borda, para o chão cinza (botões do topo)
+ * escuro    invertido ("Upgrade now" do cartão promocional)
+ * destaque  amarelo, com texto escuro
+ * suave / fantasma / perigo
+ */
+export type Variante = "primario" | "secundario" | "superficie" | "escuro" | "destaque" | "suave" | "fantasma" | "perigo";
 export type Tamanho = "sm" | "md" | "lg";
 
 const BASE =
-    "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-controle font-medium transition-colors select-none disabled:pointer-events-none disabled:opacity-50";
+    "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-controle font-semibold transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-foco focus-visible:ring-offset-2 focus-visible:ring-offset-fundo disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTES: Record<Variante, string> = {
     primario: "bg-primaria text-primaria-tinta shadow-botao hover:bg-primaria-hover",
-    secundario: "border border-linha bg-superficie text-tinta hover:border-linha-forte hover:bg-superficie-hover",
+    secundario: "border border-linha bg-superficie text-tinta shadow-botao hover:border-linha-forte hover:bg-superficie-hover",
+    superficie: "border border-cartao-borda bg-superficie text-tinta-media hover:bg-superficie-hover hover:text-tinta",
+    escuro: "bg-inverso text-inverso-tinta hover:opacity-90",
     destaque: "bg-secundaria text-secundaria-tinta shadow-botao hover:bg-secundaria-hover",
     suave: "bg-superficie-suave text-tinta hover:bg-superficie-ativa",
     fantasma: "text-tinta-media hover:bg-superficie-hover hover:text-tinta",
@@ -22,12 +32,12 @@ const VARIANTES: Record<Variante, string> = {
 
 const TAMANHOS: Record<Tamanho, string> = {
     // No celular um pouco mais altos (alvo de toque); no desktop, densos como a referência.
-    sm: "h-9 px-2.5 text-corpo md:h-8",
-    md: "h-10 px-3 text-ui md:h-9",
-    lg: "h-11 px-4 text-ui",
+    sm: "h-9 rounded-lg px-3 text-corpo md:h-8 md:px-2.5",
+    md: "h-10 px-3.5 text-ui md:h-9 md:px-3",
+    lg: "h-11 rounded-xl px-4 text-ui",
 };
 
-const SO_ICONE: Record<Tamanho, string> = { sm: "size-9 md:size-8", md: "size-10 md:size-9", lg: "size-11" };
+const SO_ICONE: Record<Tamanho, string> = { sm: "size-9 rounded-lg md:size-8", md: "size-10 md:size-9", lg: "size-11 rounded-xl" };
 
 export function classesBotao(variante: Variante = "primario", tamanho: Tamanho = "md", soIcone = false) {
     return cx(BASE, VARIANTES[variante], soIcone ? SO_ICONE[tamanho] : TAMANHOS[tamanho]);
@@ -71,18 +81,26 @@ export function BotaoLink({ href, variante, tamanho, icone, iconeFinal, soIcone,
     );
 }
 
-/** Ação principal com um menu de ações relacionadas ao lado (o "New Project ▾" da referência). */
-export function BotaoDividido({ href, icone, children, itens, rotuloMenu }: { href: string; icone?: Icone; children: ReactNode; itens: ItemMenu[]; rotuloMenu: string }) {
+/** Ação principal com um menu de ações relacionadas ao lado (o "Add widget" da referência). */
+export function BotaoDividido({ href, icone, children, itens, rotuloMenu, variante = "superficie" }: {
+    href: string;
+    icone?: Icone;
+    children: ReactNode;
+    itens: ItemMenu[];
+    rotuloMenu: string;
+    variante?: "primario" | "superficie";
+}) {
+    const divisor = variante === "primario" ? "border-s border-primaria-tinta/25" : "border-s border-linha";
     return (
-        <div className="inline-flex rounded-controle shadow-botao">
-            <Link href={href} className={cx(BASE, VARIANTES.primario, TAMANHOS.md, "rounded-e-none shadow-none")}>
+        <div className="inline-flex rounded-controle">
+            <Link href={href} className={cx(BASE, VARIANTES[variante], TAMANHOS.md, "rounded-e-none")}>
                 <Conteudo icone={icone}>{children}</Conteudo>
             </Link>
             <Menu
                 alinhamento="fim"
                 itens={itens}
                 gatilho={(props) => (
-                    <button {...props} type="button" aria-label={rotuloMenu} className={cx(BASE, VARIANTES.primario, "h-10 w-8 rounded-s-none border-s md:h-9 border-primaria-tinta/25 shadow-none")}>
+                    <button {...props} type="button" aria-label={rotuloMenu} className={cx(BASE, VARIANTES[variante], divisor, "h-10 w-9 rounded-s-none md:h-9")}>
                         <IconChevronDown size={16} stroke={TRACO} aria-hidden />
                     </button>
                 )}

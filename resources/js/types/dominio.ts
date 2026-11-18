@@ -59,6 +59,7 @@ export interface Combo {
 
 export interface Venda {
     id: number;
+    barraquinhaId: number;
     numero: number;
     dataHora: string;
     canal: Opcao;

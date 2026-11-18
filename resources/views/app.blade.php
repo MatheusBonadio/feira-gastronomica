@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="/favicon.ico">
-    {{-- Aplica o tema salvo (BotaoTema) antes da pintura, para não piscar. --}}
+    {{-- Aplica o tema (claro, escuro ou o do sistema) antes da pintura, para não piscar. --}}
     <script>
-        try {
-            document.documentElement.classList.toggle('dark', localStorage.getItem('tema') === 'escuro');
-        } catch (_) {}
+        (function () {
+            var preferencia = 'sistema';
+            try { preferencia = localStorage.getItem('tema') || 'sistema'; } catch (_) {}
+            var escuro = preferencia === 'escuro' || (preferencia === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', escuro);
+        })();
     </script>
+    <meta name="color-scheme" content="light dark">
     {{-- Só as rotas do perfil logado chegam ao navegador (config/ziggy.php). --}}
     @routes(auth()->check() ? auth()->user()->perfil->value : 'publico')
     @vite(['resources/js/styles/app.css', 'resources/js/app.tsx'])

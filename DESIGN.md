@@ -1,285 +1,225 @@
 # Design system — Feira Gastronômica UNAERP
 
-Interface clara de painel de trabalho, inspirada num dashboard de gestão de projetos
-(barra lateral branca com marca serifada, topo com busca ⌘K e botão dividido, saudação
-com pílula de números, tabela com divisórias verticais, chips pastel, agenda semanal e
-checklist), recolorida com a identidade da UNAERP.
+Painel financeiro claro e respirado, inspirado num dashboard de finanças pessoais
+(sidebar branca com árvore de navegação e cartão promocional, chão cinza com cartões
+brancos sem borda, valores grandes, barras hachuradas, medidor em meio-círculo, extrato
+de transações e "meu cartão" com ações rápidas), recolorido com a identidade da UNAERP:
+**azul #003087** (principal) e **amarelo #ecdd12** (secundária).
 
-Fonte única dos valores: [`resources/js/styles/tokens.css`](resources/js/styles/tokens.css).
-Base técnica: **Radix Primitives** (`radix-ui`) para comportamento e acessibilidade de tudo
-que é interativo, e **Tailwind CSS v4** com os tokens para o visual. Os primitivos não trazem
-estilo; o kit em `resources/js/components/` veste cada um com o design abaixo.
+- Fonte única dos valores: [`resources/js/styles/tokens.css`](resources/js/styles/tokens.css).
+- Base técnica: **Radix Primitives** (`radix-ui`) dá comportamento e acessibilidade a tudo
+  que é interativo; **Tailwind CSS v4** com os tokens dá o visual. O kit está em
+  `resources/js/components/`.
 
 ---
 
 ## 1. Princípios
 
-1. **Branco e borda fina.** Superfícies brancas separadas por bordas de 1px (`border-linha`);
-   sombra só em botão e camada flutuante. Cor é para dado e ação, não para enfeite.
-2. **Azul conduz, amarelo destaca.** O azul-marinho (#003087) marca ação primária,
-   navegação ativa e a série principal dos gráficos. O amarelo (#ecdd12) marca o que está
-   em evidência: o KPI principal, o dia selecionado, a 1ª posição do ranking, pendência resolvida.
-3. **Tela inteira.** Conteúdo em largura total, sem `max-width` de página; a grade de 12
-   colunas reparte o espaço a partir de `xl`.
-4. **Mesmo layout em todo tamanho.** Do celular de 360px ao monitor largo, sem rolagem
-   horizontal da página (seção 9).
-5. **Só tokens.** Nenhuma tela usa hex, `white`/`black`/`gray-*` ou `dark:`. O modo escuro
-   troca os valores dos mesmos nomes.
+1. **Chão cinza, cartão branco.** O conteúdo fica em cartões brancos sem borda nem sombra
+   sobre o chão cinza-claro (`bg-fundo`). No escuro os cartões ficam um tom acima do chão,
+   com um fio sutil (`border-cartao-borda`).
+2. **Valor primeiro.** Cada cartão abre com o número que importa em `text-valor` (30px) e
+   uma legenda pequena; o detalhe vem depois.
+3. **Dados hachurados.** Barras, blocos e medidores usam listras diagonais (`hachura`)
+   sobre a cor da série; o que está fora de foco fica cinza (`grafico-inativo`).
+4. **Azul conduz, amarelo destaca.** Azul: ação principal, item ativo, série principal.
+   Amarelo: o destaque (pré-venda, 1º do ranking, contador, chip do cartão). Amarelo
+   nunca é cor de texto.
+5. **Tela inteira, qualquer tela.** Largura total de 360px a 1920px, sem rolagem
+   horizontal da página; tabelas viram cartões no celular.
 
 ---
 
 ## 2. Cores
 
-Declaradas em `:root` (claro) e `.dark` (escuro), expostas ao Tailwind por `@theme inline`
-(`bg-primaria`, `text-tinta-suave`, `border-linha`...).
+Declaradas em `:root` (claro) e `.dark` (escuro) e expostas pelo `@theme inline`
+(`bg-superficie`, `text-tinta-suave`...). As cores de marca, pastéis, gráficos e
+impressão são as mesmas da versão anterior; mudaram os neutros e entraram tokens novos.
 
 ### Marca
 
-| Token | Claro | Papel |
-| --- | --- | --- |
-| `primaria` | `#003087` | Botão primário, item ativo da navegação, série 1 dos gráficos, logo |
-| `primaria-hover` | `#00246a` | Hover do primário |
-| `primaria-tinta` | `#ffffff` | Texto/ícone sobre `primaria` (contraste 11,9:1) |
-| `primaria-suave` | `#e8eef8` | Fundo de realce azul (chip, seleção) |
-| `secundaria` | `#ecdd12` | Destaque: KPI principal, dia selecionado, 1º do ranking, meta |
-| `secundaria-tinta` | `#1f1a00` | **Único** texto permitido sobre o amarelo (contraste 12,4:1) |
-| `secundaria-suave` | `#fcf8d2` | Linha recém-chegada no tempo real, fundo de aviso leve |
-| `foco` | `#6f8fd0` | Anel de foco do teclado (`focus-visible:ring-foco`) |
+| Token | Claro | Escuro | Papel |
+| --- | --- | --- | --- |
+| `primaria` | `#003087` | `#2b57b8` | Ação principal, item ativo, série 1, cartão de identidade |
+| `primaria-tinta` | `#ffffff` | `#ffffff` | Texto sobre `primaria` (11,9:1 no claro) |
+| `primaria-suave` / `primaria-texto` | `#e8eef8` / `#003087` | `#13254d` / `#8fb0f0` | Fundo e texto de realce azul |
+| `secundaria` | `#ecdd12` | `#ecdd12` | Destaque: pré-venda, 1º lugar, contador do sino, chip do cartão |
+| `secundaria-tinta` | `#1f1a00` | `#1f1a00` | **Só** texto sobre o amarelo cheio (12,4:1) |
+| `secundaria-suave` / `secundaria-texto` | `#fcf8d2` / `#5c5300` | `#3a360a` / `#f3e640` | Fundo e texto de realce amarelo (avatar, ícone de pré-venda, faixa) |
+| `foco` | `#6f8fd0` | `#4a72c8` | Anel de foco do teclado |
 
-> **Amarelo nunca é texto.** Sobre branco ele tem contraste 1,4:1. Use-o só como fundo,
-> sempre com `text-secundaria-tinta`, ou como marca gráfica (barra, ponto, fatia).
-
-### Superfícies e texto
+### Neutros e tokens novos
 
 | Token | Claro | Escuro | Uso |
 | --- | --- | --- | --- |
-| `fundo` | `#ffffff` | `#0b0b0d` | Chão da página |
-| `superficie` | `#ffffff` | `#131316` | Cartões, sidebar, topo |
-| `superficie-suave` | `#f7f7f8` | `#1a1a1e` | Cabeçalho de tabela, campo de busca, pílula de números |
-| `superficie-hover` / `-ativa` | `#f4f4f5` / `#ececee` | — | Hover e pressionado |
-| `linha` / `linha-forte` | `#e8e8eb` / `#d9d9de` | — | Bordas e divisórias |
-| `tinta` | `#18181b` | `#f4f4f5` | Texto principal e números |
-| `tinta-media` | `#52525b` | — | Ícones, texto de navegação |
-| `tinta-suave` | `#71717a` | — | Rótulos, descrições (4,8:1 sobre branco) |
-| `tinta-fraca` | `#a1a1aa` | — | Placeholder, desabilitado (não usar para texto essencial) |
-| `veu` | 40% preto | 60% preto | Fundo atrás de diálogo e gaveta |
+| `fundo` | `#f2f2f3` | `#09090b` | Chão das telas (o cinza atrás dos cartões) |
+| `superficie` | `#ffffff` | `#141417` | Cartões, sidebar, campos, botões do topo |
+| `superficie-suave` / `-hover` / `-ativa` | `#f6f6f7` / `#f1f1f3` / `#e8e8eb` | `#1b1b1f` / `#202025` / `#2a2a30` | Item ativo, hover, pressionado |
+| `cartao-borda` | transparente | `#1f1f24` | Contorno dos cartões (só aparece no escuro) |
+| `linha` / `linha-forte` | `#ececef` / `#dcdce1` | `#25252b` / `#34343b` | Divisórias e bordas de campo |
+| `tinta` → `tinta-fraca` | `#18181b` → `#a1a1aa` | `#f4f4f5` → `#6b6b74` | Texto principal, médio, suave, fraco |
+| `inverso` / `inverso-tinta` | `#18181b` / `#ffffff` | `#f4f4f5` / `#18181b` | Contadores, dicas, botão `escuro` |
+| `hachura` | branco 38% | preto 28% | Listras sobre as marcas de dados |
+| `grafico-inativo` | `#ededf0` | `#26262c` | Barras fora de foco, trilhos, blocos vazios do medidor |
+| `veu` | preto 40% | preto 60% | Atrás de diálogos e folhas |
 
-### Pastéis (chips e agenda)
-
-Cada cor tem três tons: o forte (barra, ponto), o `-suave` (fundo de chip) e o `-tinta`
-(texto do chip): `rosa`, `verde`, `azul`, `ambar`, `vermelho`.
-
-| Significado | Chip |
-| --- | --- |
-| Canal **Pré-venda** / **Feira** / **Pós-evento** | barra amarela / azul / verde (`COR_CANAL`) |
-| Pagamento **Dinheiro** / **Pix** / **Cartão** | verde / azul / rosa (`COR_PAGAMENTO`) |
-| Status ativa · aberta / planejada / bloqueada · cancelada / encerrada | verde / âmbar / vermelho / neutro (`ChipStatus`) |
-| Tag **Combo N** / **Comum** | `primaria-suave` com texto azul / neutro (`ChipTag`) |
-
-### Valores e gráficos
-
-- `positivo` `#15803d` e `negativo` `#dc2626`: resultado, saldo e margem. Valor negativo
-  também ganha ícone de alerta, não só cor.
-- Séries: `grafico-1` (azul) → `grafico-2` (amarelo) → `grafico-3` (verde) → `grafico-4`
-  (rosa) → `grafico-5` (azul claro) → `grafico-6` (âmbar). `grafico-grade` para as linhas de grade.
-- Impressão (`impressao-*`): cores do PDF, lidas em hex por `App\Support\Tema`.
+Pastéis (`rosa`, `verde`, `azul`, `ambar`, `vermelho`, cada um com `-suave` e `-tinta`),
+`positivo`/`negativo` e `grafico-1…6` seguem iguais. Canal: pré-venda amarelo, feira
+azul, pós-evento verde. Pagamento: dinheiro verde, Pix azul, cartão rosa.
 
 ---
 
 ## 3. Tipografia
 
-| Família | Uso | Pacote |
+**Plus Jakarta Sans** (variável, empacotada pelo Vite, sem CDN) em tudo, inclusive na marca
+(peso 800). Números com `tabular-nums`.
+
+| Utilitário | Tamanho | Uso |
 | --- | --- | --- |
-| **Inter Variable** (com eixo óptico) | Toda a interface, números com `tabular-nums` | `@fontsource-variable/inter` |
-| **Fraunces Variable** | Só a marca "Feira Gastronômica" na sidebar e no login | `@fontsource-variable/fraunces` |
+| `text-micro` | 11px | Datas e status em listas, rótulos de eixo |
+| `text-rotulo` | 12px | Legendas de cartão, rótulos de campo |
+| `text-corpo` | 13px | Tabelas, listas, legendas de gráfico |
+| `text-ui` | 14px | Texto padrão, botões, navegação |
+| `text-titulo` | 15px | Título de cartão |
+| `text-marca` | 17px | "Feira Gastronômica" na sidebar |
+| `text-cabecalho` | 22px | Título da página |
+| `text-numero` | 24px | Números da coluna de totais e do medidor |
+| `text-valor` | 30px | O valor principal de um cartão |
 
-As fontes vêm empacotadas pelo Vite (sem CDN, funcionam offline na rede da feira).
-
-| Utilitário | Tamanho / altura | Uso |
-| --- | --- | --- |
-| `text-micro` | 11 / 16 | Dia da semana, metadados de linha |
-| `text-rotulo` | 12 / 16 | Rótulos de campo, descrições de cartão |
-| `text-corpo` | 13 / 20 | Tabelas, listas, chips |
-| `text-ui` | 14 / 20 | Texto padrão, botões, navegação |
-| `text-titulo` | 16 / 24 | Título de cartão, valor da pílula |
-| `text-numero` | 22 / 28 | Valor de KPI |
-| `text-cabecalho` | 24 / 32 | Título de página no celular |
-| `text-saudacao` | 30 / 36, −0,02em | Título de página a partir de `sm` ("Boa tarde, Ana!") |
-
-Pesos: 400 corpo, 500 títulos e itens ativos, 600 números e valores. Nada abaixo de 11px.
+Pesos: 400 texto, 600 títulos e valores, 700–800 marca e cartão de identidade.
 
 ---
 
-## 4. Forma, espaço e profundidade
+## 4. Forma e profundidade
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `rounded-controle` | 8px | Botões, campos, itens de menu |
-| `rounded-cartao` | 14px | Cartões e painéis |
-| `rounded-xl` / `rounded-2xl` | 12 / 16px | Cartões de tabela no celular, diálogos |
-| `rounded-full` | — | Pílulas, chips, avatar, selo "Ao vivo", botão flutuante |
-| `shadow-botao` | sutil + brilho interno | Botões preenchidos |
-| `shadow-flutuante` | difusa | Menus, diálogos, paleta, gaveta, botão flutuante |
-| `w-sidebar` | 15,5rem | Barra lateral |
-| `h-topbar` | 3,75rem | Topo |
-| `toque` | 3rem | Alvo de toque mínimo do PDV |
+| `rounded-cartao` | 18px | Cartões |
+| `rounded-2xl` | 16px | Cartão de identidade, popovers, folhas |
+| `rounded-xl` | 12px | Itens da sidebar, ações rápidas, avatares quadrados |
+| `rounded-controle` | 10px | Botões, campos, busca |
+| `rounded-full` | — | Chips, contadores, trilhos de progresso |
+| `shadow-flutuante` | difusa | Só o que flutua: menus, popovers, dicas, diálogos |
 
-Espaçamento na escala do Tailwind: `gap-4` entre cartões, `p-4` dentro do cartão, `mb-5`
-entre faixas do painel. Página: `px-4 py-6` no celular, `px-8 py-7` a partir de `lg`.
-
-Movimento: `animate-surgir` (160ms, menus e diálogos), `animate-chegar` (2,4s, linha nova no
-tempo real), `animate-ping` no ponto "Ao vivo". Tudo some com `prefers-reduced-motion`.
+Espaço entre cartões: `gap-3`; dentro do cartão: `px-5`. Página: `px-4` (celular) e
+`px-6` (desktop).
 
 ---
 
 ## 5. Estrutura da tela
 
 ```
-┌──────────────┬───────────────────────────────────────────────────────────────┐
-│ ■ Feira      │ [≡] [🔍 Buscar ou digitar um comando  Ctrl K]  [+ Nova venda|▾] 🌐 ☀ (A) │
-│   Gastronô-  ├───────────────────────────────────────────────────────────────┤
-│   mica       │ quinta-feira, 19 de novembro · Feira 2027                      │
-│ [Feira ▾]    │ Boa tarde, Ana!                    (● Ao vivo · agora ⟳) [Exportar] │
-│ ▸ Painel     │ ( R$ 12.430 em vendas | 318 vendas | R$ 39 ticket | 12 barraq. )│
-│   Vendas     │ [Filtros: De Até Canal Pagamento Tag  Filtrar]                 │
-│   ...        │ [KPI amarelo][KPI][KPI][KPI][KPI]                              │
-│ Atalhos      │ [Vendas por dia ············· 8 col][Por canal ····· 4 col]    │
-│ ● Pastel     │ [Comparativo (tabela) ······· 8 col][Pendências ···· 4 col]    │
-│ ● Doces      │ [Ranking 4][Últimas vendas + semana 4][Por tag 4]              │
-│ Minha senha  │                                                               │
-│ Sair         │                                                               │
-└──────────────┴───────────────────────────────────────────────────────────────┘
+┌───────────────┬─────────────────────────────────────────────────────────────┐
+│ ■ Feira       │ [🔍 Busca rápida  Ctrl K]          (🔔2) (⚙) (CD Nome) [+ Nova venda|▾] │
+│   Gastronômica├─────────────────────────────────────────────────────────────┤
+│ [Feira 2027 ▾]│ Boa noite · sexta, 20/11          (● Ao vivo ⟳) [Filtros] [Exportar] │
+│ ▌Painel       │ Painel da feira                                             │
+│  Vendas    ▾  │ ┌ R$ 12.450 ──────────── ▥ ⌇ ┐┌ Total entradas ┐┌ Feira em uso ───┐ │
+│   │ Nova venda│ │ ● Pré ● Feira ● Pós        ││ R$ 15.000 ↗5%  ││ ▆▆ cartão azul │ │
+│   │ Histórico │ │ ▁ ▁ ▁ █ ▁ ▁ ▁  (dica)      ││ Saídas, Saldo  ││ ▢ ▢ ▢ ▢ ▢       │ │
+│  Itens        │ └───────────────────────────┘└────────────────┘│ Acesso rápido   │ │
+│  Combos       │ ┌ Meta ███████░░ ┐┌ Próximo passo  ▦▦ ┐          ├ Últimas vendas ─┤ │
+│ ───────────── │ ┌ Saídas ▤▤▤▤ ┐┌ Saúde ◠ 75% ┐┌ Estoque/ranking ┐ │ extrato         │ │
+│  Relatórios   │ ┌ Comparativo (tabela) ──────────────────────────┐ └────────────────┘ │
+│ [Hora de      │ ┌ Vendas por tag ┐┌ Por pagamento ▤▤▤ ┐                              │
+│  vender! ▶]   │                                                              │
+│  Sair · ⇤     │                                                              │
+└───────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-- **Sidebar** (`lg+` fixa; no celular, gaveta pelo ☰): logo (quadrado azul com quadrado
-  amarelo), marca em Fraunces, seletor de feira (admin), navegação, atalhos coloridos
-  (barraquinhas para o admin; Nova venda/entrada/saída para a barraquinha), conta no rodapé.
-- **Topo** fixo translúcido: busca que abre a **paleta de comandos** (Ctrl/⌘K), ação
-  principal como **botão dividido** (principal + menu de extras), idioma, tema e conta.
-- **Cabeçalho de página**: sobretítulo (data · contexto), título grande, ações à direita
-  (quebram linha no celular) e, opcionalmente, a **pílula de números**.
-- **Formulários**: grade `lg:grid-cols-3`, formulário em 2 colunas e ajuda/resumo na 3ª.
+- **Sidebar** (`lg+`): marca, seletor de feira (admin), navegação principal em árvore,
+  separador, itens secundários, cartão promocional dispensável, Sair e **Recolher menu**
+  (vira trilho de ícones com dicas; a escolha fica no navegador). Item ativo: fundo
+  `superficie-suave` e barrinha azul na borda. Abaixo de `lg`, a mesma sidebar abre numa
+  folha lateral.
+- **Topo** sobre o chão: busca (abre a paleta Ctrl/⌘K), sino de pendências, engrenagem
+  (tema e idioma), cartão do usuário e a ação principal num botão dividido.
+- **Painéis**: coluna principal + trilho direito de 22rem a partir de `xl`.
 
 ---
 
 ## 6. Componentes
 
-| Peça | Arquivo | Primitivo Radix | Notas |
+| Peça | Arquivo | Radix | Notas |
 | --- | --- | --- | --- |
-| `Botao`, `BotaoLink`, `BotaoDividido` | `ui/botao.tsx` | — (`DropdownMenu` no dividido) | Variantes `primario`, `secundario`, `destaque` (amarelo), `suave`, `fantasma`, `perigo`; tamanhos `sm` `md` `lg` (mais altos no celular) |
-| `Menu` | `ui/menu.tsx` | `DropdownMenu` | Setas, busca por letra, Esc, foco de volta ao gatilho, não sai da tela |
-| `Campo` (rótulo) | `ui/campos.tsx` | `Label` | Rótulo, dica e erro em volta de qualquer controle |
-| `Entrada`, `CampoMoeda`, `CampoNumero`, `CampoData`, `AreaTexto`, `CampoArquivo` | `ui/campos.tsx` | — (`<input>` nativo) | Teclado certo no celular; 16px abaixo de `md` (sem zoom no iOS) |
-| `Selecao` | `ui/campos.tsx` | `Select` | Opção vazia ("Todos"), grupos com título, lista que rola |
-| `CaixaSelecao` | `ui/campos.tsx` | `Checkbox` | Área de toque ampliada sem mudar o desenho |
-| `Interruptor` | `ui/campos.tsx` | `Switch` | Espelhado em RTL; `rotuloAcessivel` quando o texto visível é só o estado |
-| `Segmentos`, `OpcoesCartao` | `ui/campos.tsx` | `RadioGroup` | Setas e foco itinerante; `grande` = 44px (PDV), `cores` = ponto por opção |
-| `Dialogo`, `Confirmar`, `Folha` | `ui/dialogo.tsx` | `Dialog`, `AlertDialog` | `Confirmar` aceita Promise e não fecha clicando fora; `Folha` sobe do rodapé (carrinho do PDV) ou entra pela lateral (menu no celular) |
-| `Dica` | `ui/dica.tsx` | `Tooltip` | Para botões só de ícone; abre no hover e no foco do teclado |
-| `avisar()` + `Avisos` | `ui/avisos.tsx` | `Toast` | Anunciados a leitor de tela, pausam no hover, arrastar fecha, F8 leva até eles |
-| `Cartao`, `CabecalhoPagina`, `PilulaStats`, `Kpi`, `Detalhe`, `Vazio`, `Faixa` | `ui/cartao.tsx` | — | `Kpi destaque` = fundo azul, ícone amarelo e sparkline |
-| `Chip`, `ChipStatus`, `ChipTag`, `Ponto`, `Avatar`, `Kbd`, `Contador` | `ui/marcadores.tsx` | `Avatar` | Avatar com foto ou iniciais em cor estável por nome |
-| `Tabela`, `Linha`, `Celula` | `ui/tabela.tsx` | `Select` (ordenação no celular) | Divisórias verticais, ordenação, **modo cartão** no celular |
-| `Paginacao` | `ui/paginacao.tsx` | — | No celular só "3 / 10" com setas |
-| `PaletaComandos` | `app/paleta-comandos.tsx` | `Dialog` | Ctrl/⌘K |
-| `Provedores` | `app/provedores.tsx` | `Direction`, `Tooltip.Provider`, `Toast.Provider` | Direção do texto pelo idioma, atraso comum das dicas |
-| `FiltrosVendas` | `painel/filtros.tsx` | `Collapsible` | Filtros pela URL; recolhidos no celular, sempre abertos a partir de `md` |
-| Meta de vendas | `pages/loja/Painel.tsx` | `Progress` | — |
-| `FaixaDias`, `ListaVendas`, `ListaPendencias`, `TabelaTags` | `painel/widgets.tsx` | `Tooltip` (dias) | Agenda de 7 dias, últimas vendas com barra do canal, checklist |
+| `Botao`, `BotaoLink`, `BotaoDividido` | `ui/botao.tsx` | `DropdownMenu` (dividido) | `primario`, `secundario`, `superficie` (branco sobre o chão), `escuro`, `destaque`, `suave`, `fantasma`, `perigo` |
+| `Menu`, `MenuEscolhas` | `ui/menu.tsx` | `DropdownMenu` (+ `RadioGroup`) | Menus de ação; escolhas com marcação (tema, idioma) |
+| `Campo`, `Selecao`, `CaixaSelecao`, `Interruptor`, `Segmentos`, `OpcoesCartao` | `ui/campos.tsx` | `Label`, `Select`, `Checkbox`, `Switch`, `RadioGroup` | Texto/data/moeda/arquivo continuam `<input>` nativo |
+| `Dialogo`, `Confirmar`, `Folha` | `ui/dialogo.tsx` | `Dialog`, `AlertDialog` | Folha de baixo (carrinho do PDV) ou de lado (menu) |
+| `Dica` | `ui/dica.tsx` | `Tooltip` | Todo botão só de ícone |
+| `avisar()` + `Avisos` | `ui/avisos.tsx` | `Toast` | Sucesso/erro das ações |
+| `Cartao`, `CabecalhoPagina`, `Estatistica`, `Variacao`, `Kpi`, `PilulaStats`, `Detalhe`, `Vazio`, `Faixa` | `ui/cartao.tsx` | — | `Estatistica` + `Variacao` = a coluna de totais com "↗ 5,1% vs. Feira 2026" |
+| `Chip`, `ChipStatus`, `TextoStatus`, `ChipTag`, `Avatar`, `Contador`, `Ponto`, `Kbd` | `ui/marcadores.tsx` | `Avatar` | `TextoStatus` = "Concluída/Cancelada" em texto colorido; `Contador` escuro como o "19" da referência |
+| `Tabela`, `Linha`, `Celula` | `ui/tabela.tsx` | `Select` (ordenação no celular) | Sem divisórias verticais; **modo cartão** abaixo de `md` |
+| `VendasPorDia`, `SaidasPorCategoria`, `SaudeFinanceira`, `PorPagamento`, `ProgressoMeta`, `ProximoPasso` | `painel/blocos.tsx` | `ToggleGroup` (barras/linha) | Blocos dos dois painéis |
+| `ListaVendas`, `CartaoIdentidade`, `AcoesRapidas`, `AcessoRapido`, `CartaoDica`, `ListaPendencias`, `TabelaTags` | `painel/widgets.tsx` | `Tooltip` | Extrato, "meu cartão", ações quadradas, avatares, dica com bloquinhos |
+| `FiltrosVendas`, `BotaoFiltros` | `painel/filtros.tsx` | `Collapsible`, `Popover` | Em linha nas listas; em popover no topo dos painéis |
 | `AoVivo` | `painel/ao-vivo.tsx` | `Tooltip` | Selo de tempo real |
+| Shell, sino, configurações | `app/shell.tsx` | `Popover`, `Collapsible`, `Separator`, `Dialog` | — |
 
-Importação: `import { Dialog, Select } from "radix-ui"` (pacote único, versão fixa). Estados do
-Radix viram estilo por atributo: `data-[state=open]:animate-surgir`,
-`data-[state=checked]:bg-primaria`, `data-[highlighted]:bg-superficie-hover`.
-
-Ícones: **Tabler Icons** (`@tabler/icons-react`), traço `1.5` (`TRACO`), 16px em tabela e
-campo, 18–20px em navegação e cabeçalho de cartão. Sempre `aria-hidden` quando acompanham texto.
+Ícones: **Tabler** (`@tabler/icons-react`), traço 1,5, 16–19px.
 
 ---
 
 ## 7. Gráficos
 
-SVG próprio (`components/graficos/graficos.tsx`), medido com `ResizeObserver`, sem biblioteca.
+SVG/HTML próprios (`components/graficos/graficos.tsx`), medidos com `ResizeObserver`.
 
-| Gráfico | Uso | Detalhes |
+| Peça | Como na referência | Comportamento |
 | --- | --- | --- |
-| `GraficoArea` | Vendas por dia | Gradiente da série, grade horizontal, rótulos do eixo X rareados pela largura, tooltip com valor e nº de vendas |
-| `GraficoBarras` | Comparar feiras | Séries agrupadas com legenda |
-| `GraficoRosca` | Canal, forma de pagamento | Total no centro; legenda com % e valor; empilha pela largura do cartão (container query) |
-| `BarrasHorizontais` | Ranking de barraquinhas e itens | 1º lugar em amarelo, demais em azul |
-| `Sparkline` | Tendência dentro do KPI | Sem eixos |
+| `GraficoBarrasDias` | "Balance overview" | Barras por dia empilhadas por canal; dias fora de foco em cinza, dia em foco colorido e hachurado com a dica (data, canais, total). Mouse ou setas mudam o foco; clique/Enter filtra o painel por aquele dia. |
+| `GraficoArea` | alternativa "linha" | Mesma série em linha com área degradê. |
+| `BarraSegmentada` | "Cost analysis" | Blocos hachurados proporcionais + legenda com % e valor. |
+| `Medidor` | "Financial health" | Meio-círculo de 11 blocos; os preenchidos vão do amarelo ao azul (mistura dos dois tokens) e são hachurados. |
+| `BarraProgresso`, `BarrasHorizontais` | "Monthly spending limit", "Goal tracker" | Trilho cinza com preenchimento hachurado. |
+| `GraficoBarras`, `GraficoRosca`, `Sparkline`, `Legenda` | — | Comparar feiras e usos menores. |
 
-Todo gráfico tem `role="img"` e `aria-label`; os números também aparecem em texto (legenda,
-tabela ou tooltip), então a cor nunca é a única fonte da informação.
+Os gráficos têm rótulo acessível e o número também aparece em texto (legenda, dica ou
+anúncio para leitor de tela), então a cor nunca é a única fonte da informação.
 
 ---
 
 ## 8. Tempo real
 
-Os dois painéis (feira e barraquinha) se atualizam sozinhos, sem servidor de WebSocket
-(roda no XAMPP e em hospedagem comum):
-
-1. O painel recebe a prop `versao`, uma assinatura das vendas, cancelamentos e lançamentos
-   (e, no do admin, do cadastro das barraquinhas), calculada **antes** dos dados.
-2. `useTempoReal` consulta `GET …/pulso` a cada 3s (uma consulta agregada, poucos bytes).
-3. Versão diferente → recarga parcial do Inertia só com as props do painel. As props são
-   closures no controller, então só essas consultas rodam. Filtros, rolagem e estado da
-   tela são preservados.
-4. Aba escondida pausa as consultas; voltar à aba sincroniza na hora. Sem rede, recua
-   até 30s. Sessão expirada para as consultas.
-
-Na tela: selo **● Ao vivo · agora ⟳** (verde pulsando; amarelo atualizando; cinza
-pausado; vermelho sem conexão), anunciado a leitores de tela, com botão de atualizar.
-Venda nova acende em amarelo na lista "Últimas vendas" e esmaece.
-
-Para trocar por WebSocket no futuro (Reverb/Pusher): basta transmitir um evento com a
-nova versão e chamar a mesma recarga parcial; o resto da tela não muda.
+Sem servidor de WebSocket: o painel consulta o *pulso* (assinatura das vendas e
+lançamentos) a cada 3s e, quando muda, faz uma recarga parcial só das props do painel.
+O selo **● Ao vivo · agora ⟳** mostra o estado (verde, amarelo atualizando, cinza pausado
+com a aba escondida, vermelho sem conexão); venda nova acende em amarelo no extrato.
 
 ---
 
-## 9. Responsividade
+## 9. Modo escuro
 
-Testado de 360px a 1920px; nenhuma tela pode ter rolagem horizontal da página.
+- Três opções na engrenagem do topo: **Claro**, **Escuro** e **Do sistema** (padrão, segue o
+  aparelho e acompanha a troca na hora). A escolha fica no navegador; o script do
+  `app.blade.php` aplica antes da pintura, sem piscar.
+- Os mesmos tokens trocam de valor sob `.dark`; nenhuma tela usa `dark:`.
+- `color-scheme` acompanha o tema (campos de data e barras de rolagem nativos).
+- No escuro: chão quase preto, cartões um tom acima com fio sutil, azul clareado
+  (`#2b57b8`) para manter contraste, listras escuras sobre as cores.
+
+---
+
+## 10. Responsividade e acessibilidade
 
 | Faixa | Comportamento |
 | --- | --- |
-| `< md` (até 767px) | Sidebar vira gaveta; **tabelas viram cartões**; filtros recolhidos em "Filtros (n)"; ações quebram linha; botão flutuante **Nova venda** (barraquinha) |
-| `md` – `lg` | Tabelas completas (rolagem interna se faltar espaço); grades de 2 colunas |
-| `lg+` | Sidebar fixa; formulários em 3 colunas (form + ajuda) |
-| `xl+` | Painel em 12 colunas |
-| `2xl+` | 5 KPIs na mesma linha |
+| `< md` | Tabelas em cartões, filtros recolhidos, botão flutuante **Nova venda**, cartão do usuário vira só o avatar |
+| `md`–`lg` | Grades de 2 colunas, ação principal no topo |
+| `lg+` | Sidebar fixa (recolhível), formulários em 3 colunas |
+| `xl+` | Painéis com trilho direito |
+| `2xl+` | Três cartões por linha nos blocos do painel |
 
-**Tabela → cartão.** Abaixo de `md` cada linha vira um cartão: a célula `cabecalho` é o
-título, cada coluna vira "rótulo: valor" (os rótulos vêm das próprias colunas) e a coluna
-`acoes` vai para o rodapé do cartão. Coluna secundária: `cartao: "oculta"`. A ordenação
-continua por um seletor acima da lista. Nenhuma página precisa repetir marcação.
-
-**PDV no celular.** Cartões de item grandes (alvo ≥ 44px) em 2 colunas, canal e pagamento
-em segmentos, barra fixa no rodapé com total e "Registrar venda" (respeita a área segura do
-aparelho); no desktop o carrinho é uma coluna fixa à direita.
-
----
-
-## 10. Acessibilidade, idioma e tema
-
-- Foco visível em tudo que é clicável: `outline-none focus-visible:ring-2 focus-visible:ring-foco`.
-- Contraste AA em texto (`tinta-suave` é o mais claro permitido para texto essencial).
-- Diálogos, menus, seleção, rádios, caixas e dicas vêm do Radix: foco preso e devolvido,
-  navegação por teclado e papéis ARIA corretos sem código próprio.
-- `prefers-reduced-motion` desliga animações.
-- **Direção**: só propriedades lógicas (`ms`/`me`, `ps`/`pe`, `start`/`end`, `text-start`,
-  `border-s`/`border-e`); os gráficos mantêm coordenadas físicas.
-- **Idioma**: todo texto passa por `t("Frase em português")`; inglês em `lang/en.json`.
-- **Tema**: claro/escuro pela classe `.dark` no `<html>`, escolhido no topo e lembrado no
-  navegador; o script no `app.blade.php` aplica antes de pintar (sem piscar).
+Foco visível em tudo (`ring-foco`), alvos de toque ≥ 40px no celular (44px no PDV),
+`prefers-reduced-motion` respeitado, propriedades lógicas para RTL e diálogos, menus,
+seleções e dicas com o teclado e os papéis ARIA do Radix.
 
 ---
 
 ## 11. Regras para quem for criar tela
 
-1. Monte com o kit (`components/ui`, `components/painel`, `components/graficos`); se faltar
-   peça, crie no kit sobre o primitivo Radix correspondente, não na página.
-2. Tabela sempre com `Tabela`/`Linha`/`Celula` (ganha o modo cartão de graça).
-3. Só tokens; token novo vai em `:root`, `.dark` e `@theme inline` do `tokens.css`.
-4. Amarelo só como fundo com `text-secundaria-tinta`.
-5. Confira em 360px, 768px e 1440px, claro e escuro, pt-BR e inglês.
+1. Monte com o kit; peça nova vai para o kit, sobre o primitivo Radix correspondente.
+2. Cartão: `Cartao` (nunca uma `div` com borda própria). Valor principal em `text-valor`.
+3. Dados em barra: `hachura` + cor da série; o resto em `grafico-inativo`.
+4. Só tokens; amarelo só como fundo (`secundaria-tinta` no cheio, `secundaria-texto` no suave).
+5. Confira em 360, 768 e 1440px, claro e escuro, pt-BR e inglês.

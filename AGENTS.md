@@ -24,28 +24,32 @@ React 19 + Inertia v3 + **Radix Primitives** (`radix-ui`, comportamento e acessi
 - Nada de hex, `white`, `black`, `gray-*`, `zinc-*` nem `dark:`. As cores vêm de
   `resources/js/styles/tokens.css` e o modo escuro troca os valores sozinho.
 - Texto: `text-tinta`, `text-tinta-media`, `text-tinta-suave`, `text-tinta-fraca` (só não essencial).
-- Superfícies: `bg-fundo`, `bg-superficie`, `bg-superficie-suave`, `bg-superficie-hover`.
-- Bordas: `border-linha`, `border-linha-forte`. Véu de diálogo: `bg-veu`.
+- Superfícies: chão `bg-fundo` (cinza), cartões `bg-superficie`; `bg-superficie-suave`/`-hover`/`-ativa` para estados.
+- Bordas: `border-linha`, `border-linha-forte`; contorno de cartão `border-cartao-borda` (some no claro). Véu: `bg-veu`.
+- Invertido (contador, dica, botão `escuro`): `bg-inverso` + `text-inverso-tinta`.
 - Marca: `bg-primaria` + `text-primaria-tinta` (ação principal, item ativo);
-  `bg-secundaria` + `text-secundaria-tinta` (destaque). **Amarelo nunca é cor de texto.**
+  `bg-secundaria` + `text-secundaria-tinta` (destaque); `bg-secundaria-suave` + `text-secundaria-texto`.
+  **Amarelo nunca é cor de texto.**
 - Valores: `text-positivo` / `text-negativo` (com ícone, não só cor).
 - Chips e agenda: pastéis `rosa`, `verde`, `azul`, `ambar`, `vermelho` com `-suave` e `-tinta`.
-- Gráficos: `CORES` de `components/graficos` (tokens `grafico-1` a `grafico-6`).
+- Gráficos: `CORES` de `components/graficos` (tokens `grafico-1` a `grafico-6`); dado em barra leva
+  `hachura` (listras) e o que está fora de foco fica `bg-grafico-inativo`.
 - Token novo: declare em `:root`, `.dark` e `@theme inline` do `tokens.css`.
 
 ## Tipografia
 
 - Utilitários do projeto: `text-micro`, `text-rotulo`, `text-corpo`, `text-ui`,
-  `text-titulo`, `text-numero`, `text-cabecalho`, `text-saudacao`, com peso
-  `font-medium`/`font-semibold`. Números com `tabular-nums`.
-- Inter para tudo; Fraunces (`font-serif`) só na marca.
+  `text-titulo`, `text-numero`, `text-cabecalho`, `text-valor` (valor principal do cartão),
+  com peso `font-semibold`. Números com `tabular-nums`.
+- Plus Jakarta Sans para tudo (a marca em `font-extrabold`).
 
 ## Espaço e forma
 
 - Escala do Tailwind (`gap-4`, `p-4`); prefira `gap` a margens por filho. Valor arbitrário
   só com motivo (ex.: `env(safe-area-inset-bottom)`).
-- Cartões `rounded-cartao border border-linha bg-superficie`; campos e itens de menu
-  `rounded-controle`; pílulas e chips `rounded-full`.
+- Cartões sempre pelo `Cartao` (`rounded-cartao border-cartao-borda bg-superficie`, sem sombra);
+  campos e botões `rounded-controle`; itens da sidebar `rounded-xl`; chips `rounded-full`.
+- Sombra só no que flutua (`shadow-flutuante`: menus, popovers, dicas, diálogos).
 
 ## Responsividade (obrigatória)
 
@@ -71,4 +75,5 @@ React 19 + Inertia v3 + **Radix Primitives** (`radix-ui`, comportamento e acessi
 - Texto sempre por `t("Frase em português")` (`useT`); tradução em `lang/en.json`.
 - Datas, moeda e números por `useFormato()`; o servidor manda valores crus.
 - URLs por `rota()` (Ziggy) ou `useRotaLoja()` nas telas de barraquinha.
+- Tema: claro, escuro ou do sistema (`useTema`/`definirTema` de `components/app/tema`); nada de `dark:`.
 - Animação curta e opcional; respeite `prefers-reduced-motion` (já global).

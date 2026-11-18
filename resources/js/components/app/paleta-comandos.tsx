@@ -36,7 +36,7 @@ export function useAtalhoPaleta(abrir: () => void) {
 /** Busca rápida (o "Search or type a command" da referência): telas e barraquinhas. */
 export function PaletaComandos({ aberta, aoFechar, acoes }: { aberta: boolean; aoFechar: () => void; acoes: Comando[] }) {
     const t = useT();
-    const { principal } = useNavegacao();
+    const { todos } = useNavegacao();
     const { seletorFeira } = usePage().props;
     const [busca, setBusca] = useState("");
     const [indice, setIndice] = useState(0);
@@ -50,10 +50,11 @@ export function PaletaComandos({ aberta, aoFechar, acoes }: { aberta: boolean; a
     }, [aberta]);
 
     const comandos = useMemo<Comando[]>(() => [
-        ...principal.map((n) => ({ rotulo: n.rotulo, grupo: t("Ir para"), href: n.href, icone: n.icone })),
+        // Um destino por endereço ("Vendas" e "Histórico" levam ao mesmo lugar).
+        ...todos.filter((n, i) => todos.findIndex((m) => m.href === n.href) === i).map((n) => ({ rotulo: n.rotulo, grupo: t("Ir para"), href: n.href, icone: n.icone })),
         ...acoes,
         ...(seletorFeira?.barraquinhas ?? []).map((b) => ({ rotulo: b.nome, grupo: t("Barraquinhas"), href: rota("admin.loja.painel", { barraquinha: b.id }), icone: IconBuildingStore })),
-    ], [principal, acoes, seletorFeira, t]);
+    ], [todos, acoes, seletorFeira, t]);
 
     const filtrados = comandos.filter((c) => normalizar(c.rotulo).includes(normalizar(busca)));
     const ir = (c: Comando | undefined) => {

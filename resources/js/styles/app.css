@@ -1,6 +1,5 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter/opsz.css";
-@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/plus-jakarta-sans/wght.css";
 @import "./tokens.css";
 
 @source "../";
@@ -12,7 +11,6 @@
      encolheria toda a escala (espaços, alturas, fontes) em 12,5%. */
   html {
     @apply bg-fundo font-sans text-tinta antialiased;
-    font-feature-settings: "cv11", "ss01";
   }
 
   body {
@@ -30,10 +28,11 @@
   input[type="date"]::-webkit-calendar-picker-indicator {
     @apply cursor-pointer opacity-60;
   }
+}
 
-  .dark input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-  }
+/* Listras diagonais das barras de dados (a assinatura visual dos gráficos). */
+@utility hachura {
+  background-image: repeating-linear-gradient(-45deg, var(--hachura) 0 1.5px, transparent 1.5px 6px);
 }
 
 /* Barra de rolagem fina nas áreas internas (sidebar, tabelas largas). */
@@ -41,3 +40,4 @@
   scrollbar-width: thin;
   scrollbar-color: var(--linha-forte) transparent;
 }
+

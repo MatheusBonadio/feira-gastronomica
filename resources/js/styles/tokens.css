@@ -2,28 +2,37 @@
  * Design system da Feira Gastronômica — tokens (fonte única).
  * Descrição completa em DESIGN.md.
  *
+ *  - Chão cinza-claro com cartões brancos sem borda; dados em barras
+ *    hachuradas (listras diagonais); azul UNAERP conduz, amarelo destaca.
  *  - Telas e componentes usam só estes tokens (bg-superficie, text-tinta,
- *    border-linha, bg-primaria, bg-rosa-suave...). Nada de cor crua.
+ *    border-linha, bg-primaria...). Nada de cor crua.
  *  - Modo escuro: os mesmos nomes trocam de valor sob .dark.
  *  - Cores com hex do bloco :root também são lidas por App\Support\Tema
  *    para os PDFs (o dompdf não entende var()).
  * --------------------------------------------------------------------------- */
 
 :root {
-  /* Superfícies: tudo branco, separado por bordas finas (sem sombras pesadas). */
-  --fundo: #ffffff;
+  color-scheme: light;
+
+  /* Superfícies: chão cinza, cartões brancos (sem borda, sem sombra). */
+  --fundo: #f2f2f3;
   --superficie: #ffffff;
-  --superficie-suave: #f7f7f8;
-  --superficie-hover: #f4f4f5;
-  --superficie-ativa: #ececee;
-  --linha: #e8e8eb;
-  --linha-forte: #d9d9de;
+  --superficie-suave: #f6f6f7;
+  --superficie-hover: #f1f1f3;
+  --superficie-ativa: #e8e8eb;
+  --linha: #ececef;
+  --linha-forte: #dcdce1;
+  --cartao-borda: transparent;
 
   /* Texto */
   --tinta: #18181b;
   --tinta-media: #52525b;
   --tinta-suave: #71717a;
   --tinta-fraca: #a1a1aa;
+
+  /* Invertido: contadores, dicas, botão escuro do cartão promocional. */
+  --inverso: #18181b;
+  --inverso-tinta: #ffffff;
 
   /* Identidade UNAERP: azul-marinho (principal) e amarelo (secundária). */
   --primaria: #003087;
@@ -35,11 +44,15 @@
   --secundaria-hover: #d8ca0c;
   --secundaria-tinta: #1f1a00;
   --secundaria-suave: #fcf8d2;
+  /* Texto sobre secundaria-suave (o -tinta é para o amarelo cheio). */
+  --secundaria-texto: #5c5300;
   --foco: #6f8fd0;
   /* Véu atrás de diálogos e da gaveta do menu. */
   --veu: rgb(9 9 11 / 0.4);
+  /* Listras das barras de dados (sobre a cor da série). */
+  --hachura: rgb(255 255 255 / 0.38);
 
-  /* Pastéis de status e destaque (chips, agenda, calendário). */
+  /* Pastéis de status e destaque (chips, agenda, avatares). */
   --rosa: #e879f9;
   --rosa-suave: #f8d4fc;
   --rosa-tinta: #86198f;
@@ -68,7 +81,8 @@
   --grafico-4: #e879f9;
   --grafico-5: #60a5fa;
   --grafico-6: #f59e0b;
-  --grafico-grade: #eeeef0;
+  --grafico-grade: #ececef;
+  --grafico-inativo: #ededf0;
 
   /* Impressão (PDF) */
   --impressao-titulo: #18181b;
@@ -79,30 +93,38 @@
 }
 
 .dark {
-  --fundo: #0b0b0d;
-  --superficie: #131316;
-  --superficie-suave: #1a1a1e;
-  --superficie-hover: #1f1f24;
-  --superficie-ativa: #27272d;
-  --linha: #26262c;
+  color-scheme: dark;
+
+  --fundo: #09090b;
+  --superficie: #141417;
+  --superficie-suave: #1b1b1f;
+  --superficie-hover: #202025;
+  --superficie-ativa: #2a2a30;
+  --linha: #25252b;
   --linha-forte: #34343b;
+  --cartao-borda: #1f1f24;
 
   --tinta: #f4f4f5;
   --tinta-media: #c4c4cb;
   --tinta-suave: #9a9aa3;
   --tinta-fraca: #6b6b74;
 
+  --inverso: #f4f4f5;
+  --inverso-tinta: #18181b;
+
   --primaria: #2b57b8;
   --primaria-hover: #3a67c9;
   --primaria-tinta: #ffffff;
-  --primaria-suave: #0f1f44;
+  --primaria-suave: #13254d;
   --primaria-texto: #8fb0f0;
   --secundaria: #ecdd12;
   --secundaria-hover: #f3e640;
   --secundaria-tinta: #1f1a00;
   --secundaria-suave: #3a360a;
+  --secundaria-texto: #f3e640;
   --foco: #4a72c8;
   --veu: rgb(0 0 0 / 0.6);
+  --hachura: rgb(0 0 0 / 0.28);
 
   --rosa: #f0abfc;
   --rosa-suave: #4a1d4f;
@@ -131,11 +153,11 @@
   --grafico-5: #93c5fd;
   --grafico-6: #fbbf24;
   --grafico-grade: #232328;
+  --grafico-inativo: #26262c;
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-fundo: var(--fundo);
   --color-superficie: var(--superficie);
@@ -144,10 +166,13 @@
   --color-superficie-ativa: var(--superficie-ativa);
   --color-linha: var(--linha);
   --color-linha-forte: var(--linha-forte);
+  --color-cartao-borda: var(--cartao-borda);
   --color-tinta: var(--tinta);
   --color-tinta-media: var(--tinta-media);
   --color-tinta-suave: var(--tinta-suave);
   --color-tinta-fraca: var(--tinta-fraca);
+  --color-inverso: var(--inverso);
+  --color-inverso-tinta: var(--inverso-tinta);
   --color-primaria: var(--primaria);
   --color-primaria-hover: var(--primaria-hover);
   --color-primaria-tinta: var(--primaria-tinta);
@@ -157,6 +182,7 @@
   --color-secundaria-hover: var(--secundaria-hover);
   --color-secundaria-tinta: var(--secundaria-tinta);
   --color-secundaria-suave: var(--secundaria-suave);
+  --color-secundaria-texto: var(--secundaria-texto);
   --color-foco: var(--foco);
   --color-veu: var(--veu);
   --color-rosa: var(--rosa);
@@ -184,10 +210,11 @@
   --color-grafico-5: var(--grafico-5);
   --color-grafico-6: var(--grafico-6);
   --color-grafico-grade: var(--grafico-grade);
+  --color-grafico-inativo: var(--grafico-inativo);
 }
 
 @theme {
-  /* Escala tipográfica (Inter): densa, como a referência. */
+  /* Escala tipográfica (Plus Jakarta Sans). */
   --text-micro: 0.6875rem;
   --text-micro--line-height: 1rem;
   --text-rotulo: 0.75rem;
@@ -196,30 +223,38 @@
   --text-corpo--line-height: 1.25rem;
   --text-ui: 0.875rem;
   --text-ui--line-height: 1.25rem;
-  --text-titulo: 1rem;
-  --text-titulo--line-height: 1.5rem;
-  --text-numero: 1.375rem;
-  --text-numero--line-height: 1.75rem;
-  --text-cabecalho: 1.5rem;
-  --text-cabecalho--line-height: 2rem;
-  /* Marca "Feira Gastronômica" (Fraunces) na sidebar: quebra em 2 linhas se faltar espaço. */
-  --text-marca: 1.1875rem;
-  --text-marca--line-height: 1.375rem;
-  --text-saudacao: 1.875rem;
+  --text-titulo: 0.9375rem;
+  --text-titulo--line-height: 1.375rem;
+  --text-titulo--letter-spacing: -0.005em;
+  --text-numero: 1.5rem;
+  --text-numero--line-height: 2rem;
+  --text-numero--letter-spacing: -0.02em;
+  --text-cabecalho: 1.375rem;
+  --text-cabecalho--line-height: 1.75rem;
+  --text-cabecalho--letter-spacing: -0.015em;
+  /* Valor principal de um cartão ("R$ 12.450"). */
+  --text-valor: 1.875rem;
+  --text-valor--line-height: 2.25rem;
+  --text-valor--letter-spacing: -0.025em;
+  --text-saudacao: 1.75rem;
   --text-saudacao--line-height: 2.25rem;
   --text-saudacao--letter-spacing: -0.02em;
+  /* Marca "Feira Gastronômica" na sidebar. */
+  --text-marca: 1.0625rem;
+  --text-marca--line-height: 1.25rem;
 
   /* Forma */
-  --radius-controle: 0.5rem;
-  --radius-cartao: 0.875rem;
+  --radius-controle: 0.625rem;
+  --radius-cartao: 1.125rem;
 
-  /* Sombras discretas: só botões e camadas flutuantes. */
-  --shadow-botao: 0 1px 2px 0 rgb(16 24 40 / 0.06), inset 0 1px 0 0 rgb(255 255 255 / 0.12);
-  --shadow-flutuante: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 2px 6px -2px rgb(16 24 40 / 0.08);
+  /* Profundidade: quase plana; sombra só no que flutua. */
+  --shadow-botao: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-flutuante: 0 18px 40px -14px rgb(16 24 40 / 0.24), 0 4px 10px -4px rgb(16 24 40 / 0.08);
 
   /* Medidas de layout */
-  --spacing-sidebar: 15.5rem;
-  --spacing-topbar: 3.75rem;
+  --spacing-sidebar: 15rem;
+  --spacing-sidebar-recolhida: 4.75rem;
+  --spacing-topbar: 4rem;
   --spacing-toque: 3rem;
 
   --animate-surgir: surgir 160ms ease-out;

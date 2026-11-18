@@ -74,13 +74,13 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
             <div className="rolagem-fina relative md:overflow-x-auto">
                 <table aria-label={rotulo} className="w-full border-collapse text-corpo max-md:block">
                     <thead className="max-md:sr-only">
-                        <tr className="border-y border-linha bg-superficie-suave">
+                        <tr className="border-y border-linha">
                             {colunas.map((c) => {
                                 const ativa = ordem === c.chave;
                                 const SetaOrdem = ativa ? (direcao === "asc" ? IconArrowUp : IconArrowDown) : IconSelector;
                                 const conteudo = (
                                     <span className={cx("inline-flex items-center gap-2", c.alinhar === "direita" && "flex-row-reverse")}>
-                                        {c.icone && <c.icone size={16} stroke={TRACO} className="text-tinta-suave" aria-hidden />}
+                                        {c.icone && <c.icone size={15} stroke={TRACO} className="text-tinta-fraca" aria-hidden />}
                                         {c.rotulo}
                                         {c.ordenavel && <SetaOrdem size={14} stroke={TRACO} className={ativa ? "text-tinta" : "text-tinta-fraca"} aria-hidden />}
                                     </span>
@@ -91,7 +91,7 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
                                         scope="col"
                                         aria-sort={ativa ? (direcao === "asc" ? "ascending" : "descending") : undefined}
                                         className={cx(
-                                            "h-10 border-linha px-4 font-medium whitespace-nowrap text-tinta-media [&:not(:last-child)]:border-e",
+                                            "h-10 px-4 text-rotulo font-semibold whitespace-nowrap text-tinta-suave first:ps-5 last:pe-5",
                                             c.alinhar === "direita" ? "text-end" : "text-start",
                                             c.className,
                                         )}
@@ -158,7 +158,7 @@ export function Celula({ children, direita, className, cabecalho, coluna }: Prop
         <Tag
             scope={cabecalho ? "row" : undefined}
             className={cx(
-                "h-11 border-linha px-4 py-2 font-normal md:[&:not(:last-child)]:border-e",
+                "h-12 px-4 py-2 font-normal md:first:ps-5 md:last:pe-5",
                 direita ? "text-end tabular-nums" : "text-start",
                 // Modo cartão
                 "max-md:flex max-md:h-auto max-md:min-w-0 max-md:items-center max-md:gap-3 max-md:px-3",

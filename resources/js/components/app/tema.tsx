@@ -1,32 +1,82 @@
-import { IconMoon, IconSun } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { classesBotao } from "@/components/ui/botao";
+import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
+import { useSyncExternalStore } from "react";
 import { Dica } from "@/components/ui/dica";
-import { TRACO } from "@/components/ui/icone";
+import { classesBotao } from "@/components/ui/botao";
+import { TRACO, type Icone } from "@/components/ui/icone";
 import { useT } from "@/lib/i18n";
 
+export type PreferenciaTema = "claro" | "escuro" | "sistema";
 export const CHAVE_TEMA = "tema";
 
-/** Alterna claro/escuro trocando a classe .dark do <html>; a escolha fica no navegador. */
+/*
+ * Tema claro/escuro pela classe .dark do <html> (os tokens trocam de valor).
+ * "sistema" segue o aparelho e acompanha a troca em tempo real. O script do
+ * app.blade.php aplica a mesma regra antes da pintura, para não piscar.
+ */
+function lerPreferencia(): PreferenciaTema {
+    try {
+        const valor = localStorage.getItem(CHAVE_TEMA);
+        return valor === "claro" || valor === "escuro" ? valor : "sistema";
+    } catch {
+        return "sistema";
+    }
+}
+
+const midia = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+let preferencia: PreferenciaTema = typeof window !== "undefined" ? lerPreferencia() : "sistema";
+const ouvintes = new Set<() => void>();
+
+function aplicar() {
+    const escuro = preferencia === "escuro" || (preferencia === "sistema" && !!midia?.matches);
+    document.documentElement.classList.toggle("dark", escuro);
+    ouvintes.forEach((o) => o());
+}
+
+midia?.addEventListener("change", () => preferencia === "sistema" && aplicar());
+
+export function definirTema(nova: PreferenciaTema) {
+    preferencia = nova;
+    try {
+        localStorage.setItem(CHAVE_TEMA, nova);
+    } catch {
+        // Sem armazenamento (aba anônima): vale até recarregar.
+    }
+    aplicar();
+}
+
+export function useTema() {
+    const estado = useSyncExternalStore(
+        (ouvinte) => {
+            ouvintes.add(ouvinte);
+            return () => ouvintes.delete(ouvinte);
+        },
+        () => `${preferencia}|${document.documentElement.classList.contains("dark")}`,
+        () => "sistema|false",
+    );
+    const [pref, escuro] = estado.split("|");
+    return { preferencia: pref as PreferenciaTema, escuro: escuro === "true", definir: definirTema };
+}
+
+/** Opções para menus (configurações da topbar). */
+export function useOpcoesTema(): { valor: PreferenciaTema; rotulo: string; icone: Icone }[] {
+    const t = useT();
+    return [
+        { valor: "claro", rotulo: t("Claro"), icone: IconSun },
+        { valor: "escuro", rotulo: t("Escuro"), icone: IconMoon },
+        { valor: "sistema", rotulo: t("Do sistema"), icone: IconDeviceDesktop },
+    ];
+}
+
+/** Alternância rápida claro/escuro (tela de login). */
 export function BotaoTema() {
     const t = useT();
-    const [escuro, setEscuro] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
-
-    useEffect(() => {
-        document.documentElement.classList.toggle("dark", escuro);
-        try {
-            localStorage.setItem(CHAVE_TEMA, escuro ? "escuro" : "claro");
-        } catch {
-            // Sem armazenamento (aba anônima): vale só até recarregar.
-        }
-    }, [escuro]);
-
+    const { escuro, definir } = useTema();
     const rotulo = escuro ? t("Usar tema claro") : t("Usar tema escuro");
     const I = escuro ? IconSun : IconMoon;
 
     return (
         <Dica rotulo={rotulo}>
-            <button type="button" onClick={() => setEscuro((e) => !e)} aria-label={rotulo} className={classesBotao("fantasma", "md", true)}>
+            <button type="button" onClick={() => definir(escuro ? "claro" : "escuro")} aria-label={rotulo} className={classesBotao("fantasma", "md", true)}>
                 <I size={18} stroke={TRACO} aria-hidden />
             </button>
         </Dica>
