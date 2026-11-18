@@ -108,6 +108,7 @@ class Apresentacao
     {
         $dados = [
             'id' => $venda->id,
+            'barraquinhaId' => $venda->barraquinha_id,
             'numero' => $venda->numero,
             'dataHora' => $venda->data_hora->toIso8601String(),
             'canal' => self::enum($venda->canal),

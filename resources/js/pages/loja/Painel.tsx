@@ -1,29 +1,14 @@
 import { usePage } from "@inertiajs/react";
-import {
-    IconArrowDownRight,
-    IconArrowUpRight,
-    IconCalendarEvent,
-    IconChartDonut,
-    IconChartLine,
-    IconCoins,
-    IconDownload,
-    IconNotes,
-    IconReceipt,
-    IconPigMoney,
-    IconShoppingCart,
-    IconTag,
-    IconTarget,
-    IconTrendingUp,
-    IconTrophy,
-} from "@tabler/icons-react";
-import { Progress } from "radix-ui";
-import { BarrasHorizontais, CORES, GraficoArea, GraficoRosca, Sparkline } from "@/components/graficos/graficos";
+import { IconArrowDownRight, IconArrowUpRight, IconDownload, IconShoppingCart, IconStack2, IconTag } from "@tabler/icons-react";
+import { BarrasHorizontais } from "@/components/graficos/graficos";
 import { AoVivo } from "@/components/painel/ao-vivo";
-import { FiltrosVendas, type FiltroVendas } from "@/components/painel/filtros";
-import { FaixaDias, ListaPendencias, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
+import { PorPagamento, ProgressoMeta, ProximoPasso, SaidasPorCategoria, SaudeFinanceira, VendasPorDia } from "@/components/painel/blocos";
+import { BotaoFiltros, type FiltroVendas } from "@/components/painel/filtros";
+import { AcoesRapidas, CartaoIdentidade, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
 import { BotaoLink } from "@/components/ui/botao";
-import { CabecalhoPagina, Cartao, Kpi, PilulaStats, Vazio } from "@/components/ui/cartao";
+import { CabecalhoPagina, Cartao, Estatistica, Vazio } from "@/components/ui/cartao";
 import { useTempoReal } from "@/hooks/useTempoReal";
+import { cx } from "@/lib/cx";
 import { useFormato } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
 import { rota, useRotaLoja } from "@/lib/rotas";
@@ -41,126 +26,139 @@ interface Props {
     serie: PontoSerie[];
     ultimas: Venda[];
     pendencias: Pendencia[];
+    saidasCategoria: { categoria: Opcao; total: number }[];
+    estoque: { id: number; nome: string; inicial: number; vendidos: number; restante: number }[];
     canais: Opcao[];
     pagamentos: Opcao[];
 }
 
 /** Recarregadas quando entra venda ou lançamento nesta barraquinha. */
-const PROPS_AO_VIVO = ["indicadores", "porTag", "ranking", "porPagamento", "serie", "ultimas", "pendencias"];
-
-const COR_CANAL_GRAFICO: Record<string, (typeof CORES)[number]> = { pre_venda: CORES[1], feira: CORES[0], pos_evento: CORES[2] };
-const COR_PAGAMENTO_GRAFICO: Record<string, (typeof CORES)[number]> = { dinheiro: CORES[2], pix: CORES[4], cartao: CORES[3] };
+const PROPS_AO_VIVO = ["indicadores", "porTag", "ranking", "porPagamento", "serie", "ultimas", "pendencias", "saidasCategoria", "estoque"];
 
 /** Painel da barraquinha. O admin vê o mesmo painel, em modo leitura. */
-export default function Painel({ versao, barraquinha, filtro, indicadores: i, porTag, ranking, porPagamento, serie, ultimas, pendencias, canais, pagamentos }: Props) {
+export default function Painel({ versao, barraquinha, filtro, indicadores: i, porTag, ranking, porPagamento, serie, ultimas, pendencias, saidasCategoria, estoque, canais, pagamentos }: Props) {
     const t = useT();
     const f = useFormato();
     const saudacao = useSaudacao();
     const rotaLoja = useRotaLoja();
     const { loja } = usePage().props;
-    const ticket = i.qtdVendas ? i.vendas / i.qtdVendas : 0;
-    const unidades = ranking.reduce((s, r) => s + r.quantidade, 0);
-    const podeVender = loja?.podeVender && !loja.encerrada;
+    const podeVender = Boolean(loja?.podeVender && !loja.encerrada);
     const aoVivo = useTempoReal({ url: rotaLoja("pulso"), versao, props: PROPS_AO_VIVO });
+    const ticket = i.qtdVendas ? i.vendas / i.qtdVendas : 0;
 
     return (
         <>
             <CabecalhoPagina
                 tituloAba={barraquinha.nome}
-                sobretitulo={`${f.dataLonga()} · ${loja?.feira ?? ""}`}
-                titulo={podeVender ? `${saudacao}, ${barraquinha.nome}!` : barraquinha.nome}
+                sobretitulo={`${podeVender ? `${saudacao}! · ` : ""}${f.dataLonga()} · ${loja?.feira ?? ""}`}
+                titulo={barraquinha.nome}
                 acoes={
                     <>
                         <AoVivo estado={aoVivo.estado} sincronizadoEm={aoVivo.sincronizadoEm} aoTentar={aoVivo.tentarAgora} />
-                        {loja?.podeVender && <BotaoLink href={rota("barraquinha.relatorios.index")} variante="secundario" icone={IconDownload}>{t("Exportar")}</BotaoLink>}
-                        {podeVender && <BotaoLink href={rotaLoja("vendas.create")} icone={IconShoppingCart}>{t("Nova venda")}</BotaoLink>}
+                        <BotaoFiltros inicial={filtro} canais={canais} pagamentos={pagamentos} />
+                        {loja?.podeVender && <BotaoLink href={rota("barraquinha.relatorios.index")} variante="superficie" icone={IconDownload}>{t("Exportar")}</BotaoLink>}
                     </>
                 }
-            >
-                <PilulaStats
-                    itens={[
-                        { icone: IconCoins, valor: f.moeda(i.vendas), rotulo: t("em vendas") },
-                        { icone: IconReceipt, valor: f.numero(i.qtdVendas), rotulo: t("vendas") },
-                        { icone: IconTrendingUp, valor: f.moeda(ticket), rotulo: t("ticket médio") },
-                        { icone: IconTag, valor: f.numero(unidades), rotulo: t("itens vendidos") },
-                    ]}
-                />
-            </CabecalhoPagina>
+            />
 
-            <Cartao className="mb-5" corpo="p-4">
-                <FiltrosVendas inicial={filtro} canais={canais} pagamentos={pagamentos} />
-            </Cartao>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_22rem]">
+                <div className="grid min-w-0 content-start gap-3">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem]">
+                        <VendasPorDia serie={serie} canais={canais} filtro={filtro} total={i.vendas} rodape={t(":n vendas · ticket médio :t", { n: f.numero(i.qtdVendas), t: f.moeda(ticket) })} />
+                        <Cartao corpo="p-5" className="justify-center">
+                            <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
+                                <Estatistica rotulo={t("Outras entradas")} valor={f.moeda(i.outrasEntradas)} rodape={t("Patrocínio, rifa, aportes")} />
+                                <Estatistica rotulo={t("Total de saídas")} valor={f.moeda(i.saidas)} rodape={t("Custos, despesas e investimento")} />
+                                <Estatistica rotulo={t("Saldo de caixa")} valor={f.moeda(i.saldo)} tom={i.saldo < 0 ? "negativo" : "neutro"} rodape={t("Entradas menos todas as saídas")} />
+                            </div>
+                        </Cartao>
+                    </div>
 
-            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-                <Kpi destaque className="sm:col-span-2 2xl:col-span-1" rotulo={t("Entrada de vendas")} valor={f.moeda(i.vendas)} icone={IconCoins} detalhe={t(":n vendas", { n: f.numero(i.qtdVendas) })} grafico={<Sparkline valores={serie.map((p) => p.total)} cor={CORES[1]} />} />
-                <Kpi rotulo={t("Outras entradas")} valor={f.moeda(i.outrasEntradas)} icone={IconArrowDownRight} detalhe={t("Patrocínio, rifa, aportes")} />
-                <Kpi rotulo={t("Saídas")} valor={f.moeda(i.saidas)} icone={IconArrowUpRight} detalhe={t("Custos, despesas e investimento")} />
-                <Kpi rotulo={t("Saldo de caixa")} valor={f.moeda(i.saldo)} icone={IconPigMoney} tom={i.saldo < 0 ? "negativo" : "positivo"} detalhe={t("Entradas menos todas as saídas")} />
-                <Kpi rotulo={t("Resultado operacional")} valor={f.moeda(i.resultado)} icone={IconTrendingUp} tom={i.resultado < 0 ? "negativo" : "positivo"} detalhe={t("Margem :m", { m: f.percentual(i.margem) })} />
-            </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                        {i.meta !== null && (
+                            <ProgressoMeta
+                                titulo={t("Meta de vendas")}
+                                descricao={t(":p da meta", { p: f.percentual(i.progressoMeta) })}
+                                atual={i.vendas}
+                                meta={i.meta}
+                                formatar={f.moeda}
+                            />
+                        )}
+                        <div className={cx("grid", i.meta === null && "md:col-span-2")}>
+                            <ProximoPasso
+                                pendencias={pendencias}
+                                padrao={
+                                    podeVender
+                                        ? { titulo: t("Tudo pronto para vender"), texto: t("Cada venda entra no painel na hora; lance também os custos para o resultado ficar real."), href: rotaLoja("vendas.create"), rotulo: t("Abrir PDV") }
+                                        : { titulo: t("Tudo em dia"), texto: t("Itens, combos e lançamentos conferidos."), href: rotaLoja("vendas.index"), rotulo: t("Ver vendas") }
+                                }
+                            />
+                        </div>
+                    </div>
 
-            {i.meta !== null && (
-                <Cartao className="mb-5" corpo="px-4 pb-4" titulo={t("Meta de vendas")} icone={IconTarget} acoes={<span className="text-ui font-semibold tabular-nums text-tinta">{f.percentual(i.progressoMeta)}</span>}>
-                    <Progress.Root value={Math.min(100, Math.round((i.progressoMeta ?? 0) * 100))} max={100} aria-label={t("Meta de vendas")} className="h-2.5 overflow-hidden rounded-full bg-superficie-suave">
-                        <Progress.Indicator className="h-full rounded-full bg-secundaria transition-[width] duration-700" style={{ width: `${Math.min(100, (i.progressoMeta ?? 0) * 100)}%` }} />
-                    </Progress.Root>
-                    <p className="mt-2 text-rotulo text-tinta-suave">{t(":vendido de :meta", { vendido: f.moeda(i.vendas), meta: f.moeda(i.meta) })}</p>
-                </Cartao>
-            )}
+                    <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                        <SaidasPorCategoria itens={saidasCategoria} total={i.saidas} />
+                        <SaudeFinanceira indicadores={i} />
+                        {estoque.length > 0 ? (
+                            <Cartao className="md:col-span-2 2xl:col-span-1" titulo={t("Estoque")} descricao={t("Itens mais perto de acabar")}>
+                                <BarrasHorizontais
+                                    formatarValor={(v) => t(":n un.", { n: f.numero(v) })}
+                                    dados={estoque.map((e) => ({
+                                        rotulo: e.nome,
+                                        valor: e.vendidos,
+                                        maximo: e.inicial,
+                                        detalhe: e.restante <= 0 ? t("· esgotado") : t("· restam :n", { n: f.numero(e.restante) }),
+                                        cor: e.restante <= 0 ? "bg-vermelho" : e.restante <= e.inicial * 0.2 ? "bg-secundaria" : "bg-primaria",
+                                    }))}
+                                />
+                            </Cartao>
+                        ) : (
+                            <Cartao className="md:col-span-2 2xl:col-span-1" titulo={t("Itens mais vendidos")} descricao={t("Inclui os itens vendidos dentro de combos.")}>
+                                {ranking.length ? (
+                                    <BarrasHorizontais
+                                        formatarValor={(v) => t(":n un.", { n: f.numero(v) })}
+                                        dados={ranking.slice(0, 6).map((r, n) => ({ rotulo: r.item_nome, valor: r.quantidade, cor: n === 0 ? "bg-secundaria" : "bg-primaria" }))}
+                                    />
+                                ) : <Vazio titulo={t("Nenhuma venda no período.")} />}
+                            </Cartao>
+                        )}
+                    </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                <Cartao className="xl:col-span-8" titulo={t("Vendas por dia")} icone={IconChartLine}>
-                    {serie.length ? (
-                        <GraficoArea
-                            rotulo={t("Vendas por dia")}
-                            pontos={serie.map((p) => ({ rotulo: f.diaMes(p.dia), valor: p.total, detalhe: t(":n vendas", { n: p.qtd }) }))}
-                            formatarValor={f.moeda}
-                            formatarEixo={f.moedaCompacta}
-                            altura={260}
+                    <div className="grid gap-3 md:grid-cols-2">
+                        <Cartao titulo={t("Vendas por tag")} descricao={t("Quantas e quanto em Comum e em cada Combo N.")} corpo="">
+                            <TabelaTags tags={porTag} />
+                        </Cartao>
+                        <PorPagamento porPagamento={porPagamento} />
+                    </div>
+                </div>
+
+                <aside className="grid min-w-0 content-start gap-3 md:grid-cols-2 xl:grid-cols-1">
+                    <Cartao titulo={t("Minha barraquinha")} descricao={t("Ações rápidas")}>
+                        <CartaoIdentidade
+                            rotulo={barraquinha.status.label}
+                            titulo={barraquinha.nome}
+                            linhas={[loja?.feira ?? "", t("Vaga :n", { n: barraquinha.posicao })]}
+                            rodape={<><span>UNAERP · PEG</span><span className="font-semibold">{f.moedaCompacta(i.vendas)}</span></>}
                         />
-                    ) : <Vazio icone={IconChartLine} titulo={t("Nenhuma venda no período.")} />}
-                </Cartao>
+                        <div className="mt-4">
+                            <AcoesRapidas
+                                acoes={[
+                                    ...(podeVender ? [{ rotulo: t("Vender"), icone: IconShoppingCart, href: rotaLoja("vendas.create"), destaque: true }] : []),
+                                    ...(loja?.encerrada ? [] : [
+                                        { rotulo: t("Entrada"), icone: IconArrowDownRight, href: rotaLoja("lancamentos.create", { tipo: "entrada" }) },
+                                        { rotulo: t("Saída"), icone: IconArrowUpRight, href: rotaLoja("lancamentos.create", { tipo: "saida" }) },
+                                    ]),
+                                    { rotulo: t("Itens"), icone: IconTag, href: rotaLoja("itens.index") },
+                                    { rotulo: t("Combos"), icone: IconStack2, href: rotaLoja("combos.index") },
+                                ].slice(0, 5)}
+                            />
+                        </div>
+                    </Cartao>
 
-                <Cartao className="xl:col-span-4" titulo={t("Vendas por canal")} icone={IconChartDonut}>
-                    <GraficoRosca
-                        rotulo={t("Vendas por canal")}
-                        fatias={i.porCanal.map((p) => ({ rotulo: p.canal.label, valor: p.total, cor: COR_CANAL_GRAFICO[p.canal.valor] ?? CORES[5] }))}
-                        formatarValor={f.moeda}
-                        centro={{ valor: f.moedaCompacta(i.vendas), rotulo: t("total") }}
-                    />
-                </Cartao>
-
-                <Cartao className="xl:col-span-4" titulo={t("Últimas vendas")} icone={IconCalendarEvent} corpo="">
-                    <FaixaDias serie={serie} filtro={filtro} />
-                    <ListaVendas vendas={ultimas} hrefVenda={(v) => rotaLoja("vendas.show", { venda: v.id })} />
-                </Cartao>
-
-                <Cartao className="xl:col-span-4" titulo={t("Pendências")} icone={IconNotes} corpo="">
-                    <ListaPendencias pendencias={pendencias} />
-                </Cartao>
-
-                <Cartao className="xl:col-span-4" titulo={t("Itens mais vendidos")} icone={IconTrophy} descricao={t("Inclui os itens vendidos dentro de combos.")}>
-                    {ranking.length ? (
-                        <BarrasHorizontais
-                            formatarValor={(v) => t(":n un.", { n: f.numero(v) })}
-                            dados={ranking.map((r, n) => ({ rotulo: r.item_nome, valor: r.quantidade, cor: n === 0 ? "bg-secundaria" : "bg-primaria" }))}
-                        />
-                    ) : <Vazio titulo={t("Nenhuma venda no período.")} />}
-                </Cartao>
-
-                <Cartao className="xl:col-span-6" titulo={t("Vendas por tag")} icone={IconTag} descricao={t("Quantas e quanto em Comum e em cada Combo N.")} corpo="">
-                    <TabelaTags tags={porTag} />
-                </Cartao>
-
-                <Cartao className="xl:col-span-6" titulo={t("Por forma de pagamento")} icone={IconChartDonut}>
-                    <GraficoRosca
-                        rotulo={t("Por forma de pagamento")}
-                        fatias={porPagamento.map((p) => ({ rotulo: p.pagamento.label, valor: p.total, cor: COR_PAGAMENTO_GRAFICO[p.pagamento.valor] ?? CORES[5] }))}
-                        formatarValor={f.moeda}
-                        centro={{ valor: f.numero(i.qtdVendas), rotulo: t("vendas") }}
-                        tamanho={140}
-                    />
-                </Cartao>
+                    <Cartao titulo={t("Últimas vendas")} descricao={t("Atualiza sozinho a cada venda")} acoes={<BotaoLink href={rotaLoja("vendas.index")} variante="secundario" tamanho="sm">{t("Ver todas")}</BotaoLink>} corpo="">
+                        <ListaVendas vendas={ultimas} hrefVenda={(v) => rotaLoja("vendas.show", { venda: v.id })} />
+                    </Cartao>
+                </aside>
             </div>
         </>
     );

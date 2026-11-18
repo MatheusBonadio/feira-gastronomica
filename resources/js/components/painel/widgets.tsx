@@ -1,74 +1,26 @@
-import { Link, router } from "@inertiajs/react";
-import { IconCheck, IconChevronRight } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { Link } from "@inertiajs/react";
+import { IconCheck, IconChevronRight, IconReceipt } from "@tabler/icons-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Dica } from "@/components/ui/dica";
-import { TRACO } from "@/components/ui/icone";
-import { Chip, ChipTag, COR_CANAL } from "@/components/ui/marcadores";
-import { isoDia, paraData, useFormato } from "@/lib/formato";
+import { TRACO, type Icone } from "@/components/ui/icone";
+import { Avatar, ChipTag, TextoStatus } from "@/components/ui/marcadores";
+import { useFormato } from "@/lib/formato";
 import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
-import { semVazios } from "@/lib/rotas";
 import type { Venda } from "@/types/dominio";
 
 export interface PontoSerie {
     dia: string;
     total: number;
     qtd: number;
+    porCanal?: Record<string, number>;
 }
 
-/** Saudação conforme o horário (como "Good Evening! John,"). */
+/** Saudação conforme o horário. */
 export function useSaudacao() {
     const t = useT();
     const hora = new Date().getHours();
     return hora >= 5 && hora < 12 ? t("Bom dia") : hora >= 12 && hora < 18 ? t("Boa tarde") : t("Boa noite");
-}
-
-/**
- * Faixa de 7 dias (como a "Schedule" da referência). Mostra os últimos dias
- * com movimento; clicar filtra o painel por aquele dia, clicar de novo limpa.
- */
-export function FaixaDias({ serie, filtro }: { serie: PontoSerie[]; filtro: Record<string, string | undefined> }) {
-    const { diaSemana, diaMes } = useFormato();
-    const t = useT();
-    const ultimo = serie.length ? paraData(serie[serie.length - 1].dia) : new Date();
-    const dias = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(ultimo);
-        d.setDate(d.getDate() - (6 - i));
-        return isoDia(d);
-    });
-    const porDia = new Map(serie.map((p) => [p.dia, p]));
-    const selecionado = filtro.de && filtro.de === filtro.ate ? filtro.de : null;
-
-    const escolher = (dia: string) => {
-        const proximo = selecionado === dia ? { ...filtro, de: undefined, ate: undefined } : { ...filtro, de: dia, ate: dia };
-        router.get(window.location.pathname, semVazios(proximo), { preserveScroll: true, preserveState: true });
-    };
-
-    return (
-        <div role="group" aria-label={t("Dias")} className="grid grid-cols-7 gap-1 px-3 pb-3">
-            {dias.map((dia) => {
-                const ativo = dia === selecionado;
-                const ponto = porDia.get(dia);
-                return (
-                    <Dica key={dia} rotulo={ponto ? t(":n vendas", { n: ponto.qtd }) : t("Sem vendas")}>
-                    <button
-                        type="button"
-                        aria-pressed={ativo}
-                        onClick={() => escolher(dia)}
-                        className={cx(
-                            "flex flex-col items-center gap-0.5 rounded-lg py-1.5 transition-colors",
-                            ativo ? "bg-secundaria text-secundaria-tinta" : "hover:bg-superficie-hover",
-                        )}
-                    >
-                        <span className={cx("text-micro capitalize", ativo ? "text-secundaria-tinta" : "text-tinta-suave")}>{diaSemana(dia)}</span>
-                        <span className="text-corpo font-semibold tabular-nums">{diaMes(dia).slice(0, 2)}</span>
-                        <span className={cx("size-1 rounded-full", ponto ? (ativo ? "bg-secundaria-tinta" : "bg-primaria") : "bg-transparent")} />
-                    </button>
-                    </Dica>
-                );
-            })}
-        </div>
-    );
 }
 
 /**
@@ -98,41 +50,53 @@ function useVendasNovas(vendas: Venda[]) {
     return novas;
 }
 
-/** Últimas vendas com a barra de cor do canal (como os compromissos da "Schedule"). */
+/** Fundo do ícone da venda pela cor do canal. */
+const ICONE_CANAL: Record<string, string> = {
+    pre_venda: "bg-secundaria-suave text-secundaria-texto",
+    feira: "bg-primaria-suave text-primaria-texto",
+    pos_evento: "bg-verde-suave text-verde-tinta",
+};
+
+/** Últimas vendas no formato de extrato (o "Transaction history" da referência). */
 export function ListaVendas({ vendas, hrefVenda, comBarraquinha }: { vendas: Venda[]; hrefVenda?: (v: Venda) => string; comBarraquinha?: boolean }) {
-    const { moeda, hora, data } = useFormato();
+    const { moeda, hora, diaMes } = useFormato();
     const t = useT();
     const novas = useVendasNovas(vendas);
 
     if (vendas.length === 0) {
-        return <p className="px-4 pb-4 text-corpo text-tinta-suave">{t("Nenhuma venda no período.")}</p>;
+        return <p className="px-5 pb-5 text-corpo text-tinta-suave">{t("Nenhuma venda no período.")}</p>;
     }
 
     return (
-        <ul className="flex flex-col">
+        <ul className="flex flex-col px-2 pb-2">
             {vendas.map((v) => {
+                const titulo = comBarraquinha && v.barraquinha ? v.barraquinha : v.resumo;
                 const conteudo = (
                     <>
-                        <span className={cx("w-1 self-stretch rounded-full", COR_CANAL[v.canal.valor] ?? "bg-linha-forte")} aria-hidden />
-                        <span className="min-w-0 flex-1">
-                            <span className="flex items-center gap-2">
-                                <span className={cx("truncate text-corpo font-medium", v.cancelada ? "text-tinta-fraca line-through" : "text-tinta")}>
-                                    {comBarraquinha && v.barraquinha ? v.barraquinha : v.resumo}
-                                </span>
-                                {v.cancelada && <Chip tom="vermelho">{v.status.label}</Chip>}
+                        {comBarraquinha && v.barraquinha ? (
+                            <Avatar nome={v.barraquinha} forma="quadrada" tamanho="lg" />
+                        ) : (
+                            <span className={cx("flex size-10 shrink-0 items-center justify-center rounded-xl", ICONE_CANAL[v.canal.valor] ?? "bg-superficie-suave text-tinta-media")} aria-hidden>
+                                <IconReceipt size={18} stroke={TRACO} />
                             </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                            <span className={cx("block truncate text-corpo font-semibold", v.cancelada ? "text-tinta-suave line-through" : "text-tinta")}>{titulo}</span>
                             <span className="block truncate text-micro text-tinta-suave">
-                                #{v.numero} · {data(v.dataHora)} {hora(v.dataHora)} · {comBarraquinha ? v.resumo : v.pagamento.label}
+                                {diaMes(v.dataHora)} · {hora(v.dataHora)} · {comBarraquinha ? v.resumo : v.pagamento.label}
                             </span>
                         </span>
-                        <span className="text-corpo font-semibold tabular-nums text-tinta">{moeda(v.total)}</span>
-                        {hrefVenda && <IconChevronRight size={16} stroke={TRACO} className="text-tinta-fraca" aria-hidden />}
+                        <span className="flex shrink-0 flex-col items-end">
+                            <span className={cx("text-corpo font-semibold tabular-nums", v.cancelada ? "text-tinta-suave line-through" : "text-tinta")}>+{moeda(v.total)}</span>
+                            <TextoStatus opcao={v.status} />
+                        </span>
+                        {hrefVenda && <IconChevronRight size={16} stroke={TRACO} className="shrink-0 text-tinta-fraca rtl:rotate-180" aria-hidden />}
                     </>
                 );
-                const classes = cx("flex items-center gap-3 border-t border-linha px-4 py-2.5", novas.has(v.id) && "animate-chegar");
+                const classes = cx("flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors", novas.has(v.id) && "animate-chegar");
                 return (
                     <li key={v.id}>
-                        {hrefVenda ? <Link href={hrefVenda(v)} className={cx(classes, "hover:bg-superficie-hover")}>{conteudo}</Link> : <div className={classes}>{conteudo}</div>}
+                        {hrefVenda ? <Link href={hrefVenda(v)} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link> : <div className={classes}>{conteudo}</div>}
                     </li>
                 );
             })}
@@ -147,8 +111,8 @@ export interface Pendencia {
     href: string | null;
 }
 
-/** Checklist (como as "Notes"): resolvido fica marcado e riscado. */
-export function ListaPendencias({ pendencias }: { pendencias: Pendencia[] }) {
+/** Checklist: resolvido fica marcado (amarelo) e riscado. */
+export function ListaPendencias({ pendencias, aoNavegar }: { pendencias: Pendencia[]; aoNavegar?: () => void }) {
     return (
         <ul className="flex flex-col">
             {pendencias.map((p) => {
@@ -164,15 +128,19 @@ export function ListaPendencias({ pendencias }: { pendencias: Pendencia[] }) {
                             {p.feito && <IconCheck size={12} stroke={2.5} />}
                         </span>
                         <span className="min-w-0">
-                            <span className={cx("block text-corpo font-medium", p.feito ? "text-tinta-suave line-through" : "text-tinta")}>{p.titulo}</span>
+                            <span className={cx("block text-corpo font-semibold", p.feito ? "text-tinta-suave line-through" : "text-tinta")}>{p.titulo}</span>
                             <span className="block text-rotulo text-tinta-suave">{p.descricao}</span>
                         </span>
                     </>
                 );
-                const classes = "flex items-start gap-3 border-t border-linha px-4 py-3";
+                const classes = "flex items-start gap-3 rounded-xl px-3 py-2.5";
                 return (
                     <li key={p.titulo}>
-                        {p.href ? <Link href={p.href} className={cx(classes, "hover:bg-superficie-hover")}>{conteudo}</Link> : <div className={classes}>{conteudo}</div>}
+                        {p.href ? (
+                            <Link href={p.href} onClick={aoNavegar} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link>
+                        ) : (
+                            <div className={classes}>{conteudo}</div>
+                        )}
                     </li>
                 );
             })}
@@ -185,18 +153,126 @@ export function TabelaTags({ tags }: { tags: { rotulo: string; tag: string; quan
     const t = useT();
     const { numero, moeda } = useFormato();
 
-    if (tags.length === 0) return <p className="px-4 pb-4 text-corpo text-tinta-suave">{t("Nenhuma venda no período.")}</p>;
+    if (tags.length === 0) return <p className="px-5 pb-5 text-corpo text-tinta-suave">{t("Nenhuma venda no período.")}</p>;
 
     return (
-        <ul className="flex flex-col">
+        <ul className="flex flex-col px-2 pb-2">
             {tags.map((tag) => (
-                <li key={tag.rotulo} className="flex items-center gap-3 border-t border-linha px-4 py-2.5">
+                <li key={tag.rotulo} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
                     <ChipTag rotulo={tag.rotulo} combo={tag.tag === "combo"} />
                     <span className="flex-1 text-rotulo text-tinta-suave">{t(":n un.", { n: numero(tag.quantidade) })}</span>
                     {tag.desconto > 0 && <span className="text-rotulo tabular-nums text-positivo">−{moeda(tag.desconto)}</span>}
-                    <span className="w-28 text-end text-corpo font-semibold tabular-nums text-tinta">{moeda(tag.total)}</span>
+                    <span className="w-24 text-end text-corpo font-semibold tabular-nums text-tinta">{moeda(tag.total)}</span>
                 </li>
             ))}
         </ul>
+    );
+}
+
+/**
+ * Cartão de identidade (o "My card" da referência): a feira em uso ou a
+ * barraquinha, em azul UNAERP com chip amarelo e hachura.
+ */
+export function CartaoIdentidade({ rotulo, titulo, linhas, rodape, ativo = true, href, className }: {
+    rotulo: string;
+    titulo: string;
+    linhas: ReactNode[];
+    rodape?: ReactNode;
+    ativo?: boolean;
+    href?: string;
+    className?: string;
+}) {
+    const corpo = (
+        <>
+            <div className="hachura pointer-events-none absolute inset-y-0 inset-e-0 w-1/2 opacity-60" aria-hidden />
+            <div className="pointer-events-none absolute -inset-e-10 -top-10 size-36 rounded-full bg-secundaria/15" aria-hidden />
+            <div className="relative flex items-start justify-between gap-3">
+                <span className="text-micro font-semibold tracking-wide uppercase opacity-80">{rotulo}</span>
+                <span className="flex size-7 items-center justify-center rounded-md bg-primaria-tinta/15" aria-hidden>
+                    <span className="size-2.5 rounded-sm bg-secundaria" />
+                </span>
+            </div>
+            <span className="relative mt-3 block h-6 w-8 rounded-md bg-secundaria/90" aria-hidden />
+            <p className="relative mt-3 truncate text-titulo font-bold">{titulo}</p>
+            <div className="relative mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-micro opacity-85">
+                {linhas.map((l, i) => <span key={i}>{l}</span>)}
+            </div>
+            {rodape && <div className="relative mt-3 flex items-center justify-between text-micro opacity-85">{rodape}</div>}
+        </>
+    );
+    const classes = cx(
+        "relative block min-w-0 overflow-hidden rounded-2xl p-4 transition-colors",
+        ativo ? "bg-primaria text-primaria-tinta" : "bg-superficie-ativa text-tinta-media",
+        className,
+    );
+    return href ? <Link href={href} className={cx(classes, "outline-none focus-visible:ring-2 focus-visible:ring-foco")}>{corpo}</Link> : <div className={classes}>{corpo}</div>;
+}
+
+/** Ações rápidas em botões quadrados com rótulo embaixo ("Top up", "Send"...). */
+export function AcoesRapidas({ acoes }: { acoes: { rotulo: string; icone: Icone; href?: string; aoClicar?: () => void; destaque?: boolean }[] }) {
+    return (
+        <ul className="grid grid-cols-5 gap-2">
+            {acoes.map(({ rotulo, icone: I, href, aoClicar, destaque }) => {
+                const conteudo = (
+                    <>
+                        <span className={cx("flex size-11 items-center justify-center rounded-xl border transition-colors", destaque ? "border-primaria bg-primaria text-primaria-tinta" : "border-linha bg-superficie text-tinta-media group-hover:border-linha-forte group-hover:text-tinta")}>
+                            <I size={18} stroke={TRACO} aria-hidden />
+                        </span>
+                        <span className="w-full truncate text-center text-micro font-semibold text-tinta-media">{rotulo}</span>
+                    </>
+                );
+                const classes = "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-foco";
+                return (
+                    <li key={rotulo} className="min-w-0">
+                        {href ? <Link href={href} className={classes}>{conteudo}</Link> : <button type="button" onClick={aoClicar} className={cx(classes, "w-full")}>{conteudo}</button>}
+                    </li>
+                );
+            })}
+        </ul>
+    );
+}
+
+/** Atalhos em avatares (o "Quick payment" da referência): barraquinhas da feira. */
+export function AcessoRapido({ itens }: { itens: { id: number; nome: string; href: string; apagado?: boolean }[] }) {
+    return (
+        <ul className="rolagem-fina flex gap-1 overflow-x-auto pb-1">
+            {itens.map((i) => (
+                <li key={i.id} className="shrink-0">
+                    <Dica rotulo={i.nome}>
+                        <Link href={i.href} className={cx("flex w-14 flex-col items-center gap-1 rounded-xl py-1 outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco", i.apagado && "opacity-50")}>
+                            <Avatar nome={i.nome} tamanho="lg" forma="quadrada" />
+                            <span className="w-full truncate px-0.5 text-center text-micro font-medium text-tinta-media">{i.nome.split(" ")[0]}</span>
+                        </Link>
+                    </Dica>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+/**
+ * Dica com chamada para ação e bloquinhos decorativos (o "Optimize your
+ * budget" da referência). Usada para o próximo passo pendente.
+ */
+export function CartaoDica({ titulo, texto, acao }: { titulo: string; texto: string; acao?: ReactNode }) {
+    const blocos = [
+        "col-start-3 row-start-1 bg-secundaria",
+        "col-start-2 row-start-2 bg-primaria",
+        "col-start-3 row-start-2 bg-primaria/60",
+        "col-start-1 row-start-3 bg-secundaria/60",
+        "col-start-2 row-start-3 bg-primaria",
+        "col-start-3 row-start-3 bg-secundaria",
+    ];
+    return (
+        <section className="relative flex min-w-0 overflow-hidden rounded-cartao border border-cartao-borda bg-superficie p-5">
+            <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-1.5 pe-24 sm:pe-28">
+                <h2 className="text-titulo font-semibold text-tinta">{titulo}</h2>
+                <p className="text-corpo text-tinta-suave">{texto}</p>
+                {acao && <div className="mt-auto pt-2">{acao}</div>}
+            </div>
+            <div className="pointer-events-none absolute inset-e-5 bottom-5 grid grid-cols-3 grid-rows-3 gap-1" aria-hidden>
+                {blocos.map((b) => <span key={b} className={cx("hachura size-6 rounded-md sm:size-7", b)} />)}
+            </div>
+        </section>
     );
 }

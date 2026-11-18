@@ -2,7 +2,9 @@
 
 namespace App\Services\Financeiro;
 
+use App\Enums\Canal;
 use App\Enums\LancamentoCategoria;
+use App\Enums\LancamentoTipo;
 use App\Enums\VendaStatus;
 use App\Models\Barraquinha;
 use App\Models\Feira;
@@ -126,9 +128,9 @@ class IndicadoresService
     }
 
     /**
-     * Vendas por dia, para os gráficos e a faixa de dias do painel.
+     * Vendas por dia, com a quebra por canal (barras empilhadas do painel).
      *
-     * @return Collection<int, array{dia: string, total: float, qtd: int}>
+     * @return Collection<int, array{dia: string, total: float, qtd: int, porCanal: array<string, float>}>
      */
     public function serieDiaria(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
     {
@@ -136,13 +138,44 @@ class IndicadoresService
             return collect();
         }
 
+        $zerado = array_fill_keys(array_map(fn (Canal $c) => $c->value, Canal::cases()), 0.0);
+
         return $filtro->aplicarEmVendas(Venda::withoutGlobalScopes()->concluidas()->whereIn('barraquinha_id', $barraquinhaIds))
-            ->selectRaw('DATE(data_hora) as dia, SUM(total) as total, COUNT(*) as qtd')
-            ->groupByRaw('DATE(data_hora)')
+            ->selectRaw('DATE(data_hora) as dia, canal, SUM(total) as total, COUNT(*) as qtd')
+            ->groupByRaw('DATE(data_hora), canal')
             ->orderBy('dia')
             ->toBase()
             ->get()
-            ->map(fn ($l) => ['dia' => substr((string) $l->dia, 0, 10), 'total' => (float) $l->total, 'qtd' => (int) $l->qtd])
+            ->groupBy(fn ($l) => substr((string) $l->dia, 0, 10))
+            ->map(function (Collection $linhas, string $dia) use ($zerado) {
+                $porCanal = $zerado;
+                foreach ($linhas as $l) {
+                    $porCanal[(string) $l->canal] = (float) $l->total;
+                }
+
+                return ['dia' => $dia, 'total' => array_sum($porCanal), 'qtd' => (int) $linhas->sum('qtd'), 'porCanal' => $porCanal];
+            })
+            ->values();
+    }
+
+    /**
+     * Saídas por categoria (custos, despesas e investimento), da maior para a menor.
+     *
+     * @return Collection<int, array{categoria: LancamentoCategoria, total: float}>
+     */
+    public function saidasPorCategoria(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
+    {
+        if (! $barraquinhaIds) {
+            return collect();
+        }
+
+        return $filtro->aplicarEmLancamentos(Lancamento::withoutGlobalScope(\App\Models\Scopes\BarraquinhaScope::class)->whereIn('barraquinha_id', $barraquinhaIds))
+            ->where('tipo', LancamentoTipo::Saida->value)
+            ->selectRaw('categoria, SUM(valor) as total')
+            ->groupBy('categoria')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($l) => ['categoria' => $l->categoria, 'total' => (float) $l->total])
             ->values();
     }
 
