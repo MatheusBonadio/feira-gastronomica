@@ -68,6 +68,9 @@ class PainelController extends Controller
             'serie' => fn () => $indicadores->serieDiaria($ids, $filtro),
             'ultimas' => fn () => $indicadores->ultimasVendas($ids, $filtro)->map(fn (Venda $v) => Apresentacao::venda($v)),
             'pendencias' => fn () => $feira ? $pendencias->daFeira($feira, $porBarraquinha()) : [],
+            'saidasCategoria' => fn () => $this->saidasCategoria($indicadores, $ids, $filtro),
+            // Mesma medida da edição anterior, para as variações (só sem filtro de datas).
+            'anterior' => fn () => $this->edicaoAnterior($feira, $filtro, $indicadores),
             'ordem' => $ordem,
             'direcao' => $direcao,
             'canais' => Apresentacao::opcoes(Canal::cases()),
@@ -88,6 +91,41 @@ class PainelController extends Controller
     private function versao(PulsoService $pulso, ?Feira $feira, array $ids): string
     {
         return $pulso->versao($ids, $feira ? $feira->id.'|'.$pulso->versaoBarraquinhas($feira->id) : null);
+    }
+
+    /** Pendências da feira em uso, para o sino da topbar. */
+    public function pendencias(IndicadoresService $indicadores, PendenciasService $pendencias): JsonResponse
+    {
+        $feira = FeiraAtual::obter();
+        if (! $feira) {
+            return response()->json(['pendencias' => []]);
+        }
+
+        return response()->json(['pendencias' => $pendencias->daFeira($feira, $indicadores->porBarraquinha($feira->barraquinhas()->get()))]);
+    }
+
+    /** @return list<array{categoria: array, total: float}> */
+    public static function saidasCategoria(IndicadoresService $indicadores, array $ids, Filtro $filtro): array
+    {
+        return $indicadores->saidasPorCategoria($ids, $filtro)
+            ->map(fn ($l) => ['categoria' => Apresentacao::enum($l['categoria']), 'total' => $l['total']])
+            ->all();
+    }
+
+    private function edicaoAnterior(?Feira $feira, Filtro $filtro, IndicadoresService $indicadores): ?array
+    {
+        if (! $feira || $filtro->de || $filtro->ate) {
+            return null;
+        }
+
+        $anterior = Feira::query()->where('data_inicio', '<', $feira->data_inicio)->orderByDesc('data_inicio')->first();
+        if (! $anterior) {
+            return null;
+        }
+
+        $total = $indicadores->consolidar($indicadores->porBarraquinha($anterior->barraquinhas()->get(), $filtro));
+
+        return ['nome' => $anterior->nome] + Apresentacao::indicadores($total);
     }
 
     public function compararFeiras(IndicadoresService $indicadores): Response

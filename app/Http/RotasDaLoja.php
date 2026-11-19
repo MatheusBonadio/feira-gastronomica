@@ -17,6 +17,10 @@ class RotasDaLoja
         Route::get('/', [Loja\PainelController::class, 'index'])->name('painel');
         // Assinatura do estado do painel para a atualização em tempo real.
         Route::get('pulso', [Loja\PainelController::class, 'pulso'])->name('pulso');
+        if (! $admin) {
+            // Sino da topbar (o admin vê as pendências da feira inteira).
+            Route::get('pendencias', [Loja\PainelController::class, 'pendencias'])->name('pendencias');
+        }
 
         Route::resource('itens', Loja\ItemController::class)->except('show')->parameters(['itens' => 'item']);
         Route::resource('combos', Loja\ComboController::class)->except('show');

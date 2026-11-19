@@ -7,6 +7,7 @@ use App\Enums\FormaPagamento;
 use App\Http\Apresentacao;
 use App\Http\Controllers\Controller;
 use App\Models\Barraquinha;
+use App\Models\Item;
 use App\Models\Venda;
 use App\Services\Financeiro\Filtro;
 use App\Services\Financeiro\IndicadoresService;
@@ -46,9 +47,43 @@ class PainelController extends Controller
             'serie' => fn () => $indicadores->serieDiaria($ids, $filtro),
             'ultimas' => fn () => $indicadores->ultimasVendas($ids, $filtro)->map(fn (Venda $v) => Apresentacao::venda($v)),
             'pendencias' => fn () => $pendencias->daBarraquinha($barraquinha),
+            'saidasCategoria' => fn () => \App\Http\Controllers\Admin\PainelController::saidasCategoria($indicadores, $ids, $filtro),
+            'estoque' => fn () => $this->estoque($barraquinha, $indicadores),
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(FormaPagamento::cases()),
         ]);
+    }
+
+    /** Pendências da barraquinha, para o sino da topbar. */
+    public function pendencias(Loja $loja, PendenciasService $pendencias): JsonResponse
+    {
+        return response()->json(['pendencias' => $pendencias->daBarraquinha($loja->barraquinha())]);
+    }
+
+    /**
+     * Itens com controle de estoque, os mais perto de acabar primeiro.
+     * O estoque considera todas as vendas concluídas (não segue o filtro).
+     */
+    private function estoque(Barraquinha $barraquinha, IndicadoresService $indicadores): array
+    {
+        $vendidos = $indicadores->rankingItens([$barraquinha->id], new Filtro, null)->pluck('quantidade', 'item_id');
+
+        return Item::withoutGlobalScopes()
+            ->where('barraquinha_id', $barraquinha->id)
+            ->where('ativo', true)
+            ->whereNotNull('estoque_inicial')
+            ->get()
+            ->map(fn (Item $item) => [
+                'id' => $item->id,
+                'nome' => $item->nome,
+                'inicial' => $item->estoque_inicial,
+                'vendidos' => (int) ($vendidos[$item->id] ?? 0),
+                'restante' => $item->estoqueRestante((int) ($vendidos[$item->id] ?? 0)),
+            ])
+            ->sortBy('restante')
+            ->take(6)
+            ->values()
+            ->all();
     }
 
     public function pulso(Loja $loja, PulsoService $pulso): JsonResponse

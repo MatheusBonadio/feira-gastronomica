@@ -14,7 +14,7 @@ conforme a _Especificação Funcional – App de Gestão da Feira Gastronômica_
 | ---------- | ------------------------------------------------------------------------------------ |
 | Back-end   | PHP 8.2+, Laravel 12, sessão nativa (sem JWT)                                        |
 | Front-end  | React 19 + TypeScript via Inertia.js v3 (monolito, sem API separada)                 |
-| UI         | Radix Primitives (acessibilidade) + Tailwind CSS v4 (tokens), ícones Tabler, fontes Inter e Fraunces (`DESIGN.md`) |
+| UI         | Radix Primitives (acessibilidade) + Tailwind CSS v4 (tokens), ícones Tabler, fonte Plus Jakarta Sans (`DESIGN.md`) |
 | Banco      | MySQL 8 ou MariaDB 10.4+, com RLS por views + triggers                               |
 | Relatórios | XLSX e CSV próprios, PDF com dompdf                                                  |
 | Testes     | PHPUnit 11 (SQLite em memória e MySQL/MariaDB com RLS)                               |
@@ -94,8 +94,8 @@ completude das traduções.
 Descrito em [`DESIGN.md`](DESIGN.md). Toda cor, fonte, raio e medida vem de
 `resources/js/styles/tokens.css`: azul-marinho UNAERP `#003087` como cor principal e
 amarelo `#ecdd12` como secundária (sempre com texto escuro). As telas usam só classes de
-token (`bg-superficie`, `text-tinta-suave`, `bg-primaria`); o modo escuro troca os valores
-pela classe `.dark`. Os PDFs leem as mesmas cores em hex (`App\Support\Tema`).
+token (`bg-superficie`, `text-tinta-suave`, `bg-primaria`); o modo escuro (claro, escuro ou
+o do sistema, escolhido na engrenagem do topo) troca os valores pela classe `.dark`. Os PDFs leem as mesmas cores em hex (`App\Support\Tema`).
 
 Todas as telas são responsivas de 360px a 1920px: no celular as tabelas viram cartões, os
 filtros se recolhem e a barraquinha ganha um botão flutuante de **Nova venda**.

@@ -30,6 +30,7 @@ Route::middleware(['auth', 'auth.session', 'acesso.ativo'])->group(function () {
         Route::prefix('admin')->name('admin.')->middleware('perfil:admin')->group(function () {
             Route::get('/', [Admin\PainelController::class, 'index'])->name('painel');
             Route::get('pulso', [Admin\PainelController::class, 'pulso'])->name('painel.pulso');
+            Route::get('pendencias', [Admin\PainelController::class, 'pendencias'])->name('pendencias');
             Route::get('comparar-feiras', [Admin\PainelController::class, 'compararFeiras'])->name('comparar-feiras');
 
             Route::resource('feiras', Admin\FeiraController::class)->except(['show', 'destroy']);
