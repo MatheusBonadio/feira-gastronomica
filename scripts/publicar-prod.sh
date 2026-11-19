@@ -74,7 +74,9 @@ rm -rf public/build
 cp -r "$RAIZ/public/build" public/build
 
 passo "Instalando o vendor de produção (composer install --no-dev)"
-composer install --no-dev --optimize-autoloader --no-interaction --no-progress --quiet
+# Versão fixa do pacote raiz: sem ela o composer grava o commit atual da prod em
+# vendor/composer/installed.php e toda execução vira um commit novo.
+COMPOSER_ROOT_VERSION=dev-master composer install --no-dev --optimize-autoloader --no-interaction --no-progress --quiet
 
 # 5. Nada sensível entra, mesmo sem .gitignore.
 git add -A
