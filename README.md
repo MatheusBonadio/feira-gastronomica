@@ -69,6 +69,39 @@ barraquinhas, autenticação (mensagem genérica, bloqueio após 5 tentativas, t
 combos, feiras, relatórios, indicadores contra o anexo de 2026, RLS no banco e a
 completude das traduções.
 
+## Deploy (branch prod + git ftp)
+
+O servidor não roda `composer` nem `npm`, então há duas branches:
+
+| Branch | Conteúdo | Uso |
+| --- | --- | --- |
+| `master` | Só código-fonte, com `.gitignore` (sem `vendor/` nem `public/build/`) | Desenvolvimento e commits do dia a dia |
+| `prod` | Código da master + `vendor/` de produção (sem dev) + `public/build/` compilado, **sem** o `.gitignore` | `git ftp push` |
+
+A `prod` não é editada à mão: o script a gera a partir do último commit da master, numa
+pasta irmã (`../unaerp-prod`, uma *worktree* do git), sem mexer no `vendor/` local.
+
+```bash
+# na master, com tudo commitado
+bash scripts/publicar-prod.sh            # atualiza a prod
+cd ../unaerp-prod && git ftp push        # envia (1ª vez: git ftp init, ou git ftp catchup)
+# ou tudo de uma vez:
+bash scripts/publicar-prod.sh --push
+```
+
+O que o script garante:
+
+- o `public/build/` sai do código commitado (`npm run build`) e o `vendor/` vem de
+  `composer install --no-dev --optimize-autoloader`;
+- a prod ganha o `.htaccess` da raiz (`deploy/raiz.htaccess`): o projeto sobe para o
+  `htdocs`, que é a raiz web, e todo pedido é reescrito para `public/`, então `.env`,
+  `vendor/` e `storage/` nunca são servidos; o `public/.htaccess` local também vai;
+- `.env`, `node_modules/` e `auth.json` nunca entram (o script recusa o commit);
+- cada commit da prod tem a master como segundo pai (`git log prod` mostra a origem).
+
+O `.git-ftp-ignore` evita enviar o que só serve para desenvolver (testes, `resources/js`,
+documentação, configs do Node). O `.env` do servidor é criado uma vez, à mão, por FTP.
+
 ## Como as exigências foram atendidas
 
 ### Isolamento total (em duas camadas)

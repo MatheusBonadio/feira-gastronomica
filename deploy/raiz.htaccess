@@ -1,0 +1,25 @@
+# .htaccess da RAIZ do site no servidor (htdocs). Copiado para a branch prod pelo
+# scripts/publicar-prod.sh; não vale no ambiente local.
+#
+# O projeto inteiro sobe para a raiz web, então todo pedido é reescrito para
+# public/: nada fora de public/ (.env, vendor, storage, config...) é servido.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Arquivos e pastas ocultos (.env, .git-ftp.log...) nunca; .well-known
+    # continua liberado para a validação de certificados.
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Todo o resto vai para public/ (o public/.htaccess entrega ao Laravel).
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Defesa extra caso o mod_rewrite esteja desligado.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(log|sqlite|lock)$">
+    Require all denied
+</FilesMatch>
