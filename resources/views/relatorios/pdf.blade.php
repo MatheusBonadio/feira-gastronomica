@@ -5,6 +5,8 @@
         is_int($valor) => numero($valor),
         default => $valor ?? '',
     };
+    // Símbolo da UNAERP embutido em JPEG: o dompdf lê JPEG sem a extensão GD (PNG exigiria).
+    $simbolo = 'data:image/jpeg;base64,'.base64_encode(file_get_contents(public_path('brand/unaerp-simbolo-pdf.jpg')));
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -27,10 +29,22 @@
         table.dados tfoot td { font-weight: bold; border-top: 1px solid {{ $cor('impressao-titulo') }}; background: #ffffff; }
         .num { text-align: right; white-space: nowrap; }
         .quebra { page-break-before: always; }
+        .topo { border-collapse: collapse; margin-bottom: 8px; }
+        .topo td { padding: 0; vertical-align: middle; }
+        .topo td.logo { padding-right: 10px; }
+        .marca { color: {{ $cor('tinta-suave') }}; font-size: 8.5px; letter-spacing: 0.4px; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <h1>{{ $relatorio->tipo->label() }}</h1>
+    <table class="topo">
+        <tr>
+            <td class="logo"><img src="{{ $simbolo }}" width="34" height="34" alt="UNAERP"></td>
+            <td>
+                <h1>{{ $relatorio->tipo->label() }}</h1>
+                <span class="marca">{{ __('Feira Gastronômica') }} · UNAERP · PEG</span>
+            </td>
+        </tr>
+    </table>
     <table class="cabecalho">
         @foreach($relatorio->cabecalho() as $rotulo => $valor)
             <tr><td>{{ $rotulo }}</td><td class="valor">{{ $valor }}</td></tr>

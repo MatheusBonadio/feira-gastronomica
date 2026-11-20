@@ -40,6 +40,8 @@
   --primaria-tinta: #ffffff;
   --primaria-suave: #e8eef8;
   --primaria-texto: #003087;
+  /* Azul-escuro oficial do ícone da UNAERP: fundo do bloco do símbolo (igual nos dois temas). */
+  --marca-fundo: #292c6d;
   --secundaria: #ecdd12;
   --secundaria-hover: #d8ca0c;
   --secundaria-tinta: #1f1a00;
@@ -117,6 +119,7 @@
   --primaria-tinta: #ffffff;
   --primaria-suave: #13254d;
   --primaria-texto: #8fb0f0;
+  --marca-fundo: #292c6d;
   --secundaria: #ecdd12;
   --secundaria-hover: #f3e640;
   --secundaria-tinta: #1f1a00;
@@ -178,6 +181,7 @@
   --color-primaria-tinta: var(--primaria-tinta);
   --color-primaria-suave: var(--primaria-suave);
   --color-primaria-texto: var(--primaria-texto);
+  --color-marca-fundo: var(--marca-fundo);
   --color-secundaria: var(--secundaria);
   --color-secundaria-hover: var(--secundaria-hover);
   --color-secundaria-tinta: var(--secundaria-tinta);
