@@ -1,6 +1,6 @@
 import { router } from "@inertiajs/react";
 import { IconArrowDown, IconArrowUp, IconSelector } from "@tabler/icons-react";
-import { Children, cloneElement, createContext, isValidElement, useContext, type ReactElement, type ReactNode } from "react";
+import { Children, cloneElement, createContext, isValidElement, useContext, useRef, type ReactElement, type ReactNode } from "react";
 import { Selecao } from "@/components/ui/campos";
 import { Dica } from "@/components/ui/dica";
 import { TRACO, type Icone } from "@/components/ui/icone";
@@ -129,6 +129,10 @@ interface PropsCelula {
 /** Linha clicável opcional (abre o detalhe pelo Inertia). No celular, um cartão. */
 export function Linha({ children, href, apagada, className }: { children: ReactNode; href?: string; apagada?: boolean; className?: string }) {
     const colunas = useContext(ColunasContexto);
+    // Como os links do kit: com o mouse parado na linha, o detalhe já vem antes do clique.
+    const espera = useRef<number | undefined>(undefined);
+    const preCarregar = href ? () => (espera.current = window.setTimeout(() => router.prefetch(href, { method: "get" }), 75)) : undefined;
+    const cancelar = href ? () => window.clearTimeout(espera.current) : undefined;
     // Cada célula recebe a sua coluna pela posição (ignora null/false de células condicionais).
     const celulas = Children.toArray(children).map((filho, i) =>
         isValidElement(filho) && filho.type === Celula ? cloneElement(filho as ReactElement<PropsCelula>, { coluna: colunas[i] }) : filho,
@@ -137,6 +141,8 @@ export function Linha({ children, href, apagada, className }: { children: ReactN
     return (
         <tr
             onClick={href ? (e) => !(e.target as HTMLElement).closest("a,button,input,select,label") && router.visit(href) : undefined}
+            onMouseEnter={preCarregar}
+            onMouseLeave={cancelar}
             className={cx(
                 "border-b border-linha transition-colors md:last:border-b-0",
                 "max-md:flex max-md:flex-col max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:bg-superficie",

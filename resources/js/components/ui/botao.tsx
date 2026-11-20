@@ -75,7 +75,7 @@ export function Botao({ variante, tamanho, icone, iconeFinal, soIcone, children,
 /** Mesmo visual, navegando pelo Inertia. */
 export function BotaoLink({ href, variante, tamanho, icone, iconeFinal, soIcone, children, className }: Comum & { href: string }) {
     return (
-        <Link href={href} className={cx(classesBotao(variante, tamanho, soIcone), className)}>
+        <Link prefetch href={href} className={cx(classesBotao(variante, tamanho, soIcone), className)}>
             <Conteudo icone={icone} iconeFinal={iconeFinal} soIcone={soIcone}>{children}</Conteudo>
         </Link>
     );
@@ -93,7 +93,7 @@ export function BotaoDividido({ href, icone, children, itens, rotuloMenu, varian
     const divisor = variante === "primario" ? "border-s border-primaria-tinta/25" : "border-s border-linha";
     return (
         <div className="inline-flex rounded-controle">
-            <Link href={href} className={cx(BASE, VARIANTES[variante], TAMANHOS.md, "rounded-e-none")}>
+            <Link prefetch href={href} className={cx(BASE, VARIANTES[variante], TAMANHOS.md, "rounded-e-none")}>
                 <Conteudo icone={icone}>{children}</Conteudo>
             </Link>
             <Menu
