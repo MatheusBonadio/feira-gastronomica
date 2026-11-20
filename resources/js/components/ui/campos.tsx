@@ -338,14 +338,17 @@ export function Interruptor({ ligado, aoMudar, children, descricao, desabilitado
  * Escolha única em segmentos (Radix RadioGroup: setas, foco itinerante).
  * `grande` = 44px para toque (PDV); `cores` põe um ponto de cor por opção.
  */
-export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores }: {
+export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores, icones }: {
     rotulo: string;
     opcoes: OpcaoSelecao[];
     valor: string | null;
     aoMudar: (valor: string) => void;
     cheio?: boolean;
     grande?: boolean;
+    /** Quadradinho de cor por valor (canal da venda). */
     cores?: Record<string, string>;
+    /** Ícone por valor (forma de pagamento). */
+    icones?: Record<string, Icone>;
 }) {
     return (
         <RadioGroup.Root
@@ -356,20 +359,26 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
             loop
             className={cx("gap-1 rounded-controle bg-superficie-suave p-1", cheio ? "flex w-full" : "inline-flex max-w-full")}
         >
-            {opcoes.map((o) => (
-                <RadioGroup.Item
-                    key={o.valor}
-                    value={o.valor}
-                    className={cx(
-                        "inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-md px-3 font-medium whitespace-nowrap text-tinta-suave outline-none transition-colors hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=checked]:bg-superficie data-[state=checked]:text-tinta data-[state=checked]:shadow-botao",
-                        grande ? "h-11 text-ui" : "h-9 text-corpo md:h-7",
-                        cheio && "flex-1",
-                    )}
-                >
-                    {cores?.[o.valor] && <span className={cx("size-2.5 shrink-0 rounded-sm", cores[o.valor])} aria-hidden />}
-                    <span className="truncate">{o.rotulo}</span>
-                </RadioGroup.Item>
-            ))}
+            {opcoes.map((o) => {
+                const I = icones?.[o.valor];
+                // Grande com ícone (pagamento no PDV): ícone em cima do nome, para caber na coluna estreita do carrinho.
+                const empilhado = Boolean(I && grande);
+                return (
+                    <RadioGroup.Item
+                        key={o.valor}
+                        value={o.valor}
+                        className={cx(
+                            "inline-flex min-w-0 cursor-pointer items-center justify-center rounded-md font-medium whitespace-nowrap text-tinta-suave outline-none transition-colors hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=checked]:bg-superficie data-[state=checked]:text-tinta data-[state=checked]:shadow-botao",
+                            empilhado ? "h-16 flex-col gap-1 px-2 text-corpo" : grande ? "h-11 gap-2 px-3 text-ui" : "h-9 gap-2 px-3 text-corpo md:h-7",
+                            cheio && "flex-1",
+                        )}
+                    >
+                        {I && <I size={grande ? 20 : 16} className="shrink-0" aria-hidden />}
+                        {cores?.[o.valor] && <span className={cx("size-2.5 shrink-0 rounded-sm", cores[o.valor])} aria-hidden />}
+                        <span className="truncate">{o.rotulo}</span>
+                    </RadioGroup.Item>
+                );
+            })}
         </RadioGroup.Root>
     );
 }

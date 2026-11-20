@@ -1,5 +1,7 @@
+import { IconCashBanknoteFilled, IconCreditCardFilled } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Avatar as AvatarRadix } from "radix-ui";
+import { IconPix, type Icone } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 import type { Opcao } from "@/types/inertia";
 
@@ -51,9 +53,6 @@ const TOM_DO_VALOR: Record<string, Tom> = {
     pre_venda: "secundaria",
     feira: "azul",
     pos_evento: "verde",
-    dinheiro: "verde",
-    pix: "azul",
-    cartao: "rosa",
 };
 
 export function ChipStatus({ opcao }: { opcao: Opcao | null | undefined }) {
@@ -73,11 +72,23 @@ export const COR_CANAL: Record<string, string> = {
     pos_evento: "bg-verde",
 };
 
-export const COR_PAGAMENTO: Record<string, string> = {
-    dinheiro: "bg-verde",
-    pix: "bg-azul",
-    cartao: "bg-rosa",
+/** Forma de pagamento se reconhece pelo ícone, não pela cor (preenchidos: o Pix só existe assim). */
+export const ICONE_PAGAMENTO: Record<string, Icone> = {
+    dinheiro: IconCashBanknoteFilled,
+    pix: IconPix,
+    cartao: IconCreditCardFilled,
 };
+
+/** Forma de pagamento com o ícone ao lado do nome (listas, detalhe da venda). */
+export function Pagamento({ opcao, className }: { opcao: Opcao; className?: string }) {
+    const I = ICONE_PAGAMENTO[opcao.valor];
+    return (
+        <span className={cx("inline-flex min-w-0 items-center gap-1.5", className)}>
+            {I && <I size={16} className="shrink-0 text-tinta-suave" aria-hidden />}
+            <span className="truncate">{opcao.label}</span>
+        </span>
+    );
+}
 
 /** Quadradinho de cor das legendas. */
 export function Ponto({ cor, className }: { cor: string; className?: string }) {
@@ -92,9 +103,9 @@ export function iniciais(nome: string): string {
 
 /** Avatar de iniciais com cor estável por nome. */
 /** Avatar (Radix Avatar): foto quando houver; senão iniciais com cor estável pelo nome. */
-export function Avatar({ nome, foto, tamanho = "md", forma = "redonda", className }: { nome: string; foto?: string | null; tamanho?: "sm" | "md" | "lg" | "xl"; forma?: "redonda" | "quadrada"; className?: string }) {
+export function Avatar({ nome, foto, tamanho = "md", forma = "redonda", className }: { nome: string; foto?: string | null; tamanho?: "sm" | "md" | "lg" | "xl" | "2xl"; forma?: "redonda" | "quadrada"; className?: string }) {
     const indice = [...nome].reduce((soma, c) => soma + c.charCodeAt(0), 0) % CORES_AVATAR.length;
-    const tamanhos = { sm: "size-6 text-micro", md: "size-8 text-rotulo", lg: "size-10 text-ui", xl: "size-12 text-titulo" };
+    const tamanhos = { sm: "size-6 text-micro", md: "size-8 text-rotulo", lg: "size-10 text-ui", xl: "size-12 text-titulo", "2xl": "size-20 text-cabecalho" };
     return (
         <AvatarRadix.Root aria-hidden className={cx("inline-flex shrink-0 items-center justify-center overflow-hidden font-bold select-none", forma === "quadrada" ? "rounded-xl" : "rounded-full", tamanhos[tamanho], CORES_AVATAR[indice], className)}>
             {foto && <AvatarRadix.Image src={foto} alt="" className="size-full object-cover" />}

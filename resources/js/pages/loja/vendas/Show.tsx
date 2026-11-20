@@ -5,7 +5,7 @@ import { Botao, BotaoLink } from "@/components/ui/botao";
 import { AreaTexto } from "@/components/ui/campos";
 import { CabecalhoPagina, Cartao, Detalhe, Faixa } from "@/components/ui/cartao";
 import { Confirmar } from "@/components/ui/dialogo";
-import { ChipStatus, ChipTag, COR_CANAL, Ponto } from "@/components/ui/marcadores";
+import { ChipStatus, ChipTag, COR_CANAL, Pagamento, Ponto } from "@/components/ui/marcadores";
 import { Celula, Linha, Tabela } from "@/components/ui/tabela";
 import { useFormato } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
@@ -92,7 +92,7 @@ export default function Show({ venda }: { venda: Venda }) {
                                     {venda.canal.label}
                                 </span>
                             </Detalhe>
-                            <Detalhe rotulo={t("Pagamento")}>{venda.pagamento.label}</Detalhe>
+                            <Detalhe rotulo={t("Pagamento")}><Pagamento opcao={venda.pagamento} /></Detalhe>
                             <Detalhe rotulo={t("Operador")}>{venda.operador ?? "—"}</Detalhe>
                             <Detalhe rotulo={t("Status")}><ChipStatus opcao={venda.status} /></Detalhe>
                         </dl>

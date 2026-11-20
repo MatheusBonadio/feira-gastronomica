@@ -4,7 +4,7 @@ import { FiltrosVendas, opcoesSelecao, type FiltroVendas } from "@/components/pa
 import { BotaoLink } from "@/components/ui/botao";
 import { Selecao } from "@/components/ui/campos";
 import { CabecalhoPagina, Cartao, Vazio } from "@/components/ui/cartao";
-import { ChipStatus } from "@/components/ui/marcadores";
+import { ChipStatus, Pagamento } from "@/components/ui/marcadores";
 import { Paginacao } from "@/components/ui/paginacao";
 import { Celula, Linha, Tabela } from "@/components/ui/tabela";
 import { cx } from "@/lib/cx";
@@ -90,7 +90,7 @@ export default function Index({ vendas, filtro, canais, pagamentos, statusOpcoes
                                 <span className="md:line-clamp-2">{v.resumo}</span>
                             </Celula>
                             <Celula><ChipStatus opcao={v.canal} /></Celula>
-                            <Celula>{v.pagamento.label}</Celula>
+                            <Celula><Pagamento opcao={v.pagamento} /></Celula>
                             <Celula direita>{v.desconto > 0 ? `−${moeda(v.desconto)}` : "—"}</Celula>
                             <Celula direita>
                                 <span className={cx("font-semibold", v.cancelada ? "text-tinta-fraca line-through" : "text-tinta")}>{moeda(v.total)}</span>
