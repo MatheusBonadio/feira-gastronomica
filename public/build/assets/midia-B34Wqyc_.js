@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-WkwZ5CU-.js";import{X as t}from"./icone-BZ_FLXj4.js";var n=e(t(),1);function r(e){return(0,n.useSyncExternalStore)(t=>{let n=window.matchMedia(e);return n.addEventListener(`change`,t),()=>n.removeEventListener(`change`,t)},()=>window.matchMedia(e).matches,()=>!1)}var i=`(min-width: 48rem)`;export{r as n,i as t};
