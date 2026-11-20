@@ -27,6 +27,10 @@ Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.
 3. **Histórico preservado**: `venda_linhas` e `venda_itens` guardam preço, nome e custo da época.
 4. **Feira encerrada** bloqueia escrita: use `VendaService::garantirFeiraAberta()` nos serviços.
 5. **Auditoria** via `AuditoriaLog::registrar()`; a trilha só recebe insert (nunca update ou delete).
+6. **Login sem recarga**: o login é um redirect comum do Inertia, e as rotas (Ziggy) do perfil
+   chegam na prop `rotas` da primeira página (`HandleInertiaRequests::ENVIAR_ROTAS` →
+   `definirRotas()` no `resolve` do `app.tsx`). Só a troca de idioma recarrega a página.
+   Requisições `fetch` usam o cookie `XSRF-TOKEN` (`lib/http.ts`), nunca o `<meta>`.
 
 ## Convenções
 
@@ -49,6 +53,18 @@ Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.
   `pulso` e `useTempoReal({ url, versao, props })`. Movimento novo que deva aparecer no
   painel precisa entrar na assinatura do `PulsoService`.
 - **Valores**: o servidor manda números crus; formate no React com `useFormato()`.
+- **Navegação rápida**: os links do kit (`BotaoLink`, sidebar, widgets, linhas da `Tabela`)
+  fazem prefetch ao passar o mouse; link novo fora do kit leva `prefetch`. Toda gravação
+  limpa o cache de prefetch (`app.tsx`).
+- **Fotos** (perfil, barraquinha): `CampoFoto` no front (recorta e reduz no navegador) e
+  `FotoService` no servidor, no disco `fotos` (`public/fotos`, servido direto pelo Apache).
+  O servidor não depende da extensão GD; no PDF, imagem só em JPEG.
+- **Checkout da barraquinha**: opção nova entra em `PreferenciasCheckout` (`de`, `regras`,
+  `paraJson`, `paraTela`), no tipo `PreferenciasCheckout` do front, em `loja/Configuracoes`
+  e no `Pdv`. Forma de pagamento desativada também é recusada no `VendaController`.
+- **Marca**: `Marca`/`SimboloUnaerp` (`components/app/marca.tsx`), arquivos em `public/brand`.
+- **Transições**: troca de tema e login usam View Transitions (`tema.tsx`, `app.css`);
+  os nomes `marca`, `moldura` e `app` precisam ser únicos na tela.
 - Comentários só para explicar o porquê não óbvio.
 
 ## Verificação antes de entregar

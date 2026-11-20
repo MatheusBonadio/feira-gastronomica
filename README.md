@@ -101,6 +101,10 @@ O que o script garante:
 O `.git-ftp-ignore` evita enviar o que só serve para desenvolver (testes, `resources/js`,
 documentação, configs do Node). O `.env` do servidor é criado uma vez, à mão, por FTP.
 
+As fotos enviadas (perfil e barraquinha) ficam em `public/fotos/` no servidor: não são
+versionadas e o `git ftp push` não as toca. A pasta precisa aceitar escrita pelo PHP; o
+`public/fotos/.htaccess` (versionado) só deixa servir imagens.
+
 ## Como as exigências foram atendidas
 
 ### Isolamento total (na aplicação)
@@ -118,6 +122,24 @@ todo na aplicação:
 - feiras e barraquinhas só são gravadas pelas rotas do admin (`perfil:admin`), e a trilha
   de auditoria só recebe insert (`AuditoriaLog::registrar()`);
 - a barraquinha não recebe no navegador nem os nomes das rotas do admin (Ziggy por grupo).
+
+### Perfil, fotos e checkout da barraquinha
+
+- **Meu perfil** (admin e barraquinha): foto, nome, tema, idioma e atalho para a senha.
+- **Configurações da barraquinha**: foto da barraquinha e o jeito do checkout (PDV), escolhido
+  pelo gestor: formas de pagamento aceitas e a já marcada, canal padrão, itens em grade ou
+  lista, por categoria ou não, em ordem alfabética ou de mais vendidos, lista de combos,
+  calculadora de troco, chave Pix com botão de copiar e confirmação antes de registrar.
+- A foto é recortada e reduzida no navegador antes do envio (algumas dezenas de KB), então o
+  servidor não precisa da extensão GD.
+
+### Navegação e transições
+
+- Os links fazem prefetch ao passar o mouse: a tela abre na hora e se atualiza sozinha em
+  segundo plano se o dado tiver mais de 15 s. Qualquer gravação limpa esse cache.
+- No tempo ocioso o navegador baixa o JS das telas do perfil (nunca com "economia de dados").
+- O login entra sem recarregar a página: o quadro do login recua, o símbolo da UNAERP vai até
+  a sidebar e o app sobe. A troca de tema é um esmaecimento único da tela.
 
 ### Design system e tema
 

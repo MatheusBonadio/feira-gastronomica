@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
     {{-- Aplica o tema (claro, escuro ou o do sistema) antes da pintura, para não piscar. --}}
     <script>
         (function () {
