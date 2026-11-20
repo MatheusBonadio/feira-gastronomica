@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Perfil;
+use App\Services\FotoService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -35,6 +36,11 @@ class User extends Authenticatable
     public function barraquinha(): BelongsTo
     {
         return $this->belongsTo(Barraquinha::class);
+    }
+
+    public function fotoUrl(): ?string
+    {
+        return FotoService::url($this->foto_path);
     }
 
     public function ehAdmin(): bool

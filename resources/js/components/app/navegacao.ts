@@ -5,13 +5,14 @@ import {
     IconChartBar,
     IconFileAnalytics,
     IconHistory,
-    IconKey,
     IconLayoutDashboard,
     IconReceipt,
+    IconSettings,
     IconShieldCheck,
     IconShoppingCart,
     IconStack2,
     IconTag,
+    IconUserCircle,
     IconWallet,
 } from "@tabler/icons-react";
 import type { Icone } from "@/components/ui/icone";
@@ -39,7 +40,11 @@ export function useNavegacao(): { principal: ItemNavegacao[]; secundario: ItemNa
     const t = useT();
     const rotaLoja = useRotaLoja();
     const admin = auth?.usuario.perfil === "admin";
-    const minhaSenha: ItemNavegacao = { rotulo: t("Minha senha"), href: rota("senha.edit"), icone: IconKey, ativo: rotaAtiva("senha.*") };
+    // Perfil (foto, nome, preferências) dentro da área de cada perfil; a senha é aberta por ele.
+    const area = admin ? "admin" : "barraquinha";
+    const meuPerfil: ItemNavegacao = { rotulo: t("Meu perfil"), href: rota(`${area}.perfil`), icone: IconUserCircle, ativo: rotaAtiva(`${area}.perfil`) || rotaAtiva("senha.*") };
+    const configuracoesLoja = (): ItemNavegacao[] =>
+        loja ? [{ rotulo: t("Configurações"), href: rotaLoja("configuracoes"), icone: IconSettings, ativo: rotaAtiva(`${loja.prefixo}configuracoes`) }] : [];
 
     // Seções de uma barraquinha (a da sessão ou a que o admin abriu).
     const secoesLoja = (): ItemNavegacao[] => {
@@ -58,7 +63,7 @@ export function useNavegacao(): { principal: ItemNavegacao[]; secundario: ItemNa
     let secundario: ItemNavegacao[] = [];
 
     if (admin) {
-        const filhos = secoesLoja();
+        const filhos = [...secoesLoja(), ...configuracoesLoja()];
         principal = [
             { rotulo: t("Painel da feira"), href: rota("admin.painel"), icone: IconLayoutDashboard, ativo: rotaAtiva("admin.painel") },
             {
@@ -76,7 +81,7 @@ export function useNavegacao(): { principal: ItemNavegacao[]; secundario: ItemNa
         secundario = [
             { rotulo: t("Categorias"), href: rota("admin.categorias.index"), icone: IconTag, ativo: rotaAtiva("admin.categorias.*") },
             { rotulo: t("Auditoria"), href: rota("admin.auditoria.index"), icone: IconShieldCheck, ativo: rotaAtiva("admin.auditoria.*") },
-            minhaSenha,
+            meuPerfil,
         ];
     } else if (loja) {
         const [painel, vendas, ...resto] = secoesLoja();
@@ -97,7 +102,8 @@ export function useNavegacao(): { principal: ItemNavegacao[]; secundario: ItemNa
         ];
         secundario = [
             ...(loja.podeVender ? [{ rotulo: t("Relatórios"), href: rota("barraquinha.relatorios.index"), icone: IconFileAnalytics, ativo: rotaAtiva("barraquinha.relatorios.*") }] : []),
-            minhaSenha,
+            ...configuracoesLoja(),
+            meuPerfil,
         ];
     }
 

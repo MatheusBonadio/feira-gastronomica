@@ -24,3 +24,6 @@ yarn-error.log
 /.zed
 coverage
 /vendor
+# Fotos enviadas pelos usuários (perfil e barraquinha); só a proteção da pasta é versionada.
+/public/fotos/*
+!/public/fotos/.htaccess

@@ -22,10 +22,12 @@ import {
     IconShoppingCart,
     IconStack2,
     IconTag,
+    IconUserCircle,
     IconX,
 } from "@tabler/icons-react";
 import { Collapsible, Popover, Separator } from "radix-ui";
 import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Marca } from "@/components/app/marca";
 import { useNavegacao, type ItemNavegacao } from "@/components/app/navegacao";
 import { PaletaComandos, useAtalhoPaleta } from "@/components/app/paleta-comandos";
 import { definirTema, useOpcoesTema, useTema } from "@/components/app/tema";
@@ -92,9 +94,9 @@ export function Shell({ children }: { children: ReactNode }) {
     const flutuante = acoes?.principal.flutuante && new URL(acoes.principal.href, window.location.origin).pathname !== url.split("?")[0] ? acoes.principal : null;
 
     return (
-        <div className="min-h-dvh bg-fundo">
+        <div className="min-h-dvh bg-fundo [view-transition-name:app]">
             <aside className={cx("fixed inset-y-0 inset-s-0 z-40 hidden border-e border-cartao-borda bg-superficie transition-[width] duration-200 lg:block", recolhida ? "w-sidebar-recolhida" : "w-sidebar")}>
-                <Sidebar recolhida={recolhida} aoRecolher={() => setRecolhida(!recolhida)} />
+                <Sidebar recolhida={recolhida} aoRecolher={() => setRecolhida(!recolhida)} fixa />
             </aside>
 
             {/* Celular e tablet: a mesma sidebar numa folha lateral (Radix Dialog). */}
@@ -143,7 +145,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
 
             {flutuante && (
-                <Link
+                <Link prefetch
                     href={flutuante.href}
                     className="fixed inset-e-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 flex h-14 items-center gap-2 rounded-full bg-primaria ps-5 pe-6 text-ui font-semibold text-primaria-tinta shadow-flutuante outline-none focus-visible:ring-2 focus-visible:ring-foco focus-visible:ring-offset-2 sm:hidden"
                 >
@@ -196,7 +198,8 @@ function useAcaoPrincipal(): { principal: { rotulo: string; href: string; icone?
  * Sidebar
  * ------------------------------------------------------------------------- */
 
-function Sidebar({ recolhida, aoRecolher }: { recolhida: boolean; aoRecolher?: () => void }) {
+/** `fixa`: a sidebar do desktop (a da gaveta do celular é outra instância). */
+function Sidebar({ recolhida, aoRecolher, fixa }: { recolhida: boolean; aoRecolher?: () => void; fixa?: boolean }) {
     const t = useT();
     const { auth, seletorFeira } = usePage().props;
     const { principal, secundario } = useNavegacao();
@@ -204,16 +207,8 @@ function Sidebar({ recolhida, aoRecolher }: { recolhida: boolean; aoRecolher?: (
 
     return (
         <div className="flex h-full flex-col">
-            <Link href="/" className={cx("flex shrink-0 items-center gap-2.5 pt-5 pb-4 outline-none focus-visible:ring-2 focus-visible:ring-foco", recolhida ? "justify-center px-3" : "px-5")} aria-label={t("Feira Gastronômica")}>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primaria">
-                    <span className="size-3.5 rounded-sm bg-secundaria" />
-                </span>
-                {!recolhida && (
-                    <span className="min-w-0">
-                        <span className="block text-marca font-extrabold tracking-tight text-tinta">{t("Feira Gastronômica")}</span>
-                        <span className="block text-micro font-semibold tracking-wide text-tinta-suave uppercase">UNAERP · PEG</span>
-                    </span>
-                )}
+            <Link href="/" className={cx("flex shrink-0 items-center pt-5 pb-4 outline-none focus-visible:ring-2 focus-visible:ring-foco", recolhida ? "justify-center px-3" : "px-5")} aria-label={t("Feira Gastronômica")}>
+                <Marca compacta={recolhida} transicao={fixa} />
             </Link>
 
             {admin && !recolhida && seletorFeira && seletorFeira.lista.length > 0 && (
@@ -267,7 +262,7 @@ function ItemSidebar({ item, recolhida }: { item: ItemNavegacao; recolhida: bool
     useEffect(() => setAberto((a) => a || ativo), [ativo]);
 
     const link = (
-        <Link
+        <Link prefetch
             href={href}
             aria-current={ativo && !filhos?.some((f) => f.ativo) ? "page" : undefined}
             className={cx(
@@ -310,7 +305,7 @@ function ItemSidebar({ item, recolhida }: { item: ItemNavegacao; recolhida: bool
                         <ul className="flex flex-col gap-0.5">
                             {filhos.map((f) => (
                                 <li key={f.href + f.rotulo}>
-                                    <Link
+                                    <Link prefetch
                                         href={f.href}
                                         aria-current={f.ativo ? "page" : undefined}
                                         className={cx(
@@ -501,6 +496,7 @@ function Conta() {
                 </div>
             }
             itens={[
+                { rotulo: t("Meu perfil"), icone: IconUserCircle, href: rota(auth.usuario.perfil === "admin" ? "admin.perfil" : "barraquinha.perfil") },
                 { rotulo: t("Alterar minha senha"), icone: IconKey, href: rota("senha.edit") },
                 { rotulo: t("Sair"), icone: IconLogout, aoSelecionar: () => router.post(rota("logout")), separadorAntes: true },
             ]}
@@ -511,7 +507,7 @@ function Conta() {
                     aria-label={t("Menu da conta")}
                     className="flex h-10 items-center gap-2.5 rounded-controle border border-cartao-borda bg-superficie p-1 outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco md:h-9 md:pe-3"
                 >
-                    <Avatar nome={auth.usuario.nome} tamanho="md" className="md:size-7" />
+                    <Avatar nome={auth.usuario.nome} foto={auth.usuario.foto} tamanho="md" className="md:size-7" />
                     <span className="hidden min-w-0 text-start leading-tight md:block">
                         <span className="block max-w-36 truncate text-rotulo font-semibold text-tinta">{auth.usuario.nome}</span>
                         <span className="block max-w-36 truncate text-micro text-tinta-suave">{auth.usuario.usuario}</span>

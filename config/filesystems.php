@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // Fotos de perfil e de barraquinha: servidas direto pelo Apache (sem PHP
+        // e sem o symlink do "storage:link", que a hospedagem não permite).
+        'fotos' => [
+            'driver' => 'local',
+            'root' => public_path('fotos'),
+            'url' => '/fotos',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
