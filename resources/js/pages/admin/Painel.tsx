@@ -4,7 +4,7 @@ import { BarrasHorizontais } from "@/components/graficos/graficos";
 import { AoVivo } from "@/components/painel/ao-vivo";
 import { PorPagamento, ProgressoMeta, ProximoPasso, SaidasPorCategoria, SaudeFinanceira, VendasPorDia, variacao } from "@/components/painel/blocos";
 import { BotaoFiltros, type FiltroVendas } from "@/components/painel/filtros";
-import { AcessoRapido, AcoesRapidas, CartaoIdentidade, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
+import { AcessoRapido, AcoesRapidas, Identidade, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
 import { BotaoLink } from "@/components/ui/botao";
 import { CabecalhoPagina, Cartao, Estatistica, Faixa, Variacao, Vazio } from "@/components/ui/cartao";
 import { Avatar, ChipStatus } from "@/components/ui/marcadores";
@@ -18,7 +18,7 @@ import type { Opcao } from "@/types/inertia";
 import type { Indicadores, Venda } from "@/types/dominio";
 
 interface LinhaComparativo {
-    barraquinha: { id: number; nome: string; vaga: boolean; status: Opcao };
+    barraquinha: { id: number; nome: string; vaga: boolean; status: Opcao; foto: string | null };
     indicadores: Indicadores;
 }
 
@@ -193,7 +193,7 @@ export default function Painel(props: Props) {
                                 <Linha key={b.id} href={rota("admin.loja.painel", { barraquinha: b.id })}>
                                     <Celula cabecalho>
                                         <span className="flex items-center gap-2.5">
-                                            <Avatar nome={b.nome} tamanho="md" forma="quadrada" />
+                                            <Avatar nome={b.nome} foto={b.foto} tamanho="md" forma="quadrada" />
                                             <span className={cx("truncate", b.vaga ? "text-tinta-fraca italic" : "font-semibold text-tinta")}>{b.nome}</span>
                                             {b.status.valor === "bloqueada" && <ChipStatus opcao={b.status} />}
                                             {i.resultado < 0 && <IconAlertTriangle size={15} className="shrink-0 text-negativo" aria-label={t("Resultado negativo")} />}
@@ -224,27 +224,34 @@ export default function Painel(props: Props) {
                         descricao={t("Ações rápidas")}
                         acoes={<BotaoLink href={rota("admin.feiras.create")} variante="secundario" tamanho="sm" icone={IconPlus}>{t("Nova feira")}</BotaoLink>}
                     >
-                        <div className="rolagem-fina -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-                            <CartaoIdentidade
-                                className="w-[86%] shrink-0"
-                                rotulo={feira.status.label}
-                                titulo={feira.nome}
-                                linhas={[`${f.data(feira.dataInicio)} – ${f.data(feira.dataFim)}`, t(":n barraquinhas", { n: ocupadas.length })]}
-                                rodape={<><span>UNAERP · PEG</span><span className="font-semibold">{f.moedaCompacta(c.vendas)}</span></>}
-                                href={rota("admin.feiras.edit", { feira: feira.id })}
-                            />
-                            {outrasFeiras.map((o) => (
-                                <button
-                                    key={o.id}
-                                    type="button"
-                                    onClick={() => router.post(rota("admin.feiras.selecionar", { feira: o.id }), {}, { preserveScroll: true })}
-                                    className="w-[62%] shrink-0 rounded-2xl text-start outline-none focus-visible:ring-2 focus-visible:ring-foco"
-                                    aria-label={t("Usar :feira", { feira: o.nome })}
-                                >
-                                    <CartaoIdentidade ativo={false} rotulo={o.status} titulo={o.nome} linhas={[t("Usar esta feira")]} />
-                                </button>
-                            ))}
-                        </div>
+                        <Identidade
+                            titulo={feira.nome}
+                            situacao={<ChipStatus opcao={feira.status} />}
+                            linhas={[`${f.data(feira.dataInicio)} – ${f.data(feira.dataFim)}`, t(":n barraquinhas", { n: ocupadas.length })]}
+                            valor={f.moedaCompacta(c.vendas)}
+                            rotuloValor={t("Vendas")}
+                            href={rota("admin.feiras.edit", { feira: feira.id })}
+                        />
+                        {outrasFeiras.length > 0 && (
+                            <ul className="mt-2 flex flex-col border-t border-linha pt-2">
+                                {outrasFeiras.map((o) => (
+                                    <li key={o.id}>
+                                        <button
+                                            type="button"
+                                            onClick={() => router.post(rota("admin.feiras.selecionar", { feira: o.id }), {}, { preserveScroll: true })}
+                                            className="-mx-2 flex w-[calc(100%+1rem)] min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-start outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco"
+                                            aria-label={t("Usar :feira", { feira: o.nome })}
+                                        >
+                                            <span className="min-w-0 flex-1">
+                                                <span className="block truncate text-corpo font-semibold text-tinta">{o.nome}</span>
+                                                <span className="block text-micro text-tinta-suave">{o.status}</span>
+                                            </span>
+                                            <span className="shrink-0 text-rotulo font-semibold text-primaria-texto">{t("Usar esta feira")}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                         <div className="mt-4">
                             <AcoesRapidas
                                 acoes={[
@@ -259,7 +266,7 @@ export default function Painel(props: Props) {
                         {(seletorFeira?.barraquinhas.length ?? 0) > 0 && (
                             <div className="mt-5">
                                 <p className="mb-2 text-corpo font-semibold text-tinta">{t("Acesso rápido")}</p>
-                                <AcessoRapido itens={(seletorFeira?.barraquinhas ?? []).map((b) => ({ id: b.id, nome: b.nome, href: rota("admin.loja.painel", { barraquinha: b.id }), apagado: b.bloqueada }))} />
+                                <AcessoRapido itens={(seletorFeira?.barraquinhas ?? []).map((b) => ({ id: b.id, nome: b.nome, href: rota("admin.loja.painel", { barraquinha: b.id }), apagado: b.bloqueada, foto: b.foto }))} />
                             </div>
                         )}
                     </Cartao>

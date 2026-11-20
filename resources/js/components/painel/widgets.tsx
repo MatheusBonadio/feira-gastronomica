@@ -74,7 +74,7 @@ export function ListaVendas({ vendas, hrefVenda, comBarraquinha }: { vendas: Ven
                 const conteudo = (
                     <>
                         {comBarraquinha && v.barraquinha ? (
-                            <Avatar nome={v.barraquinha} forma="quadrada" tamanho="lg" />
+                            <Avatar nome={v.barraquinha} foto={v.barraquinhaFoto} forma="quadrada" tamanho="lg" />
                         ) : (
                             <span className={cx("flex size-10 shrink-0 items-center justify-center rounded-xl", ICONE_CANAL[v.canal.valor] ?? "bg-superficie-suave text-tinta-media")} aria-hidden>
                                 <IconReceipt size={18} stroke={TRACO} />
@@ -96,7 +96,7 @@ export function ListaVendas({ vendas, hrefVenda, comBarraquinha }: { vendas: Ven
                 const classes = cx("flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors", novas.has(v.id) && "animate-chegar");
                 return (
                     <li key={v.id}>
-                        {hrefVenda ? <Link href={hrefVenda(v)} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link> : <div className={classes}>{conteudo}</div>}
+                        {hrefVenda ? <Link prefetch href={hrefVenda(v)} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link> : <div className={classes}>{conteudo}</div>}
                     </li>
                 );
             })}
@@ -137,7 +137,7 @@ export function ListaPendencias({ pendencias, aoNavegar }: { pendencias: Pendenc
                 return (
                     <li key={p.titulo}>
                         {p.href ? (
-                            <Link href={p.href} onClick={aoNavegar} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link>
+                            <Link prefetch href={p.href} onClick={aoNavegar} className={cx(classes, "outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{conteudo}</Link>
                         ) : (
                             <div className={classes}>{conteudo}</div>
                         )}
@@ -170,42 +170,41 @@ export function TabelaTags({ tags }: { tags: { rotulo: string; tag: string; quan
 }
 
 /**
- * Cartão de identidade (o "My card" da referência): a feira em uso ou a
- * barraquinha, em azul UNAERP com chip amarelo e hachura.
+ * Identidade da feira em uso ou da barraquinha, dentro do cartão do painel:
+ * foto (ou iniciais), nome, situação, detalhes e o valor principal à direita.
+ * Sem moldura própria: o cartão em volta já é a moldura.
  */
-export function CartaoIdentidade({ rotulo, titulo, linhas, rodape, ativo = true, href, className }: {
-    rotulo: string;
+export function Identidade({ titulo, situacao, linhas, valor, rotuloValor, foto, href }: {
     titulo: string;
+    situacao?: ReactNode;
     linhas: ReactNode[];
-    rodape?: ReactNode;
-    ativo?: boolean;
+    valor?: string;
+    rotuloValor?: string;
+    foto?: string | null;
     href?: string;
-    className?: string;
 }) {
     const corpo = (
         <>
-            <div className="hachura pointer-events-none absolute inset-y-0 inset-e-0 w-1/2 opacity-60" aria-hidden />
-            <div className="pointer-events-none absolute -inset-e-10 -top-10 size-36 rounded-full bg-secundaria/15" aria-hidden />
-            <div className="relative flex items-start justify-between gap-3">
-                <span className="text-micro font-semibold tracking-wide uppercase opacity-80">{rotulo}</span>
-                <span className="flex size-7 items-center justify-center rounded-md bg-primaria-tinta/15" aria-hidden>
-                    <span className="size-2.5 rounded-sm bg-secundaria" />
+            <Avatar nome={titulo} foto={foto} forma="quadrada" tamanho="xl" />
+            <span className="min-w-0 flex-1">
+                <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-titulo font-semibold text-tinta">{titulo}</span>
+                    {situacao}
                 </span>
-            </div>
-            <span className="relative mt-3 block h-6 w-8 rounded-md bg-secundaria/90" aria-hidden />
-            <p className="relative mt-3 truncate text-titulo font-bold">{titulo}</p>
-            <div className="relative mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-micro opacity-85">
-                {linhas.map((l, i) => <span key={i}>{l}</span>)}
-            </div>
-            {rodape && <div className="relative mt-3 flex items-center justify-between text-micro opacity-85">{rodape}</div>}
+                <span className="mt-0.5 flex flex-wrap gap-x-2 text-rotulo text-tinta-suave">
+                    {linhas.filter(Boolean).map((l, i) => <span key={i}>{l}</span>)}
+                </span>
+            </span>
+            {valor && (
+                <span className="shrink-0 text-end">
+                    {rotuloValor && <span className="block text-micro text-tinta-suave">{rotuloValor}</span>}
+                    <span className="block text-titulo font-semibold tabular-nums text-tinta">{valor}</span>
+                </span>
+            )}
         </>
     );
-    const classes = cx(
-        "relative block min-w-0 overflow-hidden rounded-2xl p-4 transition-colors",
-        ativo ? "bg-primaria text-primaria-tinta" : "bg-superficie-ativa text-tinta-media",
-        className,
-    );
-    return href ? <Link href={href} className={cx(classes, "outline-none focus-visible:ring-2 focus-visible:ring-foco")}>{corpo}</Link> : <div className={classes}>{corpo}</div>;
+    const classes = "-mx-2 flex min-w-0 items-center gap-3 rounded-xl px-2 py-2";
+    return href ? <Link prefetch href={href} className={cx(classes, "outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{corpo}</Link> : <div className={classes}>{corpo}</div>;
 }
 
 /** Ações rápidas em botões quadrados com rótulo embaixo ("Top up", "Send"...). */
@@ -224,7 +223,7 @@ export function AcoesRapidas({ acoes }: { acoes: { rotulo: string; icone: Icone;
                 const classes = "group flex min-w-0 flex-col items-center gap-1.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-foco";
                 return (
                     <li key={rotulo} className="min-w-0">
-                        {href ? <Link href={href} className={classes}>{conteudo}</Link> : <button type="button" onClick={aoClicar} className={cx(classes, "w-full")}>{conteudo}</button>}
+                        {href ? <Link prefetch href={href} className={classes}>{conteudo}</Link> : <button type="button" onClick={aoClicar} className={cx(classes, "w-full")}>{conteudo}</button>}
                     </li>
                 );
             })}
@@ -233,14 +232,14 @@ export function AcoesRapidas({ acoes }: { acoes: { rotulo: string; icone: Icone;
 }
 
 /** Atalhos em avatares (o "Quick payment" da referência): barraquinhas da feira. */
-export function AcessoRapido({ itens }: { itens: { id: number; nome: string; href: string; apagado?: boolean }[] }) {
+export function AcessoRapido({ itens }: { itens: { id: number; nome: string; href: string; apagado?: boolean; foto?: string | null }[] }) {
     return (
         <ul className="rolagem-fina flex gap-1 overflow-x-auto pb-1">
             {itens.map((i) => (
                 <li key={i.id} className="shrink-0">
                     <Dica rotulo={i.nome}>
-                        <Link href={i.href} className={cx("flex w-14 flex-col items-center gap-1 rounded-xl py-1 outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco", i.apagado && "opacity-50")}>
-                            <Avatar nome={i.nome} tamanho="lg" forma="quadrada" />
+                        <Link prefetch href={i.href} className={cx("flex w-14 flex-col items-center gap-1 rounded-xl py-1 outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco", i.apagado && "opacity-50")}>
+                            <Avatar nome={i.nome} foto={i.foto} tamanho="lg" forma="quadrada" />
                             <span className="w-full truncate px-0.5 text-center text-micro font-medium text-tinta-media">{i.nome.split(" ")[0]}</span>
                         </Link>
                     </Dica>

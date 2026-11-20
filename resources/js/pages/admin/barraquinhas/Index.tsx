@@ -140,7 +140,7 @@ export default function Index({ feira, barraquinhas }: Props) {
                             <Celula cabecalho>
                                 <span className="flex min-w-0 items-center gap-2.5">
                                     <span className="w-6 shrink-0 text-end text-rotulo tabular-nums text-tinta-fraca">{b.posicao}</span>
-                                    {!b.vaga && <Avatar nome={b.nome} tamanho="sm" />}
+                                    {!b.vaga && <Avatar nome={b.nome} foto={b.foto} tamanho="sm" />}
                                     <span className={cx("min-w-0 truncate", b.vaga ? "text-tinta-fraca italic" : "font-medium text-tinta")}>{b.nome}</span>
                                 </span>
                             </Celula>

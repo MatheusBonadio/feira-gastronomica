@@ -4,9 +4,10 @@ import { BarrasHorizontais } from "@/components/graficos/graficos";
 import { AoVivo } from "@/components/painel/ao-vivo";
 import { PorPagamento, ProgressoMeta, ProximoPasso, SaidasPorCategoria, SaudeFinanceira, VendasPorDia } from "@/components/painel/blocos";
 import { BotaoFiltros, type FiltroVendas } from "@/components/painel/filtros";
-import { AcoesRapidas, CartaoIdentidade, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
+import { AcoesRapidas, Identidade, ListaVendas, TabelaTags, useSaudacao, type Pendencia, type PontoSerie } from "@/components/painel/widgets";
 import { BotaoLink } from "@/components/ui/botao";
 import { CabecalhoPagina, Cartao, Estatistica, Vazio } from "@/components/ui/cartao";
+import { ChipStatus } from "@/components/ui/marcadores";
 import { useTempoReal } from "@/hooks/useTempoReal";
 import { cx } from "@/lib/cx";
 import { useFormato } from "@/lib/formato";
@@ -134,11 +135,13 @@ export default function Painel({ versao, barraquinha, filtro, indicadores: i, po
 
                 <aside className="grid min-w-0 content-start gap-3 md:grid-cols-2 xl:grid-cols-1">
                     <Cartao titulo={t("Minha barraquinha")} descricao={t("Ações rápidas")}>
-                        <CartaoIdentidade
-                            rotulo={barraquinha.status.label}
+                        <Identidade
                             titulo={barraquinha.nome}
+                            situacao={<ChipStatus opcao={barraquinha.status} />}
                             linhas={[loja?.feira ?? "", t("Vaga :n", { n: barraquinha.posicao })]}
-                            rodape={<><span>UNAERP · PEG</span><span className="font-semibold">{f.moedaCompacta(i.vendas)}</span></>}
+                            valor={f.moedaCompacta(i.vendas)}
+                            rotuloValor={t("Vendas")}
+                            foto={barraquinha.foto}
                         />
                         <div className="mt-4">
                             <AcoesRapidas

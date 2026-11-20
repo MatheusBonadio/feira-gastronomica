@@ -190,7 +190,7 @@ export function ProgressoMeta({ titulo, descricao, atual, meta, hrefEditar, rotu
             descricao={descricao}
             acoes={hrefEditar && (
                 <Dica rotulo={rotuloEditar}>
-                    <Link href={hrefEditar} aria-label={rotuloEditar} className="flex size-9 items-center justify-center rounded-lg text-tinta-suave outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco md:size-8">
+                    <Link prefetch href={hrefEditar} aria-label={rotuloEditar} className="flex size-9 items-center justify-center rounded-lg text-tinta-suave outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco md:size-8">
                         <IconPencil size={16} stroke={TRACO} aria-hidden />
                     </Link>
                 </Dica>
@@ -216,7 +216,7 @@ export function ProximoPasso({ pendencias, padrao }: { pendencias: Pendencia[]; 
             titulo={dica.titulo}
             texto={dica.texto}
             acao={dica.href && (
-                <Link href={dica.href} className="inline-flex h-10 items-center gap-1 rounded-md text-corpo font-semibold md:h-8 text-tinta outline-none hover:text-primaria-texto focus-visible:ring-2 focus-visible:ring-foco">
+                <Link prefetch href={dica.href} className="inline-flex h-10 items-center gap-1 rounded-md text-corpo font-semibold md:h-8 text-tinta outline-none hover:text-primaria-texto focus-visible:ring-2 focus-visible:ring-foco">
                     {dica.rotulo ?? t("Ver mais")}
                     <IconArrowRight size={15} stroke={TRACO} className="rtl:rotate-180" aria-hidden />
                 </Link>
