@@ -1,5 +1,6 @@
 import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useSyncExternalStore } from "react";
+import { flushSync } from "react-dom";
 import { Dica } from "@/components/ui/dica";
 import { classesBotao } from "@/components/ui/botao";
 import { TRACO, type Icone } from "@/components/ui/icone";
@@ -26,10 +27,39 @@ const midia = typeof window !== "undefined" ? window.matchMedia("(prefers-color-
 let preferencia: PreferenciaTema = typeof window !== "undefined" ? lerPreferencia() : "sistema";
 const ouvintes = new Set<() => void>();
 
+function trocarClasse(escuro: boolean) {
+    document.documentElement.classList.toggle("dark", escuro);
+    // Síncrono: a "foto" nova da view transition já sai com os ícones do tema certo.
+    flushSync(() => ouvintes.forEach((o) => o()));
+}
+
+/*
+ * A troca de tema é um esmaecimento único da tela (View Transitions). Sem isso,
+ * os elementos com transition-colors mudavam aos poucos e o resto na hora, e a
+ * tela trocava em etapas. Durante a troca, "trocando-tema" desliga essas
+ * transições (app.css); com movimento reduzido ou sem suporte, troca na hora.
+ */
 function aplicar() {
     const escuro = preferencia === "escuro" || (preferencia === "sistema" && !!midia?.matches);
-    document.documentElement.classList.toggle("dark", escuro);
-    ouvintes.forEach((o) => o());
+    const raiz = document.documentElement;
+
+    if (raiz.classList.contains("dark") === escuro) {
+        ouvintes.forEach((o) => o());
+        return;
+    }
+
+    const reduzir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!document.startViewTransition || reduzir || document.visibilityState === "hidden") {
+        raiz.classList.add("trocando-tema");
+        trocarClasse(escuro);
+        void raiz.offsetWidth; // aplica as cores novas antes de religar as transições
+        raiz.classList.remove("trocando-tema");
+        return;
+    }
+
+    raiz.classList.add("transicao-tema", "trocando-tema");
+    const fim = () => raiz.classList.remove("transicao-tema", "trocando-tema");
+    document.startViewTransition(() => trocarClasse(escuro)).finished.then(fim, fim);
 }
 
 midia?.addEventListener("change", () => preferencia === "sistema" && aplicar());
