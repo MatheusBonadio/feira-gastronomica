@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\BarraquinhaStatus;
+use App\Services\FotoService;
+use App\Support\PreferenciasCheckout;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,7 +22,19 @@ class Barraquinha extends Model
             'status' => BarraquinhaStatus::class,
             'meta_vendas' => 'decimal:2',
             'posicao' => 'integer',
+            'checkout' => 'array',
         ];
+    }
+
+    public function fotoUrl(): ?string
+    {
+        return FotoService::url($this->foto_path);
+    }
+
+    /** Como o PDV desta barraquinha funciona (escolhido pelo gestor dela). */
+    public function preferenciasCheckout(): PreferenciasCheckout
+    {
+        return PreferenciasCheckout::de($this->checkout);
     }
 
     public function feira(): BelongsTo

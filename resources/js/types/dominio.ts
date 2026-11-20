@@ -25,6 +25,22 @@ export interface Barraquinha {
     responsaveis: string | null;
     status: Opcao;
     meta: number | null;
+    /** URL da foto (public/fotos) ou null: aí aparecem as iniciais. */
+    foto: string | null;
+}
+
+/** Como o PDV de uma barraquinha funciona (App\Support\PreferenciasCheckout::paraTela). */
+export interface PreferenciasCheckout {
+    pagamentos: string[];
+    pagamentoPadrao: string | null;
+    canalPadrao: string | null;
+    exibicao: "grade" | "lista";
+    agruparCategorias: boolean;
+    ordem: "nome" | "mais_vendidos";
+    mostrarCombos: boolean;
+    calcularTroco: boolean;
+    chavePix: string | null;
+    confirmarAntes: boolean;
 }
 
 export interface Item {
@@ -72,6 +88,7 @@ export interface Venda {
     resumo: string;
     operador: string | null;
     barraquinha: string | null;
+    barraquinhaFoto: string | null;
     linhas?: {
         descricao: string;
         tag: string;

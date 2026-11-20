@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SenhaController;
 use App\Http\Controllers\IdiomaController;
 use App\Http\Controllers\Loja;
 use App\Http\RotasDaLoja;
+use App\Http\RotasDoPerfil;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check()
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'auth.session', 'acesso.ativo'])->group(function () {
     Route::middleware('senha.trocada')->group(function () {
 
         Route::prefix('admin')->name('admin.')->middleware('perfil:admin')->group(function () {
+            RotasDoPerfil::registrar();
             Route::get('/', [Admin\PainelController::class, 'index'])->name('painel');
             Route::get('pulso', [Admin\PainelController::class, 'pulso'])->name('painel.pulso');
             Route::get('pendencias', [Admin\PainelController::class, 'pendencias'])->name('pendencias');
@@ -63,6 +65,9 @@ Route::middleware(['auth', 'auth.session', 'acesso.ativo'])->group(function () {
         });
 
         Route::prefix('barraquinha')->name('barraquinha.')->middleware('perfil:barraquinha')
-            ->group(fn () => RotasDaLoja::registrar(admin: false));
+            ->group(function () {
+                RotasDoPerfil::registrar();
+                RotasDaLoja::registrar(admin: false);
+            });
     });
 });

@@ -39,6 +39,12 @@ class RotasDaLoja
         Route::resource('lancamentos', Loja\LancamentoController::class)->except('show');
         Route::get('lancamentos/{lancamento}/comprovante', [Loja\LancamentoController::class, 'comprovante'])->name('lancamentos.comprovante');
 
+        // Foto da barraquinha e personalização do checkout (PDV).
+        Route::get('configuracoes', [Loja\ConfiguracaoController::class, 'edit'])->name('configuracoes');
+        Route::put('configuracoes/checkout', [Loja\ConfiguracaoController::class, 'checkout'])->name('configuracoes.checkout');
+        Route::post('configuracoes/foto', [Loja\ConfiguracaoController::class, 'foto'])->name('configuracoes.foto');
+        Route::delete('configuracoes/foto', [Loja\ConfiguracaoController::class, 'removerFoto'])->name('configuracoes.foto.remover');
+
         if (! $admin) {
             Route::get('relatorios', [Loja\RelatorioController::class, 'index'])->name('relatorios.index');
             Route::get('relatorios/exportar', [Loja\RelatorioController::class, 'exportar'])->name('relatorios.exportar');

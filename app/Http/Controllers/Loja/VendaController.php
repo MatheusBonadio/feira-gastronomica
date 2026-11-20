@@ -49,22 +49,30 @@ class VendaController extends Controller
         ]);
     }
 
-    /** Ponto de venda (PDV): pensado para celular e poucos toques. */
+    /** Ponto de venda (PDV): pensado para celular e poucos toques, no jeito escolhido pelo gestor da barraquinha. */
     public function create(): Response
     {
+        $checkout = $this->loja->barraquinha()->preferenciasCheckout();
         $vendidos = VendaItem::whereHas('venda', fn ($q) => $q->concluidas())
             ->selectRaw('item_id, SUM(quantidade) as qtd')->groupBy('item_id')->toBase()->pluck('qtd', 'item_id');
 
+        $itens = Item::with(['precos', 'categoria'])->ativos()->orderBy('nome')->get();
+        if ($checkout->ordem === 'mais_vendidos') {
+            // Ordenação estável: no empate, continua a ordem alfabética.
+            $itens = $itens->sortByDesc(fn (Item $i) => (int) ($vendidos[$i->id] ?? 0))->values();
+        }
+
         return Inertia::render('loja/vendas/Pdv', [
-            'itens' => Item::with(['precos', 'categoria'])->ativos()->orderBy('nome')->get()
-                ->map(fn (Item $i) => Apresentacao::item($i, (int) ($vendidos[$i->id] ?? 0))),
+            'itens' => $itens->map(fn (Item $i) => Apresentacao::item($i, (int) ($vendidos[$i->id] ?? 0))),
             'combos' => Combo::with('itens.precos')->ativos()->orderBy('numero')->get()
                 ->filter->aplicavel()
                 ->map(fn (Combo $c) => Apresentacao::combo($c))
                 ->values(),
             'canais' => Apresentacao::opcoes(Canal::cases()),
-            'pagamentos' => Apresentacao::opcoes(FormaPagamento::cases()),
-            'canalInicial' => session('canal', Canal::PADRAO->value),
+            'pagamentos' => Apresentacao::opcoes(array_map(FormaPagamento::from(...), $checkout->pagamentos)),
+            // Depois de uma venda, continua no canal dela; senão, o canal padrão da barraquinha.
+            'canalInicial' => session('canal', $checkout->canalPadrao ?? Canal::PADRAO->value),
+            'checkout' => $checkout->paraTela(),
         ]);
     }
 
@@ -118,9 +126,12 @@ class VendaController extends Controller
 
     private function validarCarrinho(Request $request, bool $exigirPagamento): array
     {
+        // Só as formas de pagamento que a barraquinha aceita (configuração do checkout).
+        $aceitas = $this->loja->barraquinha()->preferenciasCheckout()->pagamentos;
+
         return $request->validate([
             'canal' => ['required', Rule::enum(Canal::class)],
-            'pagamento' => [$exigirPagamento ? 'required' : 'nullable', Rule::enum(FormaPagamento::class)],
+            'pagamento' => [$exigirPagamento ? 'required' : 'nullable', Rule::enum(FormaPagamento::class), Rule::in($aceitas)],
             'itens' => [$exigirPagamento ? 'required' : 'nullable', 'array'],
             'itens.*' => ['integer', 'min:0', 'max:999'],
         ], [

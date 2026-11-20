@@ -1,13 +1,13 @@
 import { Head, router, usePage } from "@inertiajs/react";
-import { IconChevronUp, IconLock, IconMinus, IconPlus, IconSearch, IconShoppingCart, IconStack2, IconTrash, IconX } from "@tabler/icons-react";
+import { IconChevronUp, IconCopy, IconLock, IconMinus, IconPlus, IconSearch, IconShoppingCart, IconStack2, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { avisar } from "@/components/ui/avisos";
 import { Botao } from "@/components/ui/botao";
-import { Entrada, Segmentos } from "@/components/ui/campos";
-import { Folha } from "@/components/ui/dialogo";
+import { CampoMoeda, Entrada, Segmentos } from "@/components/ui/campos";
+import { Confirmar, Folha } from "@/components/ui/dialogo";
 import { Cartao, Faixa, Vazio } from "@/components/ui/cartao";
 import { TRACO } from "@/components/ui/icone";
-import { ChipTag, COR_CANAL, COR_PAGAMENTO, Contador } from "@/components/ui/marcadores";
+import { ChipTag, COR_CANAL, Contador, ICONE_PAGAMENTO, Pagamento } from "@/components/ui/marcadores";
 import { cx } from "@/lib/cx";
 import { useMidia } from "@/lib/midia";
 import { useFormato } from "@/lib/formato";
@@ -15,7 +15,7 @@ import { postarJson } from "@/lib/http";
 import { useT } from "@/lib/i18n";
 import { useRotaLoja } from "@/lib/rotas";
 import type { Opcao } from "@/types/inertia";
-import type { Combo, Item } from "@/types/dominio";
+import type { Combo, Item, PreferenciasCheckout } from "@/types/dominio";
 
 interface Props {
     itens: Item[];
@@ -23,6 +23,8 @@ interface Props {
     canais: Opcao[];
     pagamentos: Opcao[];
     canalInicial: string;
+    /** Jeito do PDV escolhido pelo gestor da barraquinha (Configurações). */
+    checkout: PreferenciasCheckout;
 }
 
 /** Resposta de vendas.simular (ResultadoClassificacao::paraArray). */
@@ -47,7 +49,7 @@ const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacrit
  * usa o mesmo algoritmo que grava a venda). No celular o carrinho abre numa
  * folha a partir da barra fixa no rodapé; no desktop fica numa coluna fixa.
  */
-export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }: Props) {
+export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout }: Props) {
     const desktop = useMidia("(min-width: 64rem)");
     const t = useT();
     const { moeda } = useFormato();
@@ -55,7 +57,10 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
     const { loja } = usePage().props;
 
     const [canal, setCanal] = useState(canalInicial);
-    const [pagamento, setPagamento] = useState<string | null>(null);
+    const [pagamento, setPagamento] = useState<string | null>(checkout.pagamentoPadrao);
+    // Troco: quanto o cliente entregou em dinheiro (só com "Calcular o troco" ligado).
+    const [recebido, setRecebido] = useState<number | null>(null);
+    const [confirmando, setConfirmando] = useState(false);
     const [carrinho, setCarrinho] = useState<Carrinho>({});
     const [previa, setPrevia] = useState<Previa | null>(null);
     const [calculando, setCalculando] = useState(false);
@@ -71,11 +76,11 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
         const grupos = new Map<string, Item[]>();
         for (const item of itens) {
             if (termo && !normalizar(item.nome).includes(termo)) continue;
-            const chave = item.categoria ?? "";
+            const chave = checkout.agruparCategorias ? (item.categoria ?? "") : "";
             grupos.set(chave, [...(grupos.get(chave) ?? []), item]);
         }
         return [...grupos.entries()];
-    }, [itens, busca]);
+    }, [itens, busca, checkout.agruparCategorias]);
 
     const alterar = (item: Item, delta: number) =>
         setCarrinho((atual) => {
@@ -125,18 +130,26 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
             avisar(t("Escolha a forma de pagamento."), "erro");
             return;
         }
+        if (checkout.confirmarAntes && !confirmando) {
+            setConfirmando(true);
+            return;
+        }
         router.post(
             rotaLoja("vendas.store"),
             { canal, pagamento, itens: carrinho },
             {
                 preserveScroll: true,
                 onStart: () => setEnviando(true),
-                onFinish: () => setEnviando(false),
+                onFinish: () => {
+                    setEnviando(false);
+                    setConfirmando(false);
+                },
                 // A resposta volta para esta mesma página: sem limpar, o próximo
                 // "Confirmar" repetiria a venda.
                 onSuccess: () => {
                     setCarrinho({});
-                    setPagamento(null);
+                    setPagamento(checkout.pagamentoPadrao);
+                    setRecebido(null);
                     setBusca("");
                     setFolhaAberta(false);
                 },
@@ -164,6 +177,9 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
         pagamentos,
         pagamento,
         aoPagar: setPagamento,
+        checkout,
+        recebido,
+        aoReceber: setRecebido,
         aoLimpar: limpar,
         aoConfirmar: confirmar,
         enviando,
@@ -207,21 +223,35 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
                     {porCategoria.map(([categoria, lista]) => (
                         <section key={categoria} className="mb-6" aria-label={categoria || t("Itens")}>
                             {categoria && <h2 className="mb-2 text-micro font-semibold tracking-wide text-tinta-suave uppercase">{categoria}</h2>}
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                                {lista.map((item) => (
-                                    <CartaoItem
-                                        key={item.id}
-                                        item={item}
-                                        preco={precoNoCanal(item, canal)}
-                                        quantidade={carrinho[item.id] ?? 0}
-                                        aoAlterar={(delta) => alterar(item, delta)}
-                                    />
-                                ))}
-                            </div>
+                            {checkout.exibicao === "lista" ? (
+                                <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+                                    {lista.map((item) => (
+                                        <LinhaItem
+                                            key={item.id}
+                                            item={item}
+                                            preco={precoNoCanal(item, canal)}
+                                            quantidade={carrinho[item.id] ?? 0}
+                                            aoAlterar={(delta) => alterar(item, delta)}
+                                        />
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                                    {lista.map((item) => (
+                                        <CartaoItem
+                                            key={item.id}
+                                            item={item}
+                                            preco={precoNoCanal(item, canal)}
+                                            quantidade={carrinho[item.id] ?? 0}
+                                            aoAlterar={(delta) => alterar(item, delta)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </section>
                     ))}
 
-                    {combos.length > 0 && (
+                    {checkout.mostrarCombos && combos.length > 0 && (
                         <Cartao titulo={t("Combos aplicados automaticamente")} icone={IconStack2} descricao={t("Não precisa escolher: o sistema monta o combo mais vantajoso.")}>
                             <ul className="flex flex-col gap-2">
                                 {combos.map((c) => (
@@ -283,6 +313,38 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial }:
             <Folha aberta={folhaAberta && !desktop} aoFechar={() => setFolhaAberta(false)} titulo={t("Carrinho")} ocultarCabecalho semFechar corpo="rolagem-fina min-h-0 overflow-y-auto px-4 pt-3 pb-4">
                 <ConteudoCarrinho {...propsCarrinho} aoFechar={() => setFolhaAberta(false)} />
             </Folha>
+
+            {/* "Confirmar antes de registrar" (Configurações): resumo e segundo toque. */}
+            <Confirmar
+                aberto={confirmando}
+                aoFechar={() => !enviando && setConfirmando(false)}
+                titulo={t("Registrar esta venda?")}
+                rotuloConfirmar={enviando ? t("Registrando…") : t("Registrar venda")}
+                perigo={false}
+                desabilitado={enviando}
+                aoConfirmar={confirmar}
+            >
+                <dl className="flex flex-col gap-2 text-corpo">
+                    <div className="flex justify-between gap-4">
+                        <dt className="text-tinta-suave">{t(":n itens", { n: quantidade })}</dt>
+                        <dd className="text-titulo font-semibold tabular-nums text-tinta">{previa ? moeda(previa.total) : "—"}</dd>
+                    </div>
+                    {pagamento && (
+                        <div className="flex justify-between gap-4">
+                            <dt className="text-tinta-suave">{t("Pagamento")}</dt>
+                            <dd className="text-tinta">
+                                <Pagamento opcao={pagamentos.find((p) => p.valor === pagamento) ?? { valor: pagamento, label: pagamento }} />
+                            </dd>
+                        </div>
+                    )}
+                    {pagamento === "dinheiro" && recebido !== null && previa && recebido >= previa.total && (
+                        <div className="flex justify-between gap-4">
+                            <dt className="text-tinta-suave">{t("Troco")}</dt>
+                            <dd className="font-semibold tabular-nums text-tinta">{moeda(recebido - previa.total)}</dd>
+                        </div>
+                    )}
+                </dl>
+            </Confirmar>
         </>
     );
 }
@@ -346,7 +408,7 @@ function CartaoItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco:
 }
 
 /** Carrinho classificado pelo servidor + pagamento + confirmar. Usado na coluna (desktop) e na folha (celular). */
-function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamentos, pagamento, aoPagar, aoLimpar, aoConfirmar, enviando, aoFechar }: {
+function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamentos, pagamento, aoPagar, checkout, recebido, aoReceber, aoLimpar, aoConfirmar, enviando, aoFechar }: {
     previa: Previa | null;
     quantidade: number;
     calculando: boolean;
@@ -354,6 +416,9 @@ function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamen
     pagamentos: Opcao[];
     pagamento: string | null;
     aoPagar: (valor: string) => void;
+    checkout: PreferenciasCheckout;
+    recebido: number | null;
+    aoReceber: (valor: number | null) => void;
     aoLimpar: () => void;
     aoConfirmar: () => void;
     enviando: boolean;
@@ -424,9 +489,12 @@ function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamen
 
             <div className="flex flex-col gap-2">
                 <span className="text-corpo font-medium text-tinta">{t("Forma de pagamento")}</span>
-                <Segmentos rotulo={t("Forma de pagamento")} opcoes={pagamentos.map((o) => ({ valor: o.valor, rotulo: o.label }))} valor={pagamento} aoMudar={aoPagar} cores={COR_PAGAMENTO} cheio grande />
+                <Segmentos rotulo={t("Forma de pagamento")} opcoes={pagamentos.map((o) => ({ valor: o.valor, rotulo: o.label }))} valor={pagamento} aoMudar={aoPagar} icones={ICONE_PAGAMENTO} cheio grande />
                 {quantidade > 0 && !pagamento && <p id={idDica} className="text-rotulo text-tinta-suave">{t("Escolha a forma de pagamento.")}</p>}
             </div>
+
+            {pagamento === "dinheiro" && checkout.calcularTroco && quantidade > 0 && <Troco total={previa?.total ?? null} recebido={recebido} aoReceber={aoReceber} />}
+            {pagamento === "pix" && checkout.chavePix && <ChavePix chave={checkout.chavePix} />}
 
             <Botao
                 tamanho="lg"
@@ -441,3 +509,94 @@ function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamen
     );
 }
 
+/** Exibição em lista (Configurações → Itens): linha compacta, com − e + sempre à mão. */
+function LinhaItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco: number | null; quantidade: number; aoAlterar: (delta: number) => void }) {
+    const t = useT();
+    const { moeda, numero } = useFormato();
+    const restante = item.estoqueRestante !== null ? item.estoqueRestante - quantidade : null;
+    const esgotado = restante !== null && restante <= 0;
+
+    return (
+        <li className={cx("flex min-w-0 items-center gap-1 rounded-xl border bg-superficie p-1 transition-colors", quantidade > 0 ? "border-primaria ring-1 ring-primaria" : "border-linha")}>
+            <button
+                type="button"
+                onClick={() => aoAlterar(1)}
+                className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
+            >
+                <span className="min-w-0 flex-1">
+                    <span className="block truncate text-ui font-medium text-tinta">{item.nome}</span>
+                    {restante !== null && (
+                        <span className={cx("block text-rotulo", esgotado ? "font-medium text-negativo" : "text-tinta-suave")}>
+                            {esgotado ? t("Esgotado") : t("Restam :n", { n: numero(restante) })}
+                        </span>
+                    )}
+                </span>
+                <span className="shrink-0 text-ui font-semibold tabular-nums text-tinta">{moeda(preco)}</span>
+            </button>
+            {quantidade > 0 && (
+                <span className="flex shrink-0 items-center">
+                    <button
+                        type="button"
+                        onClick={() => aoAlterar(-1)}
+                        aria-label={t("Remover um :nome", { nome: item.nome })}
+                        className="flex size-11 items-center justify-center rounded-lg text-tinta-media outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
+                    >
+                        {quantidade === 1 ? <IconTrash size={18} stroke={TRACO} aria-hidden /> : <IconMinus size={20} stroke={TRACO} aria-hidden />}
+                    </button>
+                    <span className="min-w-6 text-center text-titulo font-semibold tabular-nums text-tinta" aria-live="polite">
+                        <span className="sr-only">{t("No carrinho:")} </span>
+                        {quantidade}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => aoAlterar(1)}
+                        aria-label={t("Adicionar um :nome", { nome: item.nome })}
+                        className="flex size-11 items-center justify-center rounded-lg text-tinta-media outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
+                    >
+                        <IconPlus size={20} stroke={TRACO} aria-hidden />
+                    </button>
+                </span>
+            )}
+        </li>
+    );
+}
+
+/** Dinheiro com "Calcular o troco": quanto o cliente entregou e quanto volta. */
+function Troco({ total, recebido, aoReceber }: { total: number | null; recebido: number | null; aoReceber: (valor: number | null) => void }) {
+    const t = useT();
+    const { moeda } = useFormato();
+    const diferenca = total !== null && recebido !== null ? recebido - total : null;
+
+    return (
+        <div className="flex flex-col gap-2 rounded-xl bg-superficie-suave p-3">
+            <CampoMoeda rotulo={t("Valor recebido")} valor={recebido} aoMudar={aoReceber} inputMode="decimal" />
+            {diferenca !== null && (
+                <p className="flex items-baseline justify-between gap-3" aria-live="polite">
+                    <span className="text-corpo text-tinta-suave">{diferenca >= 0 ? t("Troco") : t("Faltam")}</span>
+                    <span className={cx("text-titulo font-semibold tabular-nums", diferenca >= 0 ? "text-tinta" : "text-negativo")}>{moeda(Math.abs(diferenca))}</span>
+                </p>
+            )}
+        </div>
+    );
+}
+
+/** Pix com chave cadastrada: o operador mostra ou copia a chave para o cliente. */
+function ChavePix({ chave }: { chave: string }) {
+    const t = useT();
+
+    const copiar = () =>
+        navigator.clipboard
+            .writeText(chave)
+            .then(() => avisar(t("Chave Pix copiada."), "sucesso"))
+            .catch(() => avisar(t("Não foi possível copiar. Selecione a chave e copie."), "erro"));
+
+    return (
+        <div className="flex items-center gap-3 rounded-xl bg-superficie-suave p-3">
+            <span className="min-w-0 flex-1">
+                <span className="block text-rotulo text-tinta-suave">{t("Chave Pix")}</span>
+                <span className="block text-ui font-semibold break-all text-tinta select-all">{chave}</span>
+            </span>
+            <Botao variante="secundario" icone={IconCopy} onClick={copiar}>{t("Copiar")}</Botao>
+        </div>
+    );
+}

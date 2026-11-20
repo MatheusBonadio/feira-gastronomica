@@ -54,6 +54,7 @@ class Apresentacao
             'responsaveis' => $b->responsaveis,
             'status' => self::enum($b->status),
             'meta' => $b->meta_vendas !== null ? (float) $b->meta_vendas : null,
+            'foto' => $b->fotoUrl(),
         ];
     }
 
@@ -121,6 +122,7 @@ class Apresentacao
             'resumo' => $venda->resumo(),
             'operador' => $venda->operador?->nome,
             'barraquinha' => $venda->relationLoaded('barraquinha') ? $venda->barraquinha?->nomeExibicao() : null,
+            'barraquinhaFoto' => $venda->relationLoaded('barraquinha') ? $venda->barraquinha?->fotoUrl() : null,
         ];
 
         if ($detalhe) {
