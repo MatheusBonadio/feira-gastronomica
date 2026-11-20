@@ -20,7 +20,8 @@ export default function Login() {
                 className="flex flex-col gap-5"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    form.post(rota("login"), { onFinish: () => form.reset("password") });
+                    // Com view transition: se o login passa, o quadro recua e o app entra (app.css).
+                    form.post(rota("login"), { viewTransition: true, onFinish: () => form.reset("password") });
                 }}
             >
                 <div>

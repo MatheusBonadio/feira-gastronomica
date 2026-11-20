@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\AcaoAuditoria;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\AuditoriaLog;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
@@ -31,12 +32,22 @@ class LoginController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        $destino = redirect()->intended(route($user->perfil->homeRoute()))->getTargetUrl();
+
         if ($user->idioma) {
             $request->session()->put('idioma', $user->idioma);
+
+            // Idioma diferente do da tela de login: recarga completa (o dicionário vem uma vez por carga).
+            if ($user->idioma !== app()->getLocale()) {
+                return Inertia::location($destino);
+            }
         }
 
-        // Recarga completa: rotas (Ziggy), traduções e CSRF passam a ser os do perfil logado.
-        return Inertia::location(redirect()->intended(route($user->perfil->homeRoute()))->getTargetUrl());
+        // Sem recarga (mais rápido, e com a transição do login): as rotas do perfil
+        // chegam junto com a primeira página (prop "rotas", ver HandleInertiaRequests).
+        $request->session()->put(HandleInertiaRequests::ENVIAR_ROTAS, true);
+
+        return redirect($destino);
     }
 
     public function destroy(Request $request): HttpResponse
