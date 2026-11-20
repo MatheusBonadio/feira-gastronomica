@@ -14,10 +14,6 @@ return [
         'en' => 'English',
     ],
 
-    // Row Level Security no MySQL/MariaDB (views + triggers, ver App\Support\Rls\RlsMysql).
-    // Ignorado em outros bancos, como o SQLite dos testes.
-    'rls' => (bool) env('FEIRA_RLS', true),
-
     'por_pagina' => (int) env('FEIRA_POR_PAGINA', 20),
 
 ];

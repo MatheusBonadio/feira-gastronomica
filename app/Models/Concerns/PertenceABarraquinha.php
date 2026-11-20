@@ -31,7 +31,6 @@ trait PertenceABarraquinha
     /**
      * Link ou id alterado apontando para dado de outra barraquinha: acesso negado
      * e auditoria, em vez de um 404 que confirmaria a existência do registro.
-     * Com RLS ativo o registro alheio nem é encontrado, e a resposta é a mesma.
      */
     public function resolveRouteBinding($value, $field = null)
     {

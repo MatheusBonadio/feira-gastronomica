@@ -2,7 +2,7 @@
 name: feira-gastronomica-unaerp
 description: |
     Guia para manter o sistema da Feira Gastronômica UNAERP: Laravel 12 + Inertia v3 + React 19
-    (TypeScript) + Radix Primitives + Tailwind v4 (kit próprio), MySQL/MariaDB com RLS por views, i18n pt_BR/en. Use ao mexer em
+    (TypeScript) + Radix Primitives + Tailwind v4 (kit próprio), MySQL/MariaDB só com tabelas, i18n pt_BR/en. Use ao mexer em
     telas, rotas, feiras, barraquinhas, itens, combos, vendas (PDV), lançamentos, painéis,
     relatórios, painel em tempo real, autenticação, isolamento entre barraquinhas ou tema.
 ---
@@ -16,16 +16,17 @@ Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.
 
 1. **Isolamento**: dado de barraquinha só é lido pelo id da sessão.
    - Models com `barraquinha_id` usam o trait `PertenceABarraquinha` (escopo global +
-     binding de rota que responde 403 e audita).
-   - Tabela nova com `barraquinha_id`: inclua em `RlsMysql::TABELAS_DA_BARRAQUINHA` e numa
-     migration que chame `(new RlsMysql)->criarViews()` depois de alterar colunas.
+     binding de rota que responde 403 e audita). O isolamento é só da aplicação: consulta
+     com `DB::table()` ou `withoutGlobalScopes()` precisa filtrar a barraquinha à mão.
+   - Banco só com tabelas: nada de views, triggers, functions, procedures ou eventos nas
+     migrations (a hospedagem, InfinityFree, não aceita).
    - Admin vê qualquer barraquinha pelas rotas `admin.loja.*`; o middleware `LojaCoerente`
      confere que os registros da URL são dessa barraquinha.
 2. **Classificação de venda** fica só em `ClassificadorVenda` (o PDV pede prévia ao
    servidor). O operador nunca escolhe a tag.
 3. **Histórico preservado**: `venda_linhas` e `venda_itens` guardam preço, nome e custo da época.
 4. **Feira encerrada** bloqueia escrita: use `VendaService::garantirFeiraAberta()` nos serviços.
-5. **Auditoria** via `AuditoriaLog::registrar()` (insert sem RETURNING; a trilha é imutável no banco).
+5. **Auditoria** via `AuditoriaLog::registrar()`; a trilha só recebe insert (nunca update ou delete).
 
 ## Convenções
 
@@ -54,7 +55,7 @@ Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.
 
 ```bash
 php vendor/bin/phpunit                         # SQLite
-DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes php vendor/bin/phpunit   # com RLS
+DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes php vendor/bin/phpunit   # MySQL/MariaDB
 npx tsc --noEmit && npm run build
 composer audit && npm audit
 ```

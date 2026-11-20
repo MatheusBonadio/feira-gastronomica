@@ -53,7 +53,8 @@ git merge --abort 2>/dev/null || true
 git reset -q --hard HEAD
 
 # Registra a master como segundo pai: "git log prod" mostra de qual commit veio.
-git merge -q -s ours --no-commit master >/dev/null 2>&1 || true
+# (--allow-unrelated-histories: a master pode ter sido reescrita depois da prod nascer.)
+git merge -q -s ours --no-commit --allow-unrelated-histories master >/dev/null 2>&1 || true
 
 # 4. Árvore = master + artefatos. Apaga o que era versionado (menos vendor/ e
 #    public/build/, refeitos abaixo) e escreve os arquivos da master.

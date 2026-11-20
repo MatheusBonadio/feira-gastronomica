@@ -18,8 +18,8 @@
         </include>
     </source>
     <!--
-        Por padrão roda em SQLite em memória (só a camada de isolamento da aplicação).
-        Para testar também o RLS do banco, aponte para um MySQL/MariaDB de testes:
+        Por padrão roda em SQLite em memória. Para rodar contra MySQL/MariaDB,
+        aponte para um banco de testes:
           DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes php artisan test
     -->
     <php>

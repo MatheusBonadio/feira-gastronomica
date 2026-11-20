@@ -34,10 +34,7 @@ class AuditoriaLog extends Model
         return $this->belongsTo(Barraquinha::class);
     }
 
-    /**
-     * Grava sem RETURNING: no PostgreSQL com RLS a barraquinha pode inserir
-     * na trilha, mas não ler, e um RETURNING exigiria a leitura.
-     */
+    /** A trilha só recebe insert: nada na aplicação altera ou apaga um registro. */
     public static function registrar(
         AcaoAuditoria $acao,
         Model|string|null $entidade = null,

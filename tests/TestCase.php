@@ -22,23 +22,8 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
-    /** No MySQL com RLS as tabelas protegidas são views: o migrate:fresh precisa apagá-las. */
-    protected bool $dropViews = true;
-
     /** Sem mock da saída de console (dispensa a dependência do Mockery). */
     public $mockConsoleOutput = false;
-
-    /**
-     * Em produção cada requisição grava o próprio contexto de RLS. No teste, depois
-     * da requisição, as asserções precisam enxergar o banco inteiro (como o console).
-     */
-    public function call($method, $uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null)
-    {
-        $resposta = parent::call($method, $uri, $parameters, $cookies, $files, $server, $content);
-        app(\App\Support\ContextoRls::class)->definirSistema();
-
-        return $resposta;
-    }
 
     protected function criarAdmin(): User
     {

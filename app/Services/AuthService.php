@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\AcaoAuditoria;
 use App\Models\AuditoriaLog;
 use App\Models\User;
-use App\Support\ContextoRls;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -13,8 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    public function __construct(private readonly ContextoRls $contexto) {}
-
     /**
      * Mensagem genérica para usuário ou senha errados (sem dizer qual) e
      * bloqueio temporário após N falhas seguidas do mesmo usuário + IP.
@@ -52,12 +49,7 @@ class AuthService
             throw ValidationException::withMessages(['usuario' => __('Usuário ou senha inválidos.')]);
         }
 
-        // Com o perfil gravado, o RLS libera a leitura da própria barraquinha.
-        $this->contexto->definirPara($user);
-
         if (! $user->podeEntrar()) {
-            $this->contexto->definirPara(null);
-
             throw ValidationException::withMessages(['usuario' => __('Acesso bloqueado. Procure a coordenação da feira.')]);
         }
 

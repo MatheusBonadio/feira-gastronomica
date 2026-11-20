@@ -3,11 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Barraquinha;
-use App\Support\ContextoRls;
 use App\Support\Loja;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Events\ConnectionEstablished;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -18,21 +15,11 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ContextoRls::class);
         $this->app->scoped(Loja::class);
     }
 
     public function boot(): void
     {
-        $contexto = $this->app->make(ContextoRls::class);
-
-        // Toda conexão nova já nasce com o contexto de RLS atual.
-        Event::listen(ConnectionEstablished::class, fn (ConnectionEstablished $e) => $contexto->aplicar($e->connection));
-
-        if ($this->app->runningInConsole()) {
-            $contexto->definirSistema();
-        }
-
         // Binding explícito: {barraquinha} vira model mesmo sem aparecer na assinatura do controller.
         Route::model('barraquinha', Barraquinha::class);
 

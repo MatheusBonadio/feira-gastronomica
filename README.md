@@ -15,9 +15,9 @@ conforme a _Especificação Funcional – App de Gestão da Feira Gastronômica_
 | Back-end   | PHP 8.2+, Laravel 12, sessão nativa (sem JWT)                                        |
 | Front-end  | React 19 + TypeScript via Inertia.js v3 (monolito, sem API separada)                 |
 | UI         | Radix Primitives (acessibilidade) + Tailwind CSS v4 (tokens), ícones Tabler, fonte Plus Jakarta Sans (`DESIGN.md`) |
-| Banco      | MySQL 8 ou MariaDB 10.4+, com RLS por views + triggers                               |
+| Banco      | MySQL 8 ou MariaDB 10.4+, só tabelas (sem views, triggers nem functions)             |
 | Relatórios | XLSX e CSV próprios, PDF com dompdf                                                  |
-| Testes     | PHPUnit 11 (SQLite em memória e MySQL/MariaDB com RLS)                               |
+| Testes     | PHPUnit 11 (SQLite em memória ou MySQL/MariaDB)                                      |
 
 Dependências auditadas: `composer audit` e `npm audit` sem vulnerabilidades conhecidas.
 
@@ -49,25 +49,24 @@ Dados carregados:
   exemplos do relatório (Combo do Guerreiro, O Hobbit e o Dragão, Eu Mereço, Combo
   família, Combo com molho) e algumas vendas.
 
-Recriar o banco do zero (as tabelas protegidas são views, daí o `--drop-views`):
+Recriar o banco do zero:
 
 ```bash
-php artisan migrate:fresh --drop-views --seed
+php artisan migrate:fresh --seed
 ```
 
 ## Testes
 
 ```bash
-composer test                                                    # SQLite (camada da aplicação)
+composer test                                                    # SQLite
 DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes \
-    php vendor/bin/phpunit                                       # MySQL/MariaDB, inclui RLS
+    php vendor/bin/phpunit                                       # MySQL/MariaDB
 npx tsc --noEmit                                                 # tipos do front
 ```
 
 Os testes cobrem a tabela de exemplos de classificação da seção 7, isolamento entre
 barraquinhas, autenticação (mensagem genérica, bloqueio após 5 tentativas, troca de senha),
-combos, feiras, relatórios, indicadores contra o anexo de 2026, RLS no banco e a
-completude das traduções.
+combos, feiras, relatórios, indicadores contra o anexo de 2026 e a completude das traduções.
 
 ## Deploy (branch prod + git ftp)
 
@@ -104,23 +103,21 @@ documentação, configs do Node). O `.env` do servidor é criado uma vez, à mã
 
 ## Como as exigências foram atendidas
 
-### Isolamento total (em duas camadas)
+### Isolamento total (na aplicação)
 
-1. **Aplicação**: o escopo global `BarraquinhaScope` filtra toda consulta da barraquinha
-   pelo id da sessão, nunca por parâmetro da tela. Link ou id alterado para dado de outra
-   barraquinha responde _403 Acesso negado_ e grava auditoria (`PertenceABarraquinha`).
-   A barraquinha também não recebe no navegador nem os nomes das rotas do admin (Ziggy por grupo).
-2. **Banco (RLS)**: o MySQL não tem RLS nativo. Cada tabela com `barraquinha_id` vira
-   `<tabela>_base` e ganha uma **view atualizável** com o nome original, filtrada pelas
-   variáveis de sessão `@app_perfil` e `@app_barraquinha_id`. `WITH CHECK OPTION` impede
-   gravar em nome de outra barraquinha; triggers deixam feiras e barraquinhas só para o
-   admin e tornam a auditoria imutável. Ver `app/Support/Rls/RlsMysql.php`.
+O banco tem só tabelas, sem views, triggers nem functions, para subir em hospedagem
+compartilhada (InfinityFree e similares) que não aceita esses objetos. O isolamento fica
+todo na aplicação:
 
-    Em produção, a aplicação deve conectar com um usuário que **só acessa as views**:
-
-    ```bash
-    php artisan feira:rls-permissoes feira_app   # imprime os GRANTs
-    ```
+- o escopo global `BarraquinhaScope` filtra toda consulta da barraquinha pelo id da
+  sessão, nunca por parâmetro da tela, e o `creating` do trait grava o `barraquinha_id`
+  da sessão em todo registro novo;
+- link ou id alterado para dado de outra barraquinha responde _403 Acesso negado_ e grava
+  auditoria (`PertenceABarraquinha`); nas rotas do admin, o `LojaCoerente` confere que os
+  registros da URL são da barraquinha escolhida;
+- feiras e barraquinhas só são gravadas pelas rotas do admin (`perfil:admin`), e a trilha
+  de auditoria só recebe insert (`AuditoriaLog::registrar()`);
+- a barraquinha não recebe no navegador nem os nomes das rotas do admin (Ziggy por grupo).
 
 ### Design system e tema
 
@@ -178,7 +175,7 @@ app/
   Http/Apresentacao.php  models → props enxutas para o React
   Http/RotasDaLoja.php   mesmas rotas em /barraquinha/... e /admin/barraquinhas/{id}/...
   Services/              Vendas/ClassificadorVenda (Comum × Combo N), Financeiro/, Relatorios/
-  Support/               ContextoRls, Rls/RlsMysql, Loja, Formato, Tema, Xlsx/XlsxWriter
+  Support/               Loja, Formato, Tema, Xlsx/XlsxWriter
 resources/js/
   pages/                 páginas Inertia (admin/, loja/, auth/)
   components/ui/         kit: botão, campos, cartão, tabela (modo cartão), diálogo, menu...
