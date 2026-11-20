@@ -40,6 +40,12 @@ class AppServiceProvider extends ServiceProvider
                 return null;
             }
 
+            // Arquivo que não existe (JS de um build anterior numa aba aberta, foto apagada,
+            // sondagem do DevTools): 404 simples, sem montar a página de erro do app.
+            if ($request->is('build/*', 'brand/*', 'fotos/*', '.well-known/*')) {
+                return null;
+            }
+
             if ($status === 419) {
                 return back()->with('error', __('A página expirou. Tente novamente.'));
             }
