@@ -1,5 +1,3 @@
-# Arquivos versionados que o git ftp NÃO envia ao servidor (só servem para
-# desenvolver). Padrões glob sobre o caminho inteiro; "*" também casa "/".
 tests/*
 resources/js/*
 scripts/*
@@ -14,3 +12,4 @@ package-lock.json
 .editorconfig
 .gitattributes
 .env.example
+docs/*
