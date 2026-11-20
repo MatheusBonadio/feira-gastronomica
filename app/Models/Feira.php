@@ -43,7 +43,6 @@ class Feira extends Model
         return $query->orderByDesc('data_inicio')->orderByDesc('id');
     }
 
-    /** Feira de trabalho padrão do admin: a aberta mais recente, senão a mais recente. */
     public static function padrao(): ?self
     {
         return static::where('status', FeiraStatus::Aberta)->recentes()->first()

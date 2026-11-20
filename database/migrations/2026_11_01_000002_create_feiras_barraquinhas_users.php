@@ -18,7 +18,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Uma linha por vaga: o admin informa a quantidade e preenche cada vaga depois.
         Schema::create('barraquinhas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('feira_id')->constrained('feiras')->cascadeOnDelete();
@@ -38,7 +37,6 @@ return new class extends Migration
             $table->string('usuario')->unique();
             $table->string('password');
             $table->string('perfil', 20);
-            // Admin não tem barraquinha; login de barraquinha é único por barraquinha.
             $table->foreignId('barraquinha_id')->nullable()->unique()->constrained('barraquinhas')->cascadeOnDelete();
             $table->boolean('ativo')->default(true);
             $table->boolean('trocar_senha')->default(false);

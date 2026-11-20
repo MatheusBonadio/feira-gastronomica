@@ -6,7 +6,6 @@ import { CabecalhoPagina, Cartao, Faixa } from "@/components/ui/cartao";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
-/** Troca da própria senha. Obrigatória na primeira entrada com senha gerada pelo admin. */
 export default function Senha({ obrigatoria }: { obrigatoria: boolean }) {
     const t = useT();
     const { auth } = usePage().props;

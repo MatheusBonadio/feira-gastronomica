@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Comida, Bebida e Sobremesa vêm prontas; só o admin inclui outras. */
 class CategoriaController extends Controller
 {
     public function index(): Response

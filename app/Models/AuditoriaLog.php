@@ -34,7 +34,6 @@ class AuditoriaLog extends Model
         return $this->belongsTo(Barraquinha::class);
     }
 
-    /** A trilha só recebe insert: nada na aplicação altera ou apaga um registro. */
     public static function registrar(
         AcaoAuditoria $acao,
         Model|string|null $entidade = null,

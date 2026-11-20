@@ -9,7 +9,6 @@ use App\Services\Financeiro\IndicadoresService;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/** Seção 7: o operador só escolhe os itens; o sistema classifica e grava preço e tag da época. */
 class VendaTest extends TestCase
 {
     public function test_registra_venda_classificada_como_combo_com_o_preco_do_combo(): void
@@ -30,7 +29,6 @@ class VendaTest extends TestCase
         $this->assertEquals(3.00, (float) $venda->desconto);
         $this->assertSame(1, $venda->numero);
 
-        // Itens dentro do combo também contam no ranking e no estoque.
         $this->assertSame(2, (int) VendaItem::withoutGlobalScopes()->where('item_id', $pastel->id)->sum('quantidade'));
     }
 

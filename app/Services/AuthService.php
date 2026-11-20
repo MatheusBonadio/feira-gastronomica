@@ -12,10 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    /**
-     * Mensagem genérica para usuário ou senha errados (sem dizer qual) e
-     * bloqueio temporário após N falhas seguidas do mesmo usuário + IP.
-     */
     public function autenticar(string $usuario, string $senha, string $ip): User
     {
         $usuario = Str::lower(trim($usuario));
@@ -31,7 +27,6 @@ class AuthService
 
         $user = User::where('usuario', $usuario)->first();
 
-        // Hash::check mesmo sem usuário, para o tempo de resposta não revelar se ele existe.
         $senhaConfere = Hash::check($senha, $user?->password ?? '$2y$12$'.str_repeat('a', 53));
 
         if (! $user || ! $senhaConfere) {

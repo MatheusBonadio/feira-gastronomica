@@ -5,14 +5,6 @@ import { Menu, type ItemMenu } from "@/components/ui/menu";
 import { TRACO, type Icone } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 
-/**
- * primario  azul UNAERP (ação principal do conteúdo)
- * secundario branco com borda fina ("+ Add card")
- * superficie branco sem borda, para o chão cinza (botões do topo)
- * escuro    invertido ("Upgrade now" do cartão promocional)
- * destaque  amarelo, com texto escuro
- * suave / fantasma / perigo
- */
 export type Variante = "primario" | "secundario" | "superficie" | "escuro" | "destaque" | "suave" | "fantasma" | "perigo";
 export type Tamanho = "sm" | "md" | "lg";
 
@@ -31,7 +23,6 @@ const VARIANTES: Record<Variante, string> = {
 };
 
 const TAMANHOS: Record<Tamanho, string> = {
-    // No celular um pouco mais altos (alvo de toque); no desktop, densos como a referência.
     sm: "h-9 rounded-lg px-3 text-corpo md:h-8 md:px-2.5",
     md: "h-10 px-3.5 text-ui md:h-9 md:px-3",
     lg: "h-11 rounded-xl px-4 text-ui",
@@ -48,7 +39,6 @@ interface Comum {
     tamanho?: Tamanho;
     icone?: Icone;
     iconeFinal?: Icone;
-    /** Botão só com ícone: o texto vira rótulo acessível. */
     soIcone?: boolean;
     children?: ReactNode;
     className?: string;
@@ -72,7 +62,6 @@ export function Botao({ variante, tamanho, icone, iconeFinal, soIcone, children,
     );
 }
 
-/** Mesmo visual, navegando pelo Inertia. */
 export function BotaoLink({ href, variante, tamanho, icone, iconeFinal, soIcone, children, className }: Comum & { href: string }) {
     return (
         <Link prefetch href={href} className={cx(classesBotao(variante, tamanho, soIcone), className)}>
@@ -81,7 +70,6 @@ export function BotaoLink({ href, variante, tamanho, icone, iconeFinal, soIcone,
     );
 }
 
-/** Ação principal com um menu de ações relacionadas ao lado (o "Add widget" da referência). */
 export function BotaoDividido({ href, icone, children, itens, rotuloMenu, variante = "superficie" }: {
     href: string;
     icone?: Icone;

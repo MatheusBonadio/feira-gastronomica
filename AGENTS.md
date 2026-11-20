@@ -1,4 +1,4 @@
-# Regras de interface — Feira Gastronômica UNAERP
+# Regras de interface da Feira Gastronômica UNAERP
 
 React 19 + Inertia v3 + **Radix Primitives** (`radix-ui`, comportamento e acessibilidade) +
 **Tailwind CSS v4** (visual, só tokens). O kit é do próprio projeto, em `resources/js/components/`. Descrição completa do design system em

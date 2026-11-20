@@ -13,7 +13,6 @@ import { useRotaLoja } from "@/lib/rotas";
 import type { Item } from "@/types/dominio";
 import type { Opcao } from "@/types/inertia";
 
-/** Todo produto vendido existe como item antes de ser vendido ou entrar num combo. */
 export default function Index({ itens, canais }: { itens: Item[]; canais: Opcao[] }) {
     const t = useT();
     const { moeda, numero } = useFormato();
@@ -35,7 +34,6 @@ export default function Index({ itens, canais }: { itens: Item[]; canais: Opcao[
 
     const colunas: Coluna[] = [
         { chave: "item", rotulo: t("Item"), icone: IconTag },
-        // No cartão a categoria aparece embaixo do nome.
         { chave: "categoria", rotulo: t("Categoria"), cartao: "oculta" },
         ...canais.map((c): Coluna => ({ chave: `preco-${c.valor}`, rotulo: c.label, alinhar: "direita" })),
         { chave: "custo", rotulo: t("Custo"), alinhar: "direita" },
@@ -109,17 +107,17 @@ export default function Index({ itens, canais }: { itens: Item[]; canais: Opcao[
                                     {item.categoria && <span className="text-rotulo text-tinta-suave md:hidden">{item.categoria}</span>}
                                 </span>
                             </Celula>
-                            <Celula className="text-tinta-media">{item.categoria ?? "—"}</Celula>
+                            <Celula className="text-tinta-media">{item.categoria ?? "-"}</Celula>
                             {canais.map((c) => (
                                 <Celula key={c.valor} direita>
-                                    {item.precos[c.valor] !== null ? moeda(item.precos[c.valor]) : <span className="text-tinta-fraca">—</span>}
+                                    {item.precos[c.valor] !== null ? moeda(item.precos[c.valor]) : <span className="text-tinta-fraca">-</span>}
                                 </Celula>
                             ))}
-                            <Celula direita>{item.custo !== null ? moeda(item.custo) : <span className="text-tinta-fraca">—</span>}</Celula>
+                            <Celula direita>{item.custo !== null ? moeda(item.custo) : <span className="text-tinta-fraca">-</span>}</Celula>
                             <Celula direita>{numero(item.vendidos)}</Celula>
                             <Celula direita>
                                 {item.estoqueRestante === null ? (
-                                    <span className="text-tinta-fraca">—</span>
+                                    <span className="text-tinta-fraca">-</span>
                                 ) : item.estoqueRestante <= 0 ? (
                                     <Chip tom="vermelho">{t("Esgotado")}</Chip>
                                 ) : (

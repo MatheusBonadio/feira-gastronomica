@@ -6,7 +6,6 @@ import { CabecalhoPagina, Cartao } from "@/components/ui/cartao";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
-/** Copia barraquinhas e itens (com preços) para a próxima edição. Vendas, combos e logins não vêm junto. */
 export default function Duplicar({ origem }: { origem: { id: number; nome: string } }) {
     const t = useT();
     const form = useForm({ nome: "", data_inicio: "", data_fim: "" });

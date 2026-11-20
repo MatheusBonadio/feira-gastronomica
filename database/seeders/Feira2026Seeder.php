@@ -15,16 +15,8 @@ use App\Models\Venda;
 use App\Models\VendaLinha;
 use Illuminate\Database\Seeder;
 
-/**
- * Carga inicial com os totais do anexo da especificação (Relatório Consolidado
- * da Feira Gastronômica 2026, UNAERP / Projeto PEG). Cada valor entra como um
- * lançamento único por barraquinha: o relatório não traz as vendas individuais.
- * Só a Petisquim informou a divisão por canal; nas demais, tudo vai como Feira.
- * Datas da edição são ilustrativas.
- */
 class Feira2026Seeder extends Seeder
 {
-    /** nome => [vendas, custos, despesas] */
     public const RELATORIO = [
         'Petisquim' => [35219.58, 18169.57, 5481.39],
         'Bigas' => [18407.90, 10938.30, 6002.46],
@@ -39,7 +31,6 @@ class Feira2026Seeder extends Seeder
         'Entre Chocolates' => [8628.10, 9775.17, 1194.22],
     ];
 
-    /** Petisquim: pré-venda R$ 24.412,44 e feira R$ 6.027,14; o restante é pós-evento. */
     private const CANAIS_PETISQUIM = ['pre_venda' => 24412.44, 'feira' => 6027.14];
 
     public function run(): void

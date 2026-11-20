@@ -115,10 +115,6 @@ class BarraquinhaController extends Controller
         return back()->with('success', __('Acesso reativado.'));
     }
 
-    /**
-     * A senha em texto vai só no flash do Inertia: aparece numa única resposta
-     * e, diferente das props, não é gravada no histórico do navegador.
-     */
     private function mostrarUmaVez(Barraquinha $barraquinha, array $credenciais): RedirectResponse
     {
         Inertia::flash('credenciais', $credenciais);

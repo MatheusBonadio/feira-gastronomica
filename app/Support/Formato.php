@@ -5,11 +5,6 @@ namespace App\Support;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 
-/**
- * Formatação dependente do idioma ativo. Não usa a extensão intl para rodar
- * em qualquer PHP; os padrões por idioma ficam em lang/{locale}/formato.php.
- * A moeda é sempre o real: muda só a pontuação.
- */
 class Formato
 {
     public static function numero(float|int|string|null $valor, int $casas = 2): string
@@ -27,20 +22,19 @@ class Formato
 
     public static function percentual(?float $valor, int $casas = 1): string
     {
-        return $valor === null ? '—' : self::numero($valor * 100, $casas).'%';
+        return $valor === null ? '-' : self::numero($valor * 100, $casas).'%';
     }
 
     public static function data(DateTimeInterface|string|null $data): string
     {
-        return $data ? Carbon::parse($data)->format(__('formato.data')) : '—';
+        return $data ? Carbon::parse($data)->format(__('formato.data')) : '-';
     }
 
     public static function dataHora(DateTimeInterface|string|null $data): string
     {
-        return $data ? Carbon::parse($data)->format(__('formato.data_hora')) : '—';
+        return $data ? Carbon::parse($data)->format(__('formato.data_hora')) : '-';
     }
 
-    /** Converte "1.234,56" (pt_BR) ou "1,234.56" (en) em float, para entradas de formulário. */
     public static function lerDecimal(mixed $valor): ?float
     {
         if ($valor === null || $valor === '') {

@@ -9,7 +9,6 @@ use App\Services\Financeiro\IndicadoresService;
 use Database\Seeders\Feira2026Seeder;
 use Tests\TestCase;
 
-/** Seção 8 e anexo da seção 12: indicadores calculados, nunca armazenados. */
 class IndicadoresTest extends TestCase
 {
     public function test_carga_de_2026_bate_com_o_relatorio_consolidado(): void

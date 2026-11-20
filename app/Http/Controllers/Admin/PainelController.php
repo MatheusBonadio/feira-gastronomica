@@ -22,11 +22,6 @@ class PainelController extends Controller
 {
     public const COLUNAS = ['nome', 'vendas', 'saidas', 'saldo', 'resultado', 'margem', 'qtd'];
 
-    /**
-     * Consolidado da feira, gráficos, pendências e tabela comparativa.
-     * As props pesadas são closures: no tempo real o navegador recarrega só
-     * algumas, e só essas são calculadas.
-     */
     public function index(Request $request, IndicadoresService $indicadores, PendenciasService $pendencias, PulsoService $pulso): Response
     {
         $feira = FeiraAtual::obter();
@@ -43,8 +38,6 @@ class PainelController extends Controller
         $direcao = $request->query('direcao') === 'asc' ? 'asc' : 'desc';
 
         return Inertia::render('admin/Painel', [
-            // Primeiro: calculada antes dos dados, então uma venda que entre no
-            // meio do request muda o pulso e provoca nova recarga.
             'versao' => fn () => $this->versao($pulso, $feira, $ids),
             'feira' => $feira ? [
                 'id' => $feira->id,
@@ -69,7 +62,6 @@ class PainelController extends Controller
             'ultimas' => fn () => $indicadores->ultimasVendas($ids, $filtro)->map(fn (Venda $v) => Apresentacao::venda($v)),
             'pendencias' => fn () => $feira ? $pendencias->daFeira($feira, $porBarraquinha()) : [],
             'saidasCategoria' => fn () => $this->saidasCategoria($indicadores, $ids, $filtro),
-            // Mesma medida da edição anterior, para as variações (só sem filtro de datas).
             'anterior' => fn () => $this->edicaoAnterior($feira, $filtro, $indicadores),
             'ordem' => $ordem,
             'direcao' => $direcao,
@@ -78,7 +70,6 @@ class PainelController extends Controller
         ]);
     }
 
-    /** Assinatura do estado da feira em uso, para o painel em tempo real. */
     public function pulso(PulsoService $pulso): JsonResponse
     {
         $feira = FeiraAtual::obter();
@@ -87,13 +78,11 @@ class PainelController extends Controller
         return response()->json(['versao' => $this->versao($pulso, $feira, $ids)]);
     }
 
-    /** Vendas e lançamentos das barraquinhas + cadastro delas (nome, status, vagas). */
     private function versao(PulsoService $pulso, ?Feira $feira, array $ids): string
     {
         return $pulso->versao($ids, $feira ? $feira->id.'|'.$pulso->versaoBarraquinhas($feira->id) : null);
     }
 
-    /** Pendências da feira em uso, para o sino da topbar. */
     public function pendencias(IndicadoresService $indicadores, PendenciasService $pendencias): JsonResponse
     {
         $feira = FeiraAtual::obter();
@@ -104,7 +93,6 @@ class PainelController extends Controller
         return response()->json(['pendencias' => $pendencias->daFeira($feira, $indicadores->porBarraquinha($feira->barraquinhas()->get()))]);
     }
 
-    /** @return list<array{categoria: array, total: float}> */
     public static function saidasCategoria(IndicadoresService $indicadores, array $ids, Filtro $filtro): array
     {
         return $indicadores->saidasPorCategoria($ids, $filtro)

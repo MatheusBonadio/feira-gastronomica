@@ -1,4 +1,4 @@
-# Design system — Feira Gastronômica UNAERP
+# Design system da Feira Gastronômica UNAERP
 
 Painel financeiro claro e respirado, inspirado num dashboard de finanças pessoais
 (sidebar branca com árvore de navegação e cartão promocional, chão cinza com cartões
@@ -98,7 +98,7 @@ Pesos: 400 texto, 600 títulos e valores, 700–800 marca e cartão de identidad
 | `rounded-2xl` | 16px | Cartão de identidade, popovers, folhas |
 | `rounded-xl` | 12px | Itens da sidebar, ações rápidas, avatares quadrados |
 | `rounded-controle` | 10px | Botões, campos, busca |
-| `rounded-full` | — | Chips, contadores, trilhos de progresso |
+| `rounded-full` | - | Chips, contadores, trilhos de progresso |
 | `shadow-flutuante` | difusa | Só o que flutua: menus, popovers, dicas, diálogos |
 
 Espaço entre cartões: `gap-3`; dentro do cartão: `px-5`. Página: `px-4` (celular) e
@@ -148,14 +148,14 @@ Espaço entre cartões: `gap-3`; dentro do cartão: `px-5`. Página: `px-4` (cel
 | `Dialogo`, `Confirmar`, `Folha` | `ui/dialogo.tsx` | `Dialog`, `AlertDialog` | Folha de baixo (carrinho do PDV) ou de lado (menu) |
 | `Dica` | `ui/dica.tsx` | `Tooltip` | Todo botão só de ícone |
 | `avisar()` + `Avisos` | `ui/avisos.tsx` | `Toast` | Sucesso/erro das ações |
-| `Cartao`, `CabecalhoPagina`, `Estatistica`, `Variacao`, `Kpi`, `PilulaStats`, `Detalhe`, `Vazio`, `Faixa` | `ui/cartao.tsx` | — | `Estatistica` + `Variacao` = a coluna de totais com "↗ 5,1% vs. Feira 2026" |
+| `Cartao`, `CabecalhoPagina`, `Estatistica`, `Variacao`, `Kpi`, `PilulaStats`, `Detalhe`, `Vazio`, `Faixa` | `ui/cartao.tsx` | - | `Estatistica` + `Variacao` = a coluna de totais com "↗ 5,1% vs. Feira 2026" |
 | `Chip`, `ChipStatus`, `TextoStatus`, `ChipTag`, `Avatar`, `Contador`, `Ponto`, `Kbd` | `ui/marcadores.tsx` | `Avatar` | `TextoStatus` = "Concluída/Cancelada" em texto colorido; `Contador` escuro como o "19" da referência |
 | `Tabela`, `Linha`, `Celula` | `ui/tabela.tsx` | `Select` (ordenação no celular) | Sem divisórias verticais; **modo cartão** abaixo de `md` |
 | `VendasPorDia`, `SaidasPorCategoria`, `SaudeFinanceira`, `PorPagamento`, `ProgressoMeta`, `ProximoPasso` | `painel/blocos.tsx` | `ToggleGroup` (barras/linha) | Blocos dos dois painéis |
 | `ListaVendas`, `CartaoIdentidade`, `AcoesRapidas`, `AcessoRapido`, `CartaoDica`, `ListaPendencias`, `TabelaTags` | `painel/widgets.tsx` | `Tooltip` | Extrato, "meu cartão", ações quadradas, avatares, dica com bloquinhos |
 | `FiltrosVendas`, `BotaoFiltros` | `painel/filtros.tsx` | `Collapsible`, `Popover` | Em linha nas listas; em popover no topo dos painéis |
 | `AoVivo` | `painel/ao-vivo.tsx` | `Tooltip` | Selo de tempo real |
-| Shell, sino, configurações | `app/shell.tsx` | `Popover`, `Collapsible`, `Separator`, `Dialog` | — |
+| Shell, sino, configurações | `app/shell.tsx` | `Popover`, `Collapsible`, `Separator`, `Dialog` | - |
 
 Ícones: **Tabler** (`@tabler/icons-react`), traço 1,5, 16–19px.
 
@@ -172,7 +172,7 @@ SVG/HTML próprios (`components/graficos/graficos.tsx`), medidos com `ResizeObse
 | `BarraSegmentada` | "Cost analysis" | Blocos hachurados proporcionais + legenda com % e valor. |
 | `Medidor` | "Financial health" | Meio-círculo de 11 blocos; os preenchidos vão do amarelo ao azul (mistura dos dois tokens) e são hachurados. |
 | `BarraProgresso`, `BarrasHorizontais` | "Monthly spending limit", "Goal tracker" | Trilho cinza com preenchimento hachurado. |
-| `GraficoBarras`, `GraficoRosca`, `Sparkline`, `Legenda` | — | Comparar feiras e usos menores. |
+| `GraficoBarras`, `GraficoRosca`, `Sparkline`, `Legenda` | - | Comparar feiras e usos menores. |
 
 Os gráficos têm rótulo acessível e o número também aparece em texto (legenda, dica ou
 anúncio para leitor de tela), então a cor nunca é a única fonte da informação.

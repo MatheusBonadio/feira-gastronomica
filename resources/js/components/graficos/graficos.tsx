@@ -1,13 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
-/**
- * Gráficos em SVG/HTML puro, coloridos pelos tokens (grafico-1 … grafico-6).
- * Assinatura visual: barras com hachura diagonal (listras em var(--hachura));
- * o que está fora de foco fica cinza (grafico-inativo).
- */
-
-/** Paleta em classes literais (o Tailwind precisa enxergar os nomes completos). */
 export const CORES = [
     { texto: "text-grafico-1", fundo: "bg-grafico-1", preenchimento: "fill-grafico-1" },
     { texto: "text-grafico-2", fundo: "bg-grafico-2", preenchimento: "fill-grafico-2" },
@@ -31,7 +24,6 @@ function useLargura<T extends HTMLElement>() {
     return [ref, largura] as const;
 }
 
-/** Escala "bonita" para o eixo Y: 4 divisões em números redondos. */
 function escala(maximo: number, divisoes = 4): number[] {
     if (maximo <= 0) return [0, 1, 2, 3, 4].map((i) => i * 25);
     const bruto = maximo / divisoes;
@@ -40,7 +32,6 @@ function escala(maximo: number, divisoes = 4): number[] {
     return Array.from({ length: divisoes + 1 }, (_, i) => i * passo);
 }
 
-/** Listras diagonais para sobrepor às marcas coloridas de um SVG. */
 function PadraoHachura({ id }: { id: string }) {
     return (
         <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -49,7 +40,6 @@ function PadraoHachura({ id }: { id: string }) {
     );
 }
 
-/** Cartãozinho flutuante dos gráficos (data + valores com bolinhas de cor). */
 function DicaGrafico({ x, y, children, largura, abaixo }: { x: number; y: number; children: ReactNode; largura: number; abaixo?: boolean }) {
     const alinharDireita = x > largura - 170;
     return (
@@ -82,15 +72,9 @@ export interface DiaBarras {
     chave: string;
     rotulo: string;
     detalhe?: string;
-    /** Um valor por série, na ordem de `series`. */
     valores: number[];
 }
 
-/**
- * Barras por dia empilhadas por série (canais). Como na referência: os dias
- * ficam cinza e o dia em foco aparece colorido, hachurado, com a dica ao lado.
- * Mouse ou setas mudam o foco; clique/Enter escolhe o dia (filtra o painel).
- */
 export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, altura = 260, rotulo, rotuloTotal, focoInicial, aoEscolher }: {
     dias: DiaBarras[];
     series: { nome: string; cor: Cor }[];
@@ -106,7 +90,6 @@ export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, a
     const [foco, setFoco] = useState<number>(() => focoInicial ?? dias.length - 1);
     const idHachura = useId();
 
-    // Novos dados (tempo real, filtro): o foco volta para o dia indicado.
     useEffect(() => setFoco(focoInicial ?? dias.length - 1), [dias.length, focoInicial]);
 
     const totais = dias.map((d) => d.valores.reduce((s, v) => s + Math.max(v, 0), 0));
@@ -143,7 +126,6 @@ export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, a
             aria-roledescription="gráfico"
             onKeyDown={teclar}
         >
-            {/* Resumo do dia em foco para leitores de tela. */}
             <p className="sr-only" aria-live="polite">
                 {atual && `${atual.rotulo}: ${series.map((s, i) => `${s.nome} ${formatarValor(atual.valores[i] ?? 0)}`).join(", ")}`}
             </p>
@@ -170,7 +152,6 @@ export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, a
                             const alturaBarra = Math.max(total > 0 ? y(0) - y(total) : 0, total > 0 ? 3 : 0);
                             return <rect key={d.chave} x={x} y={y(0) - alturaBarra} width={larguraBarra} height={alturaBarra} rx={6} className="fill-grafico-inativo" />;
                         }
-                        // Em foco: segmentos por série, com um respiro entre eles.
                         let base = 0;
                         return (
                             <g key={d.chave}>
@@ -215,7 +196,6 @@ export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, a
     );
 }
 
-/** Área com linha: série temporal (vendas por dia), alternativa às barras. */
 export function GraficoArea({ pontos, formatarValor, formatarEixo, altura = 240, cor = CORES[0], rotulo }: {
     pontos: { rotulo: string; valor: number; detalhe?: string }[];
     formatarValor: (v: number) => string;
@@ -297,7 +277,6 @@ export function GraficoArea({ pontos, formatarValor, formatarEixo, altura = 240,
     );
 }
 
-/** Barras agrupadas por categoria (comparar feiras), hachuradas. */
 export function GraficoBarras({ categorias, series, formatarValor, formatarEixo, altura = 260, rotulo }: {
     categorias: string[];
     series: { nome: string; cor: Cor; valores: number[] }[];
@@ -362,7 +341,6 @@ export function GraficoBarras({ categorias, series, formatarValor, formatarEixo,
     );
 }
 
-/** Rosca com total no centro e legenda com percentual e valor. */
 export function GraficoRosca({ fatias, formatarValor, centro, rotulo, tamanho = 168 }: {
     fatias: { rotulo: string; valor: number; cor: Cor }[];
     formatarValor: (v: number) => string;
@@ -375,7 +353,6 @@ export function GraficoRosca({ fatias, formatarValor, centro, rotulo, tamanho = 
     const circunferencia = 2 * Math.PI * raio;
     let acumulado = 0;
 
-    // Container query: empilha conforme a largura do cartão, não da tela.
     return (
         <div className="@container">
             <div className="flex flex-col items-center gap-5 @md:flex-row">
@@ -416,7 +393,6 @@ export function GraficoRosca({ fatias, formatarValor, centro, rotulo, tamanho = 
     );
 }
 
-/** Linha pequena sem eixos, para os KPIs. */
 export function Sparkline({ valores, cor = CORES[0], altura = 32 }: { valores: number[]; cor?: Cor; altura?: number }) {
     const [ref, largura] = useLargura<HTMLDivElement>();
     if (valores.length < 2) return <div className="h-8" />;
@@ -433,7 +409,6 @@ export function Sparkline({ valores, cor = CORES[0], altura = 32 }: { valores: n
     );
 }
 
-/** Trilho com preenchimento hachurado (meta, limite, estoque). */
 export function BarraProgresso({ fracao, cor = "bg-primaria", rotulo, altura = "h-3", bloco }: { fracao: number; cor?: string; rotulo: string; altura?: string; bloco?: boolean }) {
     const pct = Math.max(0, Math.min(1, fracao)) * 100;
     const forma = bloco ? "rounded-lg" : "rounded-full";
@@ -444,7 +419,6 @@ export function BarraProgresso({ fracao, cor = "bg-primaria", rotulo, altura = "
     );
 }
 
-/** Ranking/metas em barras horizontais (o "Goal tracker" da referência). */
 export function BarrasHorizontais({ dados, formatarValor }: { dados: { rotulo: string; valor: number; cor: string; detalhe?: string; maximo?: number }[]; formatarValor: (v: number) => string }) {
     const maximo = Math.max(...dados.map((d) => d.valor), 0);
     return (
@@ -465,7 +439,6 @@ export function BarrasHorizontais({ dados, formatarValor }: { dados: { rotulo: s
     );
 }
 
-/** Legenda: quadradinho de cor + rótulo; na vertical, com % e valor à direita. */
 export function Legenda({ itens, vertical }: { itens: { rotulo: string; cor: Cor | string; valor?: string; percentual?: number }[]; vertical?: boolean }) {
     const fundo = (cor: Cor | string) => (typeof cor === "string" ? cor : cor.fundo);
     if (!vertical) {
@@ -494,7 +467,6 @@ export function Legenda({ itens, vertical }: { itens: { rotulo: string; cor: Cor
     );
 }
 
-/** Barra dividida em blocos hachurados (o "Cost analysis" da referência) + legenda. */
 export function BarraSegmentada({ fatias, formatarValor, rotulo }: {
     fatias: { rotulo: string; valor: number; cor: string }[];
     formatarValor: (v: number) => string;
@@ -518,10 +490,6 @@ export function BarraSegmentada({ fatias, formatarValor, rotulo }: {
     );
 }
 
-/**
- * Medidor em meio-círculo de blocos (o "Financial health" da referência):
- * blocos preenchidos vão do amarelo ao azul, hachurados; o resto fica cinza.
- */
 export function Medidor({ fracao, valor, legenda, rotulo, blocos = 11 }: { fracao: number; valor: string; legenda: string; rotulo: string; blocos?: number }) {
     const idHachura = useId();
     const largura = 240;
@@ -529,7 +497,7 @@ export function Medidor({ fracao, valor, legenda, rotulo, blocos = 11 }: { fraca
     const raioInterno = 70;
     const cx0 = largura / 2;
     const cy0 = 120;
-    const lacuna = 0.035; // radianos entre blocos
+    const lacuna = 0.035;
     const preenchidos = Math.round(Math.max(0, Math.min(1, fracao)) * blocos);
 
     const ponto = (r: number, a: number) => `${cx0 + r * Math.cos(a)},${cy0 - r * Math.sin(a)}`;
@@ -546,7 +514,6 @@ export function Medidor({ fracao, valor, legenda, rotulo, blocos = 11 }: { fraca
                 <defs><PadraoHachura id={idHachura} /></defs>
                 {Array.from({ length: blocos }, (_, i) => {
                     const cheio = i < preenchidos;
-                    // Do amarelo (início) ao azul (fim), misturando os dois tokens.
                     const mistura = blocos > 1 ? Math.round((i / (blocos - 1)) * 100) : 100;
                     return (
                         <g key={i}>

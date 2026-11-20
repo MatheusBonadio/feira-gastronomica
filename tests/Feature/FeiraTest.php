@@ -12,7 +12,6 @@ use App\Enums\Canal;
 use App\Enums\FormaPagamento;
 use Tests\TestCase;
 
-/** Seção 4: feiras com N vagas, duplicação e encerramento. */
 class FeiraTest extends TestCase
 {
     public function test_criar_feira_gera_as_vagas_em_branco(): void

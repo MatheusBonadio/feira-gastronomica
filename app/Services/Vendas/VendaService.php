@@ -21,7 +21,6 @@ class VendaService
 {
     public function __construct(private readonly ClassificadorVenda $classificador) {}
 
-    /** @param array<int|string, int|string> $carrinho item_id => quantidade */
     public function simular(Barraquinha $barraquinha, Canal $canal, array $carrinho): ResultadoClassificacao
     {
         [$itens, $combos] = $this->catalogo($barraquinha, $canal);
@@ -46,9 +45,6 @@ class VendaService
                 throw ValidationException::withMessages(['itens' => __('Adicione ao menos um item ao carrinho.')]);
             }
 
-            // Numeração sequencial por barraquinha. O lock na última venda serializa vendas
-            // simultâneas (PostgreSQL não aceita FOR UPDATE com max()); a primeira venda
-            // é protegida pela chave única (barraquinha_id, numero).
             $numero = (int) Venda::withoutGlobalScopes()
                 ->where('barraquinha_id', $barraquinha->id)
                 ->orderByDesc('numero')
@@ -136,11 +132,6 @@ class VendaService
         }
     }
 
-    /**
-     * Itens ativos com o preço do canal e combos aplicáveis (ativos e completos).
-     *
-     * @return array{0: array<int, array{nome: string, preco: float}>, 1: list<array>}
-     */
     private function catalogo(Barraquinha $barraquinha, Canal $canal): array
     {
         $itens = Item::withoutGlobalScopes()
@@ -170,7 +161,6 @@ class VendaService
         return [$itens, $combos];
     }
 
-    /** Descarta itens inativos, de outra barraquinha ou com quantidade inválida. */
     private function normalizar(array $carrinho, array $itens): array
     {
         $normalizado = [];

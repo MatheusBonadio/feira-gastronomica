@@ -18,7 +18,6 @@ interface Props {
     pagamentos: Opcao[];
 }
 
-/** Foto da barraquinha e o jeito do checkout (PDV), escolhidos pelo gestor dela. */
 export default function Configuracoes({ barraquinha, checkout: c, canais, pagamentos }: Props) {
     const t = useT();
     const rotaLoja = useRotaLoja();
@@ -84,7 +83,6 @@ export default function Configuracoes({ barraquinha, checkout: c, canais, pagame
                                         <CaixaSelecao
                                             key={p.valor}
                                             marcado={aceita(p.valor)}
-                                            // Pelo menos uma forma: a última não pode ser desmarcada.
                                             desabilitado={aceita(p.valor) && d.pagamentos.length === 1}
                                             aoMudar={(marcado) => alternarPagamento(p.valor, marcado)}
                                         >
@@ -185,7 +183,6 @@ export default function Configuracoes({ barraquinha, checkout: c, canais, pagame
     );
 }
 
-/** Bloco do formulário com título, separado do anterior por uma linha. */
 function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
     return (
         <section className="flex flex-col gap-4 border-t border-linha pt-5 first:border-t-0 first:pt-0">

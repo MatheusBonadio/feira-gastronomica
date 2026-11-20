@@ -15,7 +15,6 @@ Route::get('/', fn () => auth()->check()
 
 Route::get('idioma/{idioma}', IdiomaController::class)->name('idioma');
 
-// Tela de login única para os dois perfis.
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'show'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->middleware('throttle:30,1');
@@ -60,7 +59,6 @@ Route::middleware(['auth', 'auth.session', 'acesso.ativo'])->group(function () {
             Route::get('relatorios', [Loja\RelatorioController::class, 'index'])->name('relatorios.index');
             Route::get('relatorios/exportar', [Loja\RelatorioController::class, 'exportar'])->name('relatorios.exportar');
 
-            // Telas de uma barraquinha vistas pelo admin.
             Route::prefix('barraquinhas/{barraquinha}')->name('loja.')->middleware('loja.coerente')->group(fn () => RotasDaLoja::registrar(admin: true));
         });
 

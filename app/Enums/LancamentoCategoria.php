@@ -2,11 +2,6 @@
 
 namespace App\Enums;
 
-/**
- * Categorias dos lançamentos manuais. O grupo decide em qual indicador o valor
- * entra: outras entradas, custo e despesa (resultado operacional) ou
- * investimento (só no saldo de caixa), como recomenda o relatório de 2026.
- */
 enum LancamentoCategoria: string
 {
     case Patrocinio = 'patrocinio';
@@ -73,7 +68,6 @@ enum LancamentoCategoria: string
         };
     }
 
-    /** @return array<string, list<self>> categorias agrupadas por tipo, para os selects */
     public static function porTipo(): array
     {
         $grupos = [];
@@ -84,7 +78,6 @@ enum LancamentoCategoria: string
         return $grupos;
     }
 
-    /** @return list<string> */
     public static function valoresDoGrupo(string $grupo): array
     {
         return array_values(array_map(

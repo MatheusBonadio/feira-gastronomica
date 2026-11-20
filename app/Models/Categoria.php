@@ -23,7 +23,6 @@ class Categoria extends Model
         return $this->hasMany(Item::class);
     }
 
-    /** As categorias padrão são traduzidas; as criadas pelo admin aparecem como digitadas. */
     public function nomeExibicao(): string
     {
         return in_array($this->nome, self::PADRAO, true) ? __($this->nome) : $this->nome;

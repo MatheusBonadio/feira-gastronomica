@@ -31,7 +31,6 @@ class ItemService
         });
     }
 
-    /** Alterar o preço vale para as próximas vendas; as já registradas guardam o preço da época. */
     public function atualizar(Item $item, array $dados): Item
     {
         $this->vendas->garantirFeiraAberta($item->barraquinha);
@@ -54,7 +53,6 @@ class ItemService
         });
     }
 
-    /** Item já vendido (ou dentro de combo) não é excluído, apenas inativado. */
     public function excluir(Item $item): void
     {
         $this->vendas->garantirFeiraAberta($item->barraquinha);
@@ -83,11 +81,6 @@ class ItemService
         ];
     }
 
-    /**
-     * Preço de Feira é obrigatório (padrão); pré-venda e pós-evento são opcionais.
-     *
-     * @return array<string, array{de: ?float, para: ?float}> preços que mudaram
-     */
     private function salvarPrecos(Item $item, array $precos): array
     {
         $atuais = ItemPreco::withoutGlobalScopes()->where('item_id', $item->id)->get()->keyBy(fn ($p) => $p->canal->value);

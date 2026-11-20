@@ -4,33 +4,12 @@ namespace App\Services\Vendas;
 
 use App\Models\VendaLinha;
 
-/**
- * Decide sozinho se o carrinho sai como Comum ou Combo N (seção 7 da especificação).
- *
- * - Monta quantos combos completos couberem no carrinho.
- * - Quando um item serve a mais de um combo, escolhe a combinação de maior
- *   desconto total para o cliente; no empate, a que cobre mais unidades do
- *   pedido com combos (pastel + sobremesa + refri vira "O Hobbit e o Dragão",
- *   não "Combo do Guerreiro" + sobremesa avulsa).
- * - O que sobra sai como Comum, a preço avulso.
- * - Combo cujo preço no canal passa da soma avulsa não é aplicado: o cliente
- *   nunca paga mais do que pagaria comprando os itens separados.
- *
- * Valores em centavos para não acumular erro de ponto flutuante.
- */
 class ClassificadorVenda
 {
-    /** @var array<string, array{0: int, 1: int, 2: list<int>}> */
     private array $memo = [];
 
-    /** @var list<array{id: int, numero: int, nome: string, composicao: array<int, int>, preco: int, desconto: int, unidades: int}> */
     private array $combos = [];
 
-    /**
-     * @param  array<int, int>  $carrinho  item_id => quantidade
-     * @param  array<int, array{nome: string, preco: float}>  $itens  item_id => nome e preço no canal
-     * @param  list<array{id: int, numero: int, nome: string, composicao: array<int, int>, preco: float}>  $combos  combos aplicáveis
-     */
     public function classificar(array $carrinho, array $itens, array $combos): ResultadoClassificacao
     {
         $carrinho = array_filter(array_map('intval', $carrinho), fn ($q) => $q > 0);
@@ -92,13 +71,6 @@ class ClassificadorVenda
         return new ResultadoClassificacao($linhas);
     }
 
-    /**
-     * Busca exaustiva com memorização: para cada combo (em ordem), testa de
-     * "quantos couberem" até zero e guarda o melhor resultado por estado.
-     * Barraquinhas têm poucos combos e carrinhos pequenos, então é barato.
-     *
-     * @return array{0: int, 1: int, 2: list<int>} [desconto total, unidades cobertas por combos, vezes por combo]
-     */
     private function melhor(int $indice, array $restante): array
     {
         if ($indice >= count($this->combos)) {

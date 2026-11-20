@@ -19,7 +19,6 @@ interface Comando {
 
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-/** Atalho do sistema: Ctrl+K (⌘K no Mac). */
 export function useAtalhoPaleta(abrir: () => void) {
     useEffect(() => {
         const tecla = (e: KeyboardEvent) => {
@@ -33,7 +32,6 @@ export function useAtalhoPaleta(abrir: () => void) {
     }, [abrir]);
 }
 
-/** Busca rápida (o "Search or type a command" da referência): telas e barraquinhas. */
 export function PaletaComandos({ aberta, aoFechar, acoes }: { aberta: boolean; aoFechar: () => void; acoes: Comando[] }) {
     const t = useT();
     const { todos } = useNavegacao();
@@ -41,7 +39,6 @@ export function PaletaComandos({ aberta, aoFechar, acoes }: { aberta: boolean; a
     const [busca, setBusca] = useState("");
     const [indice, setIndice] = useState(0);
 
-    // Cada abertura começa do zero.
     useEffect(() => {
         if (aberta) {
             setBusca("");
@@ -50,7 +47,6 @@ export function PaletaComandos({ aberta, aoFechar, acoes }: { aberta: boolean; a
     }, [aberta]);
 
     const comandos = useMemo<Comando[]>(() => [
-        // Um destino por endereço ("Vendas" e "Histórico" levam ao mesmo lugar).
         ...todos.filter((n, i) => todos.findIndex((m) => m.href === n.href) === i).map((n) => ({ rotulo: n.rotulo, grupo: t("Ir para"), href: n.href, icone: n.icone })),
         ...acoes,
         ...(seletorFeira?.barraquinhas ?? []).map((b) => ({ rotulo: b.nome, grupo: t("Barraquinhas"), href: rota("admin.loja.painel", { barraquinha: b.id }), icone: IconBuildingStore })),

@@ -1,20 +1,6 @@
-/* ---------------------------------------------------------------------------
- * Design system da Feira Gastronômica — tokens (fonte única).
- * Descrição completa em DESIGN.md.
- *
- *  - Chão cinza-claro com cartões brancos sem borda; dados em barras
- *    hachuradas (listras diagonais); azul UNAERP conduz, amarelo destaca.
- *  - Telas e componentes usam só estes tokens (bg-superficie, text-tinta,
- *    border-linha, bg-primaria...). Nada de cor crua.
- *  - Modo escuro: os mesmos nomes trocam de valor sob .dark.
- *  - Cores com hex do bloco :root também são lidas por App\Support\Tema
- *    para os PDFs (o dompdf não entende var()).
- * --------------------------------------------------------------------------- */
-
 :root {
   color-scheme: light;
 
-  /* Superfícies: chão cinza, cartões brancos (sem borda, sem sombra). */
   --fundo: #f2f2f3;
   --superficie: #ffffff;
   --superficie-suave: #f6f6f7;
@@ -24,37 +10,29 @@
   --linha-forte: #dcdce1;
   --cartao-borda: transparent;
 
-  /* Texto */
   --tinta: #18181b;
   --tinta-media: #52525b;
   --tinta-suave: #71717a;
   --tinta-fraca: #a1a1aa;
 
-  /* Invertido: contadores, dicas, botão escuro do cartão promocional. */
   --inverso: #18181b;
   --inverso-tinta: #ffffff;
 
-  /* Identidade UNAERP: azul-marinho (principal) e amarelo (secundária). */
   --primaria: #003087;
   --primaria-hover: #00246a;
   --primaria-tinta: #ffffff;
   --primaria-suave: #e8eef8;
   --primaria-texto: #003087;
-  /* Azul-escuro oficial do ícone da UNAERP: fundo do bloco do símbolo (igual nos dois temas). */
   --marca-fundo: #292c6d;
   --secundaria: #ecdd12;
   --secundaria-hover: #d8ca0c;
   --secundaria-tinta: #1f1a00;
   --secundaria-suave: #fcf8d2;
-  /* Texto sobre secundaria-suave (o -tinta é para o amarelo cheio). */
   --secundaria-texto: #5c5300;
   --foco: #6f8fd0;
-  /* Véu atrás de diálogos e da gaveta do menu. */
   --veu: rgb(9 9 11 / 0.4);
-  /* Listras das barras de dados (sobre a cor da série). */
   --hachura: rgb(255 255 255 / 0.38);
 
-  /* Pastéis de status e destaque (chips, agenda, avatares). */
   --rosa: #e879f9;
   --rosa-suave: #f8d4fc;
   --rosa-tinta: #86198f;
@@ -72,11 +50,9 @@
   --vermelho-suave: #fde2e2;
   --vermelho-tinta: #991b1b;
 
-  /* Valores financeiros */
   --positivo: #15803d;
   --negativo: #dc2626;
 
-  /* Gráficos (ordem de uso) */
   --grafico-1: #003087;
   --grafico-2: #ecdd12;
   --grafico-3: #4ade80;
@@ -86,7 +62,6 @@
   --grafico-grade: #ececef;
   --grafico-inativo: #ededf0;
 
-  /* Impressão (PDF) */
   --impressao-titulo: #18181b;
   --impressao-cabecalho: #003087;
   --impressao-destaque: #b8ac0c;
@@ -218,7 +193,6 @@
 }
 
 @theme {
-  /* Escala tipográfica (Plus Jakarta Sans). */
   --text-micro: 0.6875rem;
   --text-micro--line-height: 1rem;
   --text-rotulo: 0.75rem;
@@ -236,26 +210,21 @@
   --text-cabecalho: 1.375rem;
   --text-cabecalho--line-height: 1.75rem;
   --text-cabecalho--letter-spacing: -0.015em;
-  /* Valor principal de um cartão ("R$ 12.450"). */
   --text-valor: 1.875rem;
   --text-valor--line-height: 2.25rem;
   --text-valor--letter-spacing: -0.025em;
   --text-saudacao: 1.75rem;
   --text-saudacao--line-height: 2.25rem;
   --text-saudacao--letter-spacing: -0.02em;
-  /* Marca "Feira Gastronômica" na sidebar. */
   --text-marca: 1.0625rem;
   --text-marca--line-height: 1.25rem;
 
-  /* Forma */
   --radius-controle: 0.625rem;
   --radius-cartao: 1.125rem;
 
-  /* Profundidade: quase plana; sombra só no que flutua. */
   --shadow-botao: 0 1px 2px 0 rgb(16 24 40 / 0.05);
   --shadow-flutuante: 0 18px 40px -14px rgb(16 24 40 / 0.24), 0 4px 10px -4px rgb(16 24 40 / 0.08);
 
-  /* Medidas de layout */
   --spacing-sidebar: 15rem;
   --spacing-sidebar-recolhida: 4.75rem;
   --spacing-topbar: 4rem;
@@ -267,7 +236,6 @@
     to { opacity: 1; transform: none; }
   }
 
-  /* Camadas do Radix: véu esmaece; folha sobe (celular) ou entra pela lateral. */
   --animate-esmaecer: esmaecer 150ms ease-out;
   @keyframes esmaecer {
     from { opacity: 0; }
@@ -285,7 +253,6 @@
     from { transform: translateX(100%); }
   }
 
-  /* Tempo real: linha que acabou de chegar acende em amarelo e esmaece. */
   --animate-chegar: chegar 2.4s ease-out;
   @keyframes chegar {
     0%, 30% { background-color: var(--secundaria-suave); }

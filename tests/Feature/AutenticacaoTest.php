@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
-/** Seção 3: login único, mensagem genérica, bloqueio por tentativas e gestão de acessos pelo admin. */
 class AutenticacaoTest extends TestCase
 {
     public function test_cada_perfil_vai_para_a_sua_area(): void
@@ -39,7 +38,6 @@ class AutenticacaoTest extends TestCase
             $this->post('/login', ['usuario' => $user->usuario, 'password' => 'errada123']);
         }
 
-        // Nem a senha certa entra durante o bloqueio.
         $this->post('/login', ['usuario' => $user->usuario, 'password' => 'senha1234'])->assertSessionHasErrors('usuario');
         $this->assertGuest();
         $this->assertDatabaseHas('auditoria_logs', ['acao' => 'login_bloqueado']);
@@ -54,7 +52,6 @@ class AutenticacaoTest extends TestCase
 
         $barraquinha->update(['status' => BarraquinhaStatus::Bloqueada]);
 
-        // Cada requisição real recarrega o usuário; fresh() simula isso no teste.
         $this->actingAs($user->fresh())->get(route('barraquinha.painel'))->assertRedirect(route('login'));
         $this->post('/logout');
         $this->post('/login', ['usuario' => $user->usuario, 'password' => 'senha1234'])->assertSessionHasErrors('usuario');

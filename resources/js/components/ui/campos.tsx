@@ -5,23 +5,12 @@ import { TRACO, type Icone } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 import { useLocale, useT } from "@/lib/i18n";
 
-/*
- * Campos do sistema. Texto, número, data e arquivo usam o <input> nativo
- * (teclados certos no celular); rótulo, seleção, caixa, interruptor e escolhas
- * em segmento/cartão são primitivos do Radix, estilizados com os tokens.
- */
-
 const CAMPO_BASE =
     "w-full rounded-controle border border-linha bg-superficie px-3 text-tinta placeholder:text-tinta-fraca transition-colors hover:border-linha-forte focus:border-primaria focus:ring-3 focus:ring-primaria-suave focus:outline-none aria-[invalid=true]:border-negativo disabled:cursor-not-allowed disabled:bg-superficie-suave";
 
-/**
- * Altura e fonte por tamanho, sem classes em conflito (o cx não faz merge).
- * No celular: 44px e 16px, que evita o zoom automático do iOS ao focar.
- */
 export const CLASSE_ENTRADA = `${CAMPO_BASE} h-11 text-base md:h-9 md:text-ui`;
 const CLASSE_ENTRADA_PEQUENA = `${CAMPO_BASE} h-11 text-base md:h-8 md:text-corpo`;
 
-/** Rótulo (Radix Label), dica e erro em volta de qualquer controle. */
 export function Campo({ rotulo, dica, erro, obrigatorio, id, className, children }: {
     rotulo?: ReactNode;
     dica?: ReactNode;
@@ -81,11 +70,6 @@ export function Entrada({ rotulo, dica, erro, icone: I, prefixo, valor, aoMudar,
     );
 }
 
-/**
- * Lê "12,5", "12.50", "1.234,56" ou "1,234.56". O último separador é o decimal,
- * exceto quando ele não é o decimal do idioma e vem seguido de exatamente 3
- * dígitos ("1.000" em pt-BR = mil).
- */
 export function lerMoeda(texto: string, decimal: "," | "."): number | null {
     const limpo = texto.replace(/[^\d,.]/g, "");
     if (!/\d/.test(limpo)) return null;
@@ -96,21 +80,14 @@ export function lerMoeda(texto: string, decimal: "," | "."): number | null {
     return Number.isFinite(n) ? n : null;
 }
 
-/**
- * Valor em reais, com teclado numérico no celular. Guarda o texto digitado
- * (senão "12," viraria "12" a cada tecla) e repassa o número; ao sair do
- * campo, formata com 2 casas no separador do idioma.
- */
 export function CampoMoeda({ valor, aoMudar, onBlur, ...props }: Omit<PropsEntrada, "valor" | "aoMudar" | "prefixo"> & { valor: number | null; aoMudar: (valor: number | null) => void }) {
     const locale = useLocale();
     const decimal = (1.5).toLocaleString(locale).includes(",") ? "," : ".";
     const formatar = (v: number | null) => (v === null || Number.isNaN(v) ? "" : v.toFixed(2).replace(".", decimal));
     const [texto, setTexto] = useState(() => formatar(valor));
 
-    // Valor trocado por fora (reset do formulário, cálculo de outro campo).
     useEffect(() => {
         if (lerMoeda(texto, decimal) !== valor) setTexto(formatar(valor));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [valor]);
 
     return (
@@ -177,7 +154,6 @@ export interface OpcaoSelecao {
     rotulo: string;
 }
 
-/** O Radix Select não aceita item com valor "": a opção vazia usa esta marca. */
 const VAZIO = "__vazio__";
 
 function ItemSelecao({ opcao }: { opcao: OpcaoSelecao }) {
@@ -194,10 +170,6 @@ function ItemSelecao({ opcao }: { opcao: OpcaoSelecao }) {
     );
 }
 
-/**
- * Seleção (Radix Select): teclado completo, digitar para achar, lista que
- * rola e se reposiciona na tela. Aceita opções soltas e/ou grupos com título.
- */
 export function Selecao({ rotulo, dica, erro, opcoes = [], grupos, valor, aoMudar, vazio, placeholder, className, tamanho = "md", required, disabled, name, id: idExterno, "aria-label": rotuloAcessivel }: {
     rotulo?: ReactNode;
     dica?: ReactNode;
@@ -206,7 +178,6 @@ export function Selecao({ rotulo, dica, erro, opcoes = [], grupos, valor, aoMuda
     grupos?: { rotulo: string; opcoes: OpcaoSelecao[] }[];
     valor: string;
     aoMudar: (valor: string) => void;
-    /** Rótulo da opção vazia ("Todos"); sem ele, não há opção vazia. */
     vazio?: string;
     placeholder?: string;
     className?: string;
@@ -220,7 +191,6 @@ export function Selecao({ rotulo, dica, erro, opcoes = [], grupos, valor, aoMuda
     const t = useT();
     const idGerado = useId();
     const id = idExterno ?? idGerado;
-    // "" com opção vazia = a opção vazia; "" sem ela = nada escolhido (mostra o placeholder).
     const valorRadix = valor === "" ? (vazio !== undefined ? VAZIO : "") : valor;
 
     return (
@@ -273,7 +243,6 @@ export function Selecao({ rotulo, dica, erro, opcoes = [], grupos, valor, aoMuda
     );
 }
 
-/** Caixa de marcação (Radix Checkbox) com rótulo clicável e descrição opcional. */
 export function CaixaSelecao({ marcado, aoMudar, children, descricao, desabilitado }: {
     marcado: boolean;
     aoMudar: (marcado: boolean) => void;
@@ -303,14 +272,12 @@ export function CaixaSelecao({ marcado, aoMudar, children, descricao, desabilita
     );
 }
 
-/** Interruptor liga/desliga (Radix Switch), espelhado em RTL. */
 export function Interruptor({ ligado, aoMudar, children, descricao, desabilitado, rotuloAcessivel }: {
     ligado: boolean;
     aoMudar: (ligado: boolean) => void;
     children: ReactNode;
     descricao?: ReactNode;
     desabilitado?: boolean;
-    /** Nome da ação para leitor de tela quando o texto visível é só o estado ("Ativa"). */
     rotuloAcessivel?: string;
 }) {
     const id = useId();
@@ -334,10 +301,6 @@ export function Interruptor({ ligado, aoMudar, children, descricao, desabilitado
     );
 }
 
-/**
- * Escolha única em segmentos (Radix RadioGroup: setas, foco itinerante).
- * `grande` = 44px para toque (PDV); `cores` põe um ponto de cor por opção.
- */
 export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores, icones }: {
     rotulo: string;
     opcoes: OpcaoSelecao[];
@@ -345,9 +308,7 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
     aoMudar: (valor: string) => void;
     cheio?: boolean;
     grande?: boolean;
-    /** Quadradinho de cor por valor (canal da venda). */
     cores?: Record<string, string>;
-    /** Ícone por valor (forma de pagamento). */
     icones?: Record<string, Icone>;
 }) {
     return (
@@ -361,7 +322,6 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
         >
             {opcoes.map((o) => {
                 const I = icones?.[o.valor];
-                // Grande com ícone (pagamento no PDV): ícone em cima do nome, para caber na coluna estreita do carrinho.
                 const empilhado = Boolean(I && grande);
                 return (
                     <RadioGroup.Item
@@ -383,7 +343,6 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
     );
 }
 
-/** Escolha única em cartões (Radix RadioGroup): tipo de relatório, formato. */
 export function OpcoesCartao({ rotulo, opcoes, valor, aoMudar, colunas = 1 }: {
     rotulo: string;
     opcoes: { valor: string; titulo: string; descricao?: string }[];
@@ -417,7 +376,6 @@ export function OpcoesCartao({ rotulo, opcoes, valor, aoMudar, colunas = 1 }: {
     );
 }
 
-/** Anexo opcional (comprovante). Tipo e tamanho são validados no servidor. */
 export function CampoArquivo({ rotulo, arquivo, aoMudar, aceitar, dica, erro }: {
     rotulo: string;
     arquivo: File | null;

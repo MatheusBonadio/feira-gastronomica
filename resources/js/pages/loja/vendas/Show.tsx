@@ -12,7 +12,6 @@ import { useT } from "@/lib/i18n";
 import { useRotaLoja } from "@/lib/rotas";
 import type { Venda } from "@/types/dominio";
 
-/** Detalhe da venda com preço, desconto e tag da época. Cancelar exige motivo e não apaga o registro. */
 export default function Show({ venda }: { venda: Venda }) {
     const t = useT();
     const { dataHora, moeda, numero } = useFormato();
@@ -38,7 +37,7 @@ export default function Show({ venda }: { venda: Venda }) {
                     <Faixa tom="perigo" icone={IconCircleX} titulo={t("Venda cancelada")}>
                         <p className="wrap-break-word">{venda.motivoCancelamento}</p>
                         <p className="mt-1 text-rotulo opacity-80">
-                            {t("Por :quem em :quando", { quem: venda.canceladaPor ?? "—", quando: dataHora(venda.canceladaEm) })}
+                            {t("Por :quem em :quando", { quem: venda.canceladaPor ?? "-", quando: dataHora(venda.canceladaEm) })}
                         </p>
                     </Faixa>
                 </div>
@@ -63,7 +62,7 @@ export default function Show({ venda }: { venda: Venda }) {
                                 <Celula><ChipTag rotulo={l.tag} combo={l.ehCombo} /></Celula>
                                 <Celula direita>{numero(l.quantidade)}</Celula>
                                 <Celula direita>{moeda(l.precoUnitario)}</Celula>
-                                <Celula direita className={l.desconto > 0 ? "text-positivo" : undefined}>{l.desconto > 0 ? `−${moeda(l.desconto)}` : "—"}</Celula>
+                                <Celula direita className={l.desconto > 0 ? "text-positivo" : undefined}>{l.desconto > 0 ? `−${moeda(l.desconto)}` : "-"}</Celula>
                                 <Celula direita><span className="font-medium text-tinta">{moeda(l.total)}</span></Celula>
                             </Linha>
                         ))}
@@ -93,7 +92,7 @@ export default function Show({ venda }: { venda: Venda }) {
                                 </span>
                             </Detalhe>
                             <Detalhe rotulo={t("Pagamento")}><Pagamento opcao={venda.pagamento} /></Detalhe>
-                            <Detalhe rotulo={t("Operador")}>{venda.operador ?? "—"}</Detalhe>
+                            <Detalhe rotulo={t("Operador")}>{venda.operador ?? "-"}</Detalhe>
                             <Detalhe rotulo={t("Status")}><ChipStatus opcao={venda.status} /></Detalhe>
                         </dl>
                     </Cartao>

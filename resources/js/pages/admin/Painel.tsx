@@ -41,7 +41,6 @@ interface Props {
     pagamentos: Opcao[];
 }
 
-/** Recarregadas quando entra venda ou lançamento em qualquer barraquinha da feira. */
 const PROPS_AO_VIVO = ["linhas", "consolidado", "porTag", "porPagamento", "serie", "ultimas", "pendencias", "saidasCategoria"];
 
 export default function Painel(props: Props) {

@@ -4,11 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Foto do usuário e da barraquinha (arquivos em public/fotos) e as preferências
- * do checkout (PDV) de cada barraquinha, em JSON num texto comum: nada de
- * coluna JSON com CHECK, para o banco subir em qualquer hospedagem.
- */
 return new class extends Migration
 {
     public function up(): void

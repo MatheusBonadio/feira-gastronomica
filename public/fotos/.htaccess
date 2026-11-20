@@ -1,5 +1,3 @@
-# Fotos enviadas pelos usuários (perfil e barraquinha): aqui só se serve imagem.
-# Nenhum outro tipo de arquivo é entregue, nem executado, mesmo que chegue aqui.
 Require all denied
 <FilesMatch "\.(jpe?g|png|webp)$">
     Require all granted

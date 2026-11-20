@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/** O gestor da barraquinha escolhe como o checkout (PDV) funciona, e põe a foto da barraquinha. */
 class ConfiguracaoCheckoutTest extends TestCase
 {
     private function preferencias(array $extras = []): array
@@ -46,7 +45,6 @@ class ConfiguracaoCheckoutTest extends TestCase
         [$barraquinha, $pastel, $refri] = $this->cenarioPastelaria();
         $usuario = $this->usuarioDa($barraquinha);
 
-        // Refrigerante vendido antes: com "mais vendidos", vem primeiro.
         $this->actingAs($usuario)->post(route('barraquinha.vendas.store'), ['canal' => 'feira', 'pagamento' => 'dinheiro', 'itens' => [$refri->id => 3]]);
 
         $this->actingAs($usuario)->put(route('barraquinha.configuracoes.checkout'), $this->preferencias())
@@ -92,7 +90,6 @@ class ConfiguracaoCheckoutTest extends TestCase
             ->put(route('barraquinha.configuracoes.checkout'), $this->preferencias(['pagamentos' => [], 'exibicao' => 'mosaico']))
             ->assertSessionHasErrors(['pagamentos', 'exibicao']);
 
-        // A forma já marcada precisa estar entre as aceitas.
         $this->actingAs($usuario)
             ->put(route('barraquinha.configuracoes.checkout'), $this->preferencias(['pagamentos' => ['cartao'], 'pagamento_padrao' => 'pix']))
             ->assertSessionHasErrors('pagamento_padrao');
@@ -113,12 +110,10 @@ class ConfiguracaoCheckoutTest extends TestCase
         $this->actingAs($usuario)->get(route('barraquinha.painel'))
             ->assertInertia(fn (Assert $p) => $p->where('barraquinha.foto', '/fotos/'.$caminho));
 
-        // O admin também ajusta pela tela da barraquinha.
         $this->flushSession();
         $this->actingAs($this->criarAdmin())
             ->put(route('admin.loja.configuracoes.checkout', ['barraquinha' => $barraquinha->id]), $this->preferencias(['pagamentos' => ['cartao'], 'pagamento_padrao' => null]))
             ->assertSessionHasNoErrors();
-        // Uma forma só: já vem marcada.
         $this->assertSame('cartao', $barraquinha->fresh()->preferenciasCheckout()->pagamentoPadrao);
     }
 }

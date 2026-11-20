@@ -6,13 +6,8 @@ use App\Models\Lancamento;
 use App\Models\User;
 use Tests\TestCase;
 
-/**
- * Painel em tempo real: o pulso muda quando entra venda ou lançamento e o
- * navegador recarrega só as props do painel.
- */
 class TempoRealTest extends TestCase
 {
-    /** Troca de usuário como um login novo faria (o auth.session confere o hash da senha na sessão). */
     private function como(User $user): static
     {
         return $this->flushSession()->actingAs($user);

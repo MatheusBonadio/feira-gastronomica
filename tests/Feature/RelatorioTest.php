@@ -7,7 +7,6 @@ use App\Enums\FormaPagamento;
 use App\Services\Vendas\VendaService;
 use Tests\TestCase;
 
-/** Seção 9: exportação em xlsx, csv e pdf, com escopo decidido no servidor e auditoria. */
 class RelatorioTest extends TestCase
 {
     public function test_barraquinha_exporta_so_os_proprios_dados_mesmo_pedindo_outra(): void
@@ -55,7 +54,6 @@ class RelatorioTest extends TestCase
         $xlsx->assertOk();
         $this->assertStringContainsString('spreadsheetml', $xlsx->headers->get('content-type'));
 
-        // Uma aba por barraquinha e uma de consolidado.
         $zip = new \ZipArchive;
         $zip->open($xlsx->getFile()->getPathname());
         $this->assertSame(3, preg_match_all('/<sheet /', $zip->getFromName('xl/workbook.xml')));

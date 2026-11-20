@@ -1,22 +1,16 @@
 import { useMemo } from "react";
 import { useLocale } from "@/lib/i18n";
 
-/** "2026-11-19" vira data local (new Date("2026-11-19") seria meia-noite UTC, um dia antes no Brasil). */
 export function paraData(valor: string): Date {
     const soData = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
     return soData ? new Date(Number(soData[1]), Number(soData[2]) - 1, Number(soData[3])) : new Date(valor);
 }
 
-/** "AAAA-MM-DD" de uma data local. */
 export function isoDia(data: Date): string {
     const d = new Date(data.getTime() - data.getTimezoneOffset() * 60000);
     return d.toISOString().slice(0, 10);
 }
 
-/**
- * Formatação no idioma ativo. O servidor manda números crus; a moeda é sempre
- * o real, só a pontuação muda (R$ 1.234,56 em pt-BR, R$1,234.56 em en).
- */
 export function useFormato() {
     const locale = useLocale();
 
@@ -37,10 +31,10 @@ export function useFormato() {
             moeda: (valor: number | null | undefined) => moeda.format(valor ?? 0),
             moedaCompacta: (valor: number | null | undefined) => moedaCompacta.format(valor ?? 0),
             numero: (valor: number | null | undefined) => inteiro.format(valor ?? 0),
-            percentual: (valor: number | null | undefined) => (valor === null || valor === undefined ? "—" : pct.format(valor)),
-            data: (valor: string | null | undefined) => (valor ? data.format(paraData(valor)) : "—"),
-            dataHora: (valor: string | null | undefined) => (valor ? dataHora.format(paraData(valor)) : "—"),
-            hora: (valor: string | null | undefined) => (valor ? hora.format(paraData(valor)) : "—"),
+            percentual: (valor: number | null | undefined) => (valor === null || valor === undefined ? "-" : pct.format(valor)),
+            data: (valor: string | null | undefined) => (valor ? data.format(paraData(valor)) : "-"),
+            dataHora: (valor: string | null | undefined) => (valor ? dataHora.format(paraData(valor)) : "-"),
+            hora: (valor: string | null | undefined) => (valor ? hora.format(paraData(valor)) : "-"),
             diaMes: (valor: string) => diaMes.format(paraData(valor)),
             diaSemana: (valor: string) => diaSemana.format(paraData(valor)).replace(".", ""),
             dataLonga: (valor: Date = new Date()) => {

@@ -25,10 +25,6 @@ interface Props {
     rotaExportar: string;
 }
 
-/**
- * Exportação (seção 9). A barraquinha só exporta os próprios dados: o servidor
- * ignora qualquer escopo vindo da tela. O admin escolhe a feira e as barraquinhas.
- */
 export default function Relatorios({ admin, feiraAtual, feiras, barraquinhas, tipos, formatos, canais, pagamentos, numerosCombo, rotaExportar }: Props) {
     const t = useT();
     const { data } = useFormato();
@@ -47,13 +43,11 @@ export default function Relatorios({ admin, feiraAtual, feiras, barraquinhas, ti
         pdf: { titulo: "PDF", descricao: t("Pronto para imprimir ou enviar.") },
     };
 
-    // As barraquinhas listadas são as da feira em uso; noutra feira, vale "todas".
     const podeEscolherBarraquinhas = admin && barraquinhas.length > 0 && feira === String(feiraAtual ?? "");
     const ids = podeEscolherBarraquinhas ? escolhidas : [];
     const periodoInvalido = !!filtro.de && !!filtro.ate && filtro.ate < filtro.de;
     const pronto = !!tipo && !!formato && (!admin || !!feira) && !periodoInvalido;
 
-    // Download direto (não é uma página do Inertia): link comum com a query montada.
     const parametros = new URLSearchParams(semVazios({ tipo, formato, feira_id: admin ? feira : "", ...filtro }) as Record<string, string>);
     ids.forEach((id) => parametros.append("barraquinhas[]", String(id)));
     const url = `${rotaExportar}?${parametros.toString()}`;
@@ -175,12 +169,11 @@ export default function Relatorios({ admin, feiraAtual, feiras, barraquinhas, ti
                     </Cartao>
                 </div>
 
-                {/* Resumo + botão: ao lado no desktop, no fim da página no celular. */}
                 <aside className="flex min-w-0 flex-col gap-4 lg:self-start">
                     <Cartao titulo={t("Resumo da exportação")} icone={IconInfoCircle}>
                         <dl className="-mt-2.5 divide-y divide-linha">
-                            <Detalhe rotulo={t("Relatório")}>{tipoAtual?.label ?? "—"}</Detalhe>
-                            {admin && <Detalhe rotulo={t("Feira")}>{feiraNome ?? "—"}</Detalhe>}
+                            <Detalhe rotulo={t("Relatório")}>{tipoAtual?.label ?? "-"}</Detalhe>
+                            {admin && <Detalhe rotulo={t("Feira")}>{feiraNome ?? "-"}</Detalhe>}
                             <Detalhe rotulo={t("Escopo")}>
                                 {!admin
                                     ? t("Sua barraquinha")

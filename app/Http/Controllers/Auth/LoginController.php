@@ -37,14 +37,11 @@ class LoginController extends Controller
         if ($user->idioma) {
             $request->session()->put('idioma', $user->idioma);
 
-            // Idioma diferente do da tela de login: recarga completa (o dicionário vem uma vez por carga).
             if ($user->idioma !== app()->getLocale()) {
                 return Inertia::location($destino);
             }
         }
 
-        // Sem recarga (mais rápido, e com a transição do login): as rotas do perfil
-        // chegam junto com a primeira página (prop "rotas", ver HandleInertiaRequests).
         $request->session()->put(HandleInertiaRequests::ENVIAR_ROTAS, true);
 
         return redirect($destino);
@@ -60,7 +57,6 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
         $request->session()->put('idioma', $idioma);
 
-        // Em celular compartilhado da barraquinha, nada da sessão fica no histórico.
         Inertia::clearHistory();
 
         return Inertia::location(route('login'));

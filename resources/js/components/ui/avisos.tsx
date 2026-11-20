@@ -21,7 +21,6 @@ function remover(id: number) {
     emitir();
 }
 
-/** Mostra um aviso flutuante (até 3 de uma vez). Erros ficam mais tempo na tela. */
 export function avisar(texto: string, tipo: TipoAviso = "sucesso") {
     avisos = [...avisos.slice(-2), { id: proximoId++, texto, tipo }];
     emitir();
@@ -30,10 +29,6 @@ export function avisar(texto: string, tipo: TipoAviso = "sucesso") {
 const ICONES = { sucesso: IconCircleCheck, erro: IconAlertTriangle, info: IconInfoCircle };
 const CORES = { sucesso: "text-positivo", erro: "text-negativo", info: "text-primaria-texto" };
 
-/**
- * Avisos (Radix Toast): anunciados a leitores de tela, pausam com o mouse em
- * cima ou a janela sem foco, fecham arrastando e têm atalho F8 para chegar neles.
- */
 export function Avisos({ rotulo, rotuloFechar }: { rotulo: string; rotuloFechar: string }) {
     const lista = useSyncExternalStore(
         (ouvinte) => {

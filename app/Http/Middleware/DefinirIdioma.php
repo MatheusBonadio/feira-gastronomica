@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Idioma: escolha da sessão, senão a preferência salva do usuário, senão o padrão da aplicação. */
 class DefinirIdioma
 {
     public function handle(Request $request, Closure $next): Response

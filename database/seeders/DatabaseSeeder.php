@@ -9,7 +9,6 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /** Senha dos acessos de demonstração. Troque em produção (FEIRA_SENHA_DEMO). */
     public static function senhaDemo(): string
     {
         return env('FEIRA_SENHA_DEMO', 'feira2027');

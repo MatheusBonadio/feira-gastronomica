@@ -14,16 +14,10 @@ use App\Services\Financeiro\Indicadores;
 use App\Services\Financeiro\IndicadoresService;
 use Illuminate\Support\Collection;
 
-/**
- * Monta os relatórios da seção 9. Quem chama decide o escopo: a barraquinha
- * só passa a si mesma; o admin passa uma, várias ou todas da feira.
- * Vendas canceladas aparecem marcadas e ficam fora dos totais.
- */
 class RelatorioService
 {
     public function __construct(private readonly IndicadoresService $indicadores) {}
 
-    /** @param Collection<int, Barraquinha> $barraquinhas */
     public function gerar(TipoRelatorio $tipo, Feira $feira, Collection $barraquinhas, Filtro $filtro): Relatorio
     {
         $escopo = $barraquinhas->count() === 1 ? $barraquinhas->first()->nomeExibicao() : __('Consolidado');
@@ -158,7 +152,6 @@ class RelatorioService
         );
     }
 
-    /** Um arquivo com uma aba por barraquinha e uma de consolidado (seção 9, regra 5). */
     private function fechamento(Relatorio $r, Collection $barraquinhas, Filtro $filtro): void
     {
         $porBarraquinha = $this->indicadores->porBarraquinha($barraquinhas, $filtro);

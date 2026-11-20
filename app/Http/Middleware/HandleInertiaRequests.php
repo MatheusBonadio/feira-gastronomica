@@ -12,7 +12,6 @@ use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
-    /** Marca na sessão: a próxima página renderizada leva as rotas (Ziggy) do perfil. */
     public const ENVIAR_ROTAS = 'enviar_rotas';
 
     protected $rootView = 'app';
@@ -45,27 +44,18 @@ class HandleInertiaRequests extends Middleware
                     'feiraEncerrada' => $user->barraquinha->feira->estaEncerrada(),
                 ] : null,
             ] : null,
-            // Seletor de feira do admin (cada feira é uma edição independente).
             'seletorFeira' => fn () => $user?->ehAdmin() ? [
                 'atual' => FeiraAtual::obter()?->only(['id', 'nome']),
-                // Atalhos da sidebar para as barraquinhas da feira em uso.
                 'barraquinhas' => FeiraAtual::obter()?->barraquinhas()->whereNotNull('nome')->get(['id', 'nome', 'posicao', 'status', 'foto_path'])
                     ->map(fn ($b) => ['id' => $b->id, 'nome' => $b->nome, 'bloqueada' => ! $b->estaAtiva(), 'foto' => $b->fotoUrl()]) ?? [],
                 'lista' => Feira::recentes()->get(['id', 'nome', 'status'])->map(fn (Feira $f) => [
                     'id' => $f->id, 'nome' => $f->nome, 'status' => $f->status->label(),
                 ]),
             ] : null,
-            // Login sem recarga: o @routes da página de login só tem as rotas públicas, então a
-            // primeira página renderizada depois dele leva as do perfil (resources/js/lib/rotas.ts).
-            // "pull" aqui dentro: só é lido quando uma página é renderizada, não num redirect.
             'rotas' => fn () => $user && $request->hasSession() && $request->session()->pull(self::ENVIAR_ROTAS)
                 ? (new Ziggy($user->perfil->value))->toArray()
                 : null,
-            // Barraquinha em foco nas telas compartilhadas (itens, combos, vendas...).
             'loja' => fn () => $this->loja($request),
-            // Mensagens de sucesso/erro após uma ação. (A senha gerada vai à parte, por Inertia::flash.)
-            // Sem sessão (página de erro de uma URL fora das rotas web, como um arquivo que não
-            // existe), não há mensagem: ler a sessão aqui transformaria o 404 num 500.
             'mensagens' => fn () => [
                 'success' => $request->hasSession() ? $request->session()->get('success') : null,
                 'error' => $request->hasSession() ? $request->session()->get('error') : null,
@@ -73,11 +63,6 @@ class HandleInertiaRequests extends Middleware
         ];
     }
 
-    /**
-     * Dicionário do idioma ativo (lang/{idioma}.json), enviado uma vez e lembrado
-     * pelo cliente. As chaves das telas são as próprias frases em português; o
-     * pt_BR.json só traduz os textos internos (em inglês) dos componentes BoardUI.
-     */
     public function shareOnce(Request $request): array
     {
         return [
@@ -99,7 +84,6 @@ class HandleInertiaRequests extends Middleware
 
         $loja = app(Loja::class);
 
-        // Inclui páginas de erro: sem foco definido, simplesmente não há loja.
         if (! $user || ! $naRotaDaLoja || ! $loja->temFoco()) {
             return null;
         }

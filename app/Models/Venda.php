@@ -64,7 +64,6 @@ class Venda extends Model
         return $this->status === VendaStatus::Cancelada;
     }
 
-    /** Ex.: "Combo 1 × 2 + Comum": combos em ordem, Comum por último. */
     public function resumo(): string
     {
         return $this->linhas

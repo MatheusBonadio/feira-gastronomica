@@ -4,19 +4,10 @@ namespace App\Services\Relatorios;
 
 use Illuminate\Support\Carbon;
 
-/**
- * Relatório pronto para exportar, independente do formato.
- * Cada aba tem blocos; cada bloco é uma tabela com rodapé opcional.
- * Valores: float = dinheiro, int = contagem, string = texto já formatado.
- *
- * @phpstan-type Bloco array{titulo: ?string, colunas: list<string>, linhas: list<list<mixed>>, rodape: ?list<mixed>}
- */
 final class Relatorio
 {
-    /** @var list<array{nome: string, blocos: list<array>}> */
     public array $abas = [];
 
-    /** @param array<string, string> $filtros */
     public function __construct(
         public readonly TipoRelatorio $tipo,
         public readonly string $feira,
@@ -44,7 +35,6 @@ final class Relatorio
         return $this;
     }
 
-    /** Cabeçalho obrigatório de todo arquivo (seção 9, regra 1). */
     public function cabecalho(): array
     {
         return [

@@ -13,7 +13,6 @@ interface Props {
     perfil: { nome: string; usuario: string; perfilLabel: string; foto: string | null; ultimoAcesso: string | null };
 }
 
-/** Configurações do próprio perfil: foto, nome, tema, idioma e atalho para a senha. */
 export default function Perfil({ perfil }: Props) {
     const t = useT();
     const f = useFormato();
@@ -77,7 +76,6 @@ export default function Perfil({ perfil }: Props) {
                                     rotulo={t("Idioma")}
                                     opcoes={Object.entries(app.idiomas).map(([valor, rotulo]) => ({ valor, rotulo }))}
                                     valor={app.idioma}
-                                    // Recarrega a página inteira: o dicionário do idioma vem uma vez por carga.
                                     aoMudar={(idioma) => window.location.assign(rota("idioma", { idioma }))}
                                     cheio
                                 />
@@ -88,7 +86,7 @@ export default function Perfil({ perfil }: Props) {
 
                 <Cartao titulo={t("Segurança")} icone={IconShieldLock} className="self-start">
                     <div className="flex flex-col gap-4">
-                        <Detalhe rotulo={t("Último acesso")}>{perfil.ultimoAcesso ? f.dataHora(perfil.ultimoAcesso) : "—"}</Detalhe>
+                        <Detalhe rotulo={t("Último acesso")}>{perfil.ultimoAcesso ? f.dataHora(perfil.ultimoAcesso) : "-"}</Detalhe>
                         <BotaoLink href={rota("senha.edit")} variante="secundario" icone={IconKey} className="self-start">{t("Alterar minha senha")}</BotaoLink>
                     </div>
                 </Cartao>

@@ -5,14 +5,6 @@ namespace App\Support;
 use App\Models\Barraquinha;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Barraquinha em foco na requisição.
- *
- * As telas de itens, combos, vendas, lançamentos e painel são as mesmas para
- * os dois perfis. Para a barraquinha, o foco vem sempre da sessão; para o
- * admin, do {barraquinha} das rotas /admin/barraquinhas/{id}/..., fixado pelo
- * middleware LojaCoerente.
- */
 class Loja
 {
     private ?Barraquinha $foco = null;
@@ -45,7 +37,6 @@ class Loja
         return (bool) auth()->user()?->ehAdmin();
     }
 
-    /** Nome completo da rota no portal atual: "itens.index" vira barraquinha.itens.index ou admin.loja.itens.index. */
     public function nomeRota(string $nome): string
     {
         return ($this->ehAdmin() ? 'admin.loja.' : 'barraquinha.').$nome;

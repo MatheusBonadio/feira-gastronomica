@@ -33,7 +33,6 @@ export default function Form({ item, categorias, canais, canalPadrao }: Props) {
     });
     const erros = form.errors as Record<string, string | undefined>;
 
-    // Prévia da margem unitária em cada canal (preço vazio = preço de Feira).
     const precoFeira = form.data.precos[canalPadrao] ?? null;
     const custo = form.data.custo;
     const margens = canais.map((canal) => {
@@ -134,7 +133,6 @@ export default function Form({ item, categorias, canais, canalPadrao }: Props) {
                     </Cartao>
                 </div>
 
-                {/* No celular fica entre o formulário e os botões. */}
                 <aside className="flex min-w-0 flex-col gap-4 lg:row-span-2 lg:self-start">
                     <Cartao titulo={t("Margem por canal")} icone={IconReceipt} descricao={t("Prévia com o custo unitário informado.")}>
                         <dl className="-my-2.5 divide-y divide-linha">
@@ -142,7 +140,7 @@ export default function Form({ item, categorias, canais, canalPadrao }: Props) {
                                 <Detalhe key={canal.valor} rotulo={canal.label}>
                                     <span className="flex flex-col items-end">
                                         <span className="tabular-nums">
-                                            {preco ? moeda(preco) : "—"}
+                                            {preco ? moeda(preco) : "-"}
                                             {herdado && preco ? <span className="ms-1 text-rotulo font-normal text-tinta-suave">({t("Feira")})</span> : null}
                                         </span>
                                         {margem !== null && (

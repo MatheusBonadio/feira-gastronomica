@@ -5,7 +5,6 @@ import { TRACO, type Icone } from "@/components/ui/icone";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
-/** Página de erro do Inertia (403, 404, 419, 422, 429, 500, 503), com e sem login. */
 export default function Erro({ status, mensagem }: { status: number; mensagem?: string | null }) {
     const t = useT();
     const { auth } = usePage().props;

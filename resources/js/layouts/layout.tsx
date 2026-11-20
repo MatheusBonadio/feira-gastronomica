@@ -8,14 +8,12 @@ import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
-/** Layout persistente: com usuário logado, a shell; sem, a moldura pública. */
 export function Layout({ children }: { children: ReactNode }) {
     const { auth } = usePage().props;
 
     return <Provedores>{auth ? <Shell>{children}</Shell> : <MolduraPublica>{children}</MolduraPublica>}</Provedores>;
 }
 
-/** Login: cartão branco sobre o chão cinza; painel da marca ao lado em telas largas. */
 function MolduraPublica({ children }: { children: ReactNode }) {
     const { app } = usePage().props;
     const t = useT();
@@ -34,7 +32,6 @@ function MolduraPublica({ children }: { children: ReactNode }) {
 
     return (
         <div className="flex min-h-dvh bg-fundo p-3 sm:p-4">
-            {/* "moldura": nome da view transition que leva o login até o app (app.css). */}
             <div className="grid w-full overflow-hidden rounded-3xl border border-cartao-borda bg-superficie [view-transition-name:moldura] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
                 <div className="flex flex-col px-6 py-7 sm:px-12">
                     <Marca transicao />

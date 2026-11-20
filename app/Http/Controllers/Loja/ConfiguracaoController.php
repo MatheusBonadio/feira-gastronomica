@@ -14,10 +14,6 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/**
- * Configurações da barraquinha em foco: foto e como o checkout (PDV) funciona.
- * Feitas pelo gestor da barraquinha; o admin também pode ajustar pela tela dela.
- */
 class ConfiguracaoController extends Controller
 {
     public function __construct(private readonly Loja $loja, private readonly FotoService $fotos) {}

@@ -19,7 +19,6 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Painel da barraquinha (o admin vê o mesmo painel). Atualiza em tempo real pelo pulso. */
 class PainelController extends Controller
 {
     public function index(Request $request, Loja $loja, IndicadoresService $indicadores, PendenciasService $pendencias, PulsoService $pulso): Response
@@ -29,7 +28,6 @@ class PainelController extends Controller
         $ids = [$barraquinha->id];
 
         return Inertia::render('loja/Painel', [
-            // Primeiro, antes dos dados: ver Admin\PainelController.
             'versao' => fn () => $this->versao($pulso, $barraquinha),
             'barraquinha' => Apresentacao::barraquinha($barraquinha),
             'filtro' => $filtro->paraQuery(),
@@ -54,16 +52,11 @@ class PainelController extends Controller
         ]);
     }
 
-    /** Pendências da barraquinha, para o sino da topbar. */
     public function pendencias(Loja $loja, PendenciasService $pendencias): JsonResponse
     {
         return response()->json(['pendencias' => $pendencias->daBarraquinha($loja->barraquinha())]);
     }
 
-    /**
-     * Itens com controle de estoque, os mais perto de acabar primeiro.
-     * O estoque considera todas as vendas concluídas (não segue o filtro).
-     */
     private function estoque(Barraquinha $barraquinha, IndicadoresService $indicadores): array
     {
         $vendidos = $indicadores->rankingItens([$barraquinha->id], new Filtro, null)->pluck('quantidade', 'item_id');

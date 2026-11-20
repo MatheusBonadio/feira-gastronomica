@@ -7,10 +7,8 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/** Configurações do próprio perfil: nome e foto, para os dois perfis. */
 class PerfilTest extends TestCase
 {
-    /** PNG 1x1 de verdade: o fake()->image() exigiria a extensão GD. */
     public static function png(string $nome = 'foto.png'): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($nome, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=='));
@@ -25,7 +23,6 @@ class PerfilTest extends TestCase
         $this->actingAs($admin)->put(route('admin.perfil.update'), ['nome' => '  Coordenação  '])->assertRedirect();
         $this->assertSame('Coordenação', $admin->fresh()->nome);
 
-        // Outro usuário no mesmo teste: sessão nova (o auth.session derrubaria a troca).
         $this->flushSession();
         $usuario = $this->usuarioDa($this->criarBarraquinha());
         $this->actingAs($usuario)->get(route('barraquinha.perfil'))->assertOk();
@@ -43,13 +40,11 @@ class PerfilTest extends TestCase
         $this->assertStringStartsWith('usuarios/', $primeira);
         $this->assertSame('/fotos/'.$primeira, $usuario->fresh()->fotoUrl());
 
-        // A anterior é apagada ao trocar.
         $this->actingAs($usuario)->post(route('barraquinha.perfil.foto'), ['foto' => self::png('outra.png')]);
         $segunda = $usuario->fresh()->foto_path;
         Storage::disk('fotos')->assertMissing($primeira);
         Storage::disk('fotos')->assertExists($segunda);
 
-        // A foto vai para o topo (props compartilhadas).
         $this->actingAs($usuario)->get(route('barraquinha.perfil'))
             ->assertInertia(fn (Assert $p) => $p->where('auth.usuario.foto', '/fotos/'.$segunda));
 

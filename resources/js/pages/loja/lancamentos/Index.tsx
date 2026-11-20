@@ -23,7 +23,6 @@ interface Props {
     tipos: Opcao[];
 }
 
-/** Patrocínio, rifa e aportes entram; custos, despesas e investimentos saem. Toda alteração fica no histórico. */
 export default function Index({ lancamentos, filtro, tipos }: Props) {
     const t = useT();
     const { data, moeda } = useFormato();

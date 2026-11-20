@@ -4,10 +4,6 @@ import type { ReactNode } from "react";
 import { TRACO, type Icone } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 
-/**
- * Cartão branco sobre o chão cinza, sem borda no tema claro (no escuro, um
- * fio sutil). Cabeçalho = título + descrição pequena + ações à direita.
- */
 export function Cartao({ titulo, icone: I, descricao, acoes, children, className, corpo, id }: {
     titulo?: ReactNode;
     icone?: Icone;
@@ -15,7 +11,6 @@ export function Cartao({ titulo, icone: I, descricao, acoes, children, className
     acoes?: ReactNode;
     children: ReactNode;
     className?: string;
-    /** Classes do corpo; "" para tabelas e listas que encostam nas bordas. */
     corpo?: string;
     id?: string;
 }) {
@@ -39,7 +34,6 @@ export function Cartao({ titulo, icone: I, descricao, acoes, children, className
     );
 }
 
-/** Topo da página: contexto pequeno, título e ações à direita (quebram no celular). */
 export function CabecalhoPagina({ titulo, sobretitulo, descricao, acoes, voltar, children, tituloAba }: {
     titulo: ReactNode;
     sobretitulo?: ReactNode;
@@ -47,7 +41,6 @@ export function CabecalhoPagina({ titulo, sobretitulo, descricao, acoes, voltar,
     acoes?: ReactNode;
     voltar?: ReactNode;
     children?: ReactNode;
-    /** Texto do <title>; padrão = título, quando for texto. */
     tituloAba?: string;
 }) {
     return (
@@ -69,7 +62,6 @@ export function CabecalhoPagina({ titulo, sobretitulo, descricao, acoes, voltar,
     );
 }
 
-/** Faixa de números resumidos logo abaixo do título. */
 export function PilulaStats({ itens }: { itens: { icone: Icone; valor: ReactNode; rotulo: ReactNode }[] }) {
     return (
         <div className="inline-flex max-w-full flex-wrap items-center gap-y-1 self-start rounded-2xl border border-cartao-borda bg-superficie px-1.5 py-1.5">
@@ -84,10 +76,6 @@ export function PilulaStats({ itens }: { itens: { icone: Icone; valor: ReactNode
     );
 }
 
-/**
- * Variação contra uma referência ("↗ 5,1% vs. Feira 2026"). `bomQuandoSobe`
- * decide a cor: entrada que sobe é boa; saída que sobe, não.
- */
 export function Variacao({ fracao, rotulo, bomQuandoSobe = true, formatar }: {
     fracao: number | null;
     rotulo: ReactNode;
@@ -108,7 +96,6 @@ export function Variacao({ fracao, rotulo, bomQuandoSobe = true, formatar }: {
     );
 }
 
-/** Número de um cartão de totais: rótulo, valor e variação ou detalhe. */
 export function Estatistica({ rotulo, valor, tom = "neutro", rodape, className }: {
     rotulo: ReactNode;
     valor: ReactNode;
@@ -125,7 +112,6 @@ export function Estatistica({ rotulo, valor, tom = "neutro", rodape, className }
     );
 }
 
-/** Indicador em cartão próprio: rótulo, ícone, valor e um gráfico pequeno opcional. */
 export function Kpi({ rotulo, valor, icone: I, detalhe, tom = "neutro", grafico, destaque, className }: {
     rotulo: string;
     valor: ReactNode;
@@ -155,7 +141,6 @@ export function Kpi({ rotulo, valor, icone: I, detalhe, tom = "neutro", grafico,
     );
 }
 
-/** Rótulo + valor em linha, para fichas de detalhe. */
 export function Detalhe({ rotulo, children }: { rotulo: string; children: ReactNode }) {
     return (
         <div className="flex items-baseline justify-between gap-4 py-2.5">
@@ -180,7 +165,6 @@ export function Vazio({ titulo, descricao, acao, icone: I }: { titulo: string; d
     );
 }
 
-/** Faixa de aviso (feira encerrada, resultado negativo, senha gerada). */
 export function Faixa({ tom = "aviso", icone: I, children, titulo }: { tom?: "aviso" | "perigo" | "info" | "destaque"; icone?: Icone; titulo?: ReactNode; children?: ReactNode }) {
     const tons = {
         aviso: "bg-ambar-suave text-ambar-tinta",

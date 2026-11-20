@@ -44,9 +44,6 @@ import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
 import { rota, useRotaLoja } from "@/lib/rotas";
 
-/* ---------------------------------------------------------------------------
- * Preferência "menu recolhido" (só ícones), lembrada no navegador.
- * ------------------------------------------------------------------------- */
 const CHAVE_RECOLHIDO = "menu-recolhido";
 const ouvintesMenu = new Set<() => void>();
 function lerRecolhido() {
@@ -69,14 +66,12 @@ function useMenuRecolhido(): [boolean, (valor: boolean) => void] {
         try {
             localStorage.setItem(CHAVE_RECOLHIDO, valor ? "1" : "0");
         } catch {
-            // Sem armazenamento: vale até recarregar.
         }
         ouvintesMenu.forEach((o) => o());
     }, []);
     return [recolhido, definir];
 }
 
-/** Telas autenticadas: sidebar (recolhível), topo sobre o chão cinza e conteúdo em largura total. */
 export function Shell({ children }: { children: ReactNode }) {
     const t = useT();
     const { props: { loja, auth }, url } = usePage();
@@ -90,7 +85,6 @@ export function Shell({ children }: { children: ReactNode }) {
     useEffect(() => router.on("navigate", () => setGaveta(false)), []);
 
     const encerrada = loja?.encerrada ?? auth?.barraquinha?.feiraEncerrada ?? false;
-    // No celular a ação principal (Nova venda) vira botão flutuante, menos na própria tela dela.
     const flutuante = acoes?.principal.flutuante && new URL(acoes.principal.href, window.location.origin).pathname !== url.split("?")[0] ? acoes.principal : null;
 
     return (
@@ -99,7 +93,6 @@ export function Shell({ children }: { children: ReactNode }) {
                 <Sidebar recolhida={recolhida} aoRecolher={() => setRecolhida(!recolhida)} fixa />
             </aside>
 
-            {/* Celular e tablet: a mesma sidebar numa folha lateral (Radix Dialog). */}
             <Folha aberta={gaveta} aoFechar={() => setGaveta(false)} titulo={t("Menu")} lado="inicio" ocultarCabecalho corpo="h-full min-h-0">
                 <Sidebar recolhida={false} />
             </Folha>
@@ -163,7 +156,6 @@ export function Shell({ children }: { children: ReactNode }) {
     );
 }
 
-/** Ação principal da topbar ("Add widget ▾"), conforme o perfil e a tela. */
 function useAcaoPrincipal(): { principal: { rotulo: string; href: string; icone?: Icone; flutuante?: boolean }; extras: ItemMenu[] } | null {
     const { auth, loja } = usePage().props;
     const t = useT();
@@ -194,11 +186,6 @@ function useAcaoPrincipal(): { principal: { rotulo: string; href: string; icone?
     return null;
 }
 
-/* ---------------------------------------------------------------------------
- * Sidebar
- * ------------------------------------------------------------------------- */
-
-/** `fixa`: a sidebar do desktop (a da gaveta do celular é outra instância). */
 function Sidebar({ recolhida, aoRecolher, fixa }: { recolhida: boolean; aoRecolher?: () => void; fixa?: boolean }) {
     const t = useT();
     const { auth, seletorFeira } = usePage().props;
@@ -255,7 +242,6 @@ function Sidebar({ recolhida, aoRecolher, fixa }: { recolhida: boolean; aoRecolh
 
 const CLASSE_ITEM = "relative flex h-10 items-center gap-3 rounded-xl text-ui outline-none transition-colors focus-visible:ring-2 focus-visible:ring-foco";
 
-/** Item da sidebar: ativo com fundo cinza e barrinha na borda; filhos em árvore (Radix Collapsible). */
 function ItemSidebar({ item, recolhida }: { item: ItemNavegacao; recolhida: boolean }) {
     const { rotulo, href, icone: I, ativo, filhos, tituloFilhos, contador } = item;
     const [aberto, setAberto] = useState(ativo);
@@ -336,7 +322,6 @@ function BotaoLateral({ icone: I, rotulo, recolhida, aoClicar }: { icone: Icone;
     return recolhida ? <Dica rotulo={rotulo} lado="right">{botao}</Dica> : botao;
 }
 
-/** Cartão no pé da sidebar (o "Upgrade to Pro!" da referência), dispensável. */
 function CartaoPromo() {
     const t = useT();
     const { props: { auth, loja }, url } = usePage();
@@ -357,7 +342,6 @@ function CartaoPromo() {
         : loja?.podeVender && !loja.encerrada
           ? { titulo: t("Hora de vender!"), texto: t("Abra o PDV no celular; o painel atualiza sozinho a cada venda."), rotulo: t("Abrir PDV"), href: rotaLoja("vendas.create") }
           : null;
-    // Na própria tela do destino (o PDV), o convite não faz sentido.
     if (!conteudo || new URL(conteudo.href, window.location.origin).pathname === url.split("?")[0]) return null;
 
     return (
@@ -374,7 +358,6 @@ function CartaoPromo() {
                         try {
                             localStorage.setItem(chave, "1");
                         } catch {
-                            // ignorado
                         }
                     }}
                     className="-me-1 -mt-1 flex size-8 items-center justify-center rounded-lg text-tinta-fraca outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco"
@@ -389,11 +372,6 @@ function CartaoPromo() {
     );
 }
 
-/* ---------------------------------------------------------------------------
- * Topbar
- * ------------------------------------------------------------------------- */
-
-/** Sino com as pendências (Radix Popover), recarregadas a cada navegação. */
 function Notificacoes() {
     const t = useT();
     const { auth } = usePage().props;
@@ -406,7 +384,6 @@ function Notificacoes() {
             const resposta = await fetch(url, { headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" });
             if (resposta.ok && resposta.headers.get("content-type")?.includes("json")) setLista(((await resposta.json()) as { pendencias: Pendencia[] }).pendencias);
         } catch {
-            // Sem rede: o sino só fica sem contagem.
         }
     }, [url]);
 
@@ -450,7 +427,6 @@ function Notificacoes() {
     );
 }
 
-/** Engrenagem: tema (claro, escuro, do sistema) e idioma. */
 function Configuracoes() {
     const t = useT();
     const { app } = usePage().props;
@@ -465,7 +441,6 @@ function Configuracoes() {
                     rotulo: t("Idioma"),
                     valor: app.idioma,
                     opcoes: Object.entries(app.idiomas).map(([codigo, nome]) => ({ valor: codigo, rotulo: nome, icone: IconLanguage })),
-                    // Recarga completa: o dicionário do idioma novo vem do servidor.
                     aoEscolher: (idioma) => idioma !== app.idioma && window.location.assign(rota("idioma", { idioma })),
                 },
             ]}
@@ -480,7 +455,6 @@ function Configuracoes() {
     );
 }
 
-/** Cartão do usuário (iniciais, nome e login) com o menu da conta. */
 function Conta() {
     const t = useT();
     const { auth } = usePage().props;

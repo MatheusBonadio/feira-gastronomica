@@ -8,7 +8,6 @@ use App\Models\Item;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/** Seção 2: uma barraquinha nunca vê dados, itens, combos ou valores de outra. */
 class IsolamentoTest extends TestCase
 {
     public function test_lista_so_os_itens_da_propria_barraquinha(): void

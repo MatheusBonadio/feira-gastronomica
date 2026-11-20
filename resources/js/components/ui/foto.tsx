@@ -6,13 +6,7 @@ import { Avatar } from "@/components/ui/marcadores";
 import { prepararFoto } from "@/lib/imagem";
 import { useT } from "@/lib/i18n";
 
-/**
- * Foto com troca e remoção (perfil, barraquinha). O arquivo escolhido é
- * recortado e reduzido no navegador (lib/imagem) e enviado na hora; enquanto
- * sobe, a prévia já aparece no lugar da foto atual.
- */
 export function CampoFoto({ nome, foto, forma = "redonda", urlEnviar, urlRemover, rotulo }: {
-    /** Nome da pessoa ou barraquinha: as iniciais aparecem quando não há foto. */
     nome: string;
     foto: string | null;
     forma?: "redonda" | "quadrada";
@@ -34,7 +28,6 @@ export function CampoFoto({ nome, foto, forma = "redonda", urlEnviar, urlRemover
         try {
             envio = await prepararFoto(arquivo);
         } catch {
-            // Navegador sem canvas/WebP: vai o original (o servidor aceita até 2 MB).
         }
         const url = URL.createObjectURL(envio);
         setPrevia(url);

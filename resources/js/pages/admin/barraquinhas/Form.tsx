@@ -36,7 +36,6 @@ interface Props {
     sugestao: string;
 }
 
-/** Dados da barraquinha e acesso da equipe (gerar, definir, redefinir, bloquear). */
 export default function Form({ barraquinha: b, sugestao }: Props) {
     const t = useT();
     const { dataHora } = useFormato();
@@ -49,7 +48,6 @@ export default function Form({ barraquinha: b, sugestao }: Props) {
     const bloqueada = b.status.valor === "bloqueada";
     const parametros = { barraquinha: b.id };
 
-    /** Para o Confirmar: a Promise segura o botão ocupado até a resposta. */
     const enviar = (metodo: "post" | "patch", nome: string) =>
         new Promise<void>((ok) => router[metodo](rota(nome, parametros), {}, { preserveScroll: true, onFinish: () => ok() }));
 
@@ -251,7 +249,6 @@ export default function Form({ barraquinha: b, sugestao }: Props) {
     );
 }
 
-/** Exibida uma única vez: vem no flash do Inertia, que não entra no histórico do navegador. */
 function CredenciaisUmaVez({ credenciais }: { credenciais: Credenciais }) {
     const t = useT();
     const [copiado, setCopiado] = useState(false);
@@ -259,7 +256,6 @@ function CredenciaisUmaVez({ credenciais }: { credenciais: Credenciais }) {
 
     const copiar = async () => {
         try {
-            // Fora de HTTPS/localhost o navegador não libera a área de transferência.
             await navigator.clipboard.writeText(texto);
             setCopiado(true);
         } catch {

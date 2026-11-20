@@ -31,7 +31,6 @@ return new class extends Migration
             $table->index(['feira_id', 'status']);
         });
 
-        // Preço, desconto e tag da época da venda (histórico preservado).
         Schema::create('venda_linhas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('barraquinha_id')->constrained('barraquinhas')->cascadeOnDelete();
@@ -49,7 +48,6 @@ return new class extends Migration
             $table->index(['venda_id']);
         });
 
-        // Baixa por item (inclusive os que saíram dentro de combos): ranking, estoque e margem.
         Schema::create('venda_itens', function (Blueprint $table) {
             $table->id();
             $table->foreignId('barraquinha_id')->constrained('barraquinhas')->cascadeOnDelete();

@@ -24,29 +24,21 @@ export interface ItemNavegacao {
     href: string;
     icone: Icone;
     ativo: boolean;
-    /** Subitens em árvore (o "Transactions › History, Reports" da referência). */
     filhos?: ItemNavegacao[];
-    /** Título dos subitens (o nome da barraquinha que o admin está vendo). */
     tituloFilhos?: string;
     contador?: number;
 }
 
-/**
- * Itens de navegação do perfil logado: grupo principal e secundário (abaixo
- * do separador). Usados pela sidebar e pela paleta de comandos (`todos`).
- */
 export function useNavegacao(): { principal: ItemNavegacao[]; secundario: ItemNavegacao[]; todos: ItemNavegacao[] } {
     const { auth, loja } = usePage().props;
     const t = useT();
     const rotaLoja = useRotaLoja();
     const admin = auth?.usuario.perfil === "admin";
-    // Perfil (foto, nome, preferências) dentro da área de cada perfil; a senha é aberta por ele.
     const area = admin ? "admin" : "barraquinha";
     const meuPerfil: ItemNavegacao = { rotulo: t("Meu perfil"), href: rota(`${area}.perfil`), icone: IconUserCircle, ativo: rotaAtiva(`${area}.perfil`) || rotaAtiva("senha.*") };
     const configuracoesLoja = (): ItemNavegacao[] =>
         loja ? [{ rotulo: t("Configurações"), href: rotaLoja("configuracoes"), icone: IconSettings, ativo: rotaAtiva(`${loja.prefixo}configuracoes`) }] : [];
 
-    // Seções de uma barraquinha (a da sessão ou a que o admin abriu).
     const secoesLoja = (): ItemNavegacao[] => {
         if (!loja) return [];
         const p = loja.prefixo;

@@ -49,7 +49,6 @@ class VendaController extends Controller
         ]);
     }
 
-    /** Ponto de venda (PDV): pensado para celular e poucos toques, no jeito escolhido pelo gestor da barraquinha. */
     public function create(): Response
     {
         $checkout = $this->loja->barraquinha()->preferenciasCheckout();
@@ -58,7 +57,6 @@ class VendaController extends Controller
 
         $itens = Item::with(['precos', 'categoria'])->ativos()->orderBy('nome')->get();
         if ($checkout->ordem === 'mais_vendidos') {
-            // Ordenação estável: no empate, continua a ordem alfabética.
             $itens = $itens->sortByDesc(fn (Item $i) => (int) ($vendidos[$i->id] ?? 0))->values();
         }
 
@@ -70,13 +68,11 @@ class VendaController extends Controller
                 ->values(),
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(array_map(FormaPagamento::from(...), $checkout->pagamentos)),
-            // Depois de uma venda, continua no canal dela; senão, o canal padrão da barraquinha.
             'canalInicial' => session('canal', $checkout->canalPadrao ?? Canal::PADRAO->value),
             'checkout' => $checkout->paraTela(),
         ]);
     }
 
-    /** Prévia da classificação (Comum / Combo N) enquanto o operador monta o carrinho. */
     public function simular(Request $request): JsonResponse
     {
         $dados = $this->validarCarrinho($request, exigirPagamento: false);
@@ -99,7 +95,7 @@ class VendaController extends Controller
         );
 
         return redirect($this->loja->rota('vendas.create'))
-            ->with('success', __('Venda #:n registrada: :resumo — :total', [
+            ->with('success', __('Venda #:n registrada: :resumo · :total', [
                 'n' => $venda->numero,
                 'resumo' => $venda->resumo(),
                 'total' => moeda($venda->total),
@@ -114,7 +110,6 @@ class VendaController extends Controller
         return Inertia::render('loja/vendas/Show', ['venda' => Apresentacao::venda($venda, detalhe: true)]);
     }
 
-    /** Cancelar exige motivo e não apaga o lançamento: a venda fica marcada e sai dos totais. */
     public function cancelar(Request $request, Venda $venda): RedirectResponse
     {
         $dados = $request->validate(['motivo' => ['required', 'string', 'min:3', 'max:500']], attributes: ['motivo' => __('motivo')]);
@@ -126,7 +121,6 @@ class VendaController extends Controller
 
     private function validarCarrinho(Request $request, bool $exigirPagamento): array
     {
-        // Só as formas de pagamento que a barraquinha aceita (configuração do checkout).
         $aceitas = $this->loja->barraquinha()->preferenciasCheckout()->pagamentos;
 
         return $request->validate([

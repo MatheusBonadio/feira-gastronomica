@@ -7,7 +7,7 @@ description: |
     relatórios, painel em tempo real, autenticação, isolamento entre barraquinhas ou tema.
 ---
 
-# Feira Gastronômica UNAERP — guia de manutenção
+# Feira Gastronômica UNAERP: guia de manutenção
 
 Visão geral, como rodar e decisões de produto: ver `README.md`.
 Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.

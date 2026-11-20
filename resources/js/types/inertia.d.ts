@@ -1,6 +1,5 @@
 import "@inertiajs/core";
 
-/** Opção de enum vinda do servidor (App\Http\Apresentacao::enum). */
 export interface Opcao {
     valor: string;
     label: string;
@@ -21,7 +20,6 @@ export interface LojaAtual {
     feira: string;
     encerrada: boolean;
     bloqueada: boolean;
-    /** "barraquinha." ou "admin.loja.": o mesmo conjunto de telas nos dois portais. */
     prefixo: string;
     parametros: Record<string, number>;
     podeVender: boolean;
@@ -46,14 +44,11 @@ declare module "@inertiajs/core" {
                 lista: { id: number; nome: string; status: string }[];
             } | null;
             loja: LojaAtual | null;
-            /** Rotas (Ziggy) do perfil, só na primeira página depois do login sem recarga. */
             rotas: { url: string; port: number | null; defaults: Record<string, unknown>; routes: Record<string, unknown> } | null;
             mensagens: { success: string | null; error: string | null };
-            /** Dicionário do idioma ativo; as chaves são as frases em português. */
             traducoes: Record<string, string>;
             errors: Record<string, string>;
         };
-        /** Flash do Inertia: não fica no histórico do navegador. */
         flashDataType: { credenciais?: Credenciais };
     }
 }

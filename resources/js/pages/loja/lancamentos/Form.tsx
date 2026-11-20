@@ -61,7 +61,6 @@ export default function Form({ lancamento, tipoInicial, tipos, categorias, hoje 
                 className="grid grid-cols-1 gap-4 xl:grid-cols-3"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    // Arquivo exige multipart; PUT vai como POST com _method, como o Laravel espera.
                     if (lancamento) {
                         form.transform((dados) => ({ ...dados, _method: "put" }));
                         form.post(rotaLoja("lancamentos.update", { lancamento: lancamento.id }), { forceFormData: true });
@@ -137,7 +136,6 @@ export default function Form({ lancamento, tipoInicial, tipos, categorias, hoje 
     );
 }
 
-/** Entrada ou saída, em dois botões grandes (cabem lado a lado no celular). */
 function TipoLancamento({ tipos, valor, aoMudar }: { tipos: Opcao[]; valor: string; aoMudar: (valor: string) => void }) {
     const t = useT();
 
@@ -168,7 +166,6 @@ function TipoLancamento({ tipos, valor, aoMudar }: { tipos: Opcao[]; valor: stri
     );
 }
 
-/** Categorias agrupadas (custos, despesas, investimento...) no Selecao do kit (Radix Select). */
 function SelecaoCategoria({ opcoes, valor, aoMudar, erro, dica }: { opcoes: Categoria[]; valor: string; aoMudar: (valor: string) => void; erro?: string; dica?: string }) {
     const t = useT();
     const grupos = [...opcoes.reduce<Map<string, Categoria[]>>((mapa, c) => mapa.set(c.grupo, [...(mapa.get(c.grupo) ?? []), c]), new Map()).entries()]

@@ -18,7 +18,6 @@ interface Categoria {
     itens: number;
 }
 
-/** Comida, Bebida e Sobremesa vêm prontas; só o admin inclui outras. */
 export default function Categorias({ categorias }: { categorias: Categoria[] }) {
     const t = useT();
     const { numero } = useFormato();

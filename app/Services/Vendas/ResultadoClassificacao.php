@@ -6,7 +6,6 @@ use App\Models\VendaLinha;
 
 final class ResultadoClassificacao
 {
-    /** @param list<LinhaClassificada> $linhas */
     public function __construct(public readonly array $linhas) {}
 
     public function total(): int
@@ -29,7 +28,6 @@ final class ResultadoClassificacao
         return $this->linhas === [];
     }
 
-    /** Ex.: "Combo 1 × 2 + Comum", no idioma ativo. */
     public function resumo(): string
     {
         $partes = [];

@@ -17,11 +17,6 @@
             <directory suffix=".php">app</directory>
         </include>
     </source>
-    <!--
-        Por padrão roda em SQLite em memória. Para rodar contra MySQL/MariaDB,
-        aponte para um banco de testes:
-          DB_CONNECTION=mysql DB_DATABASE=feira_gastronomica_testes php artisan test
-    -->
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_LOCALE" value="pt_BR"/>

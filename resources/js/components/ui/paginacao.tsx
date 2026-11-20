@@ -5,7 +5,6 @@ import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
 import type { Paginado } from "@/types/inertia";
 
-/** Páginas próximas da atual, com reticências nas pontas. */
 function janela(atual: number, ultima: number): (number | "…")[] {
     const paginas = new Set([1, ultima, atual - 1, atual, atual + 1].filter((p) => p >= 1 && p <= ultima));
     const ordenadas = [...paginas].sort((a, b) => a - b);
@@ -29,7 +28,6 @@ export function Paginacao<T>({ paginado }: { paginado: Paginado<T> }) {
                 <Botao variante="fantasma" tamanho="sm" icone={IconChevronLeft} disabled={!paginado.anterior} onClick={() => ir(paginado.pagina - 1)}>
                     <span className="max-sm:sr-only">{t("Anterior")}</span>
                 </Botao>
-                {/* No celular só "3 / 10"; os números aparecem a partir de sm. */}
                 <span className="px-2 text-corpo tabular-nums text-tinta-media sm:hidden">{paginado.pagina} / {paginado.ultimaPagina}</span>
                 {janela(paginado.pagina, paginado.ultimaPagina).map((p, i) =>
                     p === "…" ? (

@@ -15,7 +15,6 @@ class IdiomaController extends Controller
         $request->session()->put('idioma', $idioma);
         $request->user()?->update(['idioma' => $idioma]);
 
-        // Recarga completa para o dicionário (enviado uma vez por carga) vir no idioma novo.
         return Inertia::location(url()->previous('/'));
     }
 }

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-/** Filtros comuns a painéis, listas e relatórios. Lançamentos respeitam só o período. */
 final class Filtro
 {
     public function __construct(
@@ -71,7 +70,6 @@ final class Filtro
             ->when($this->ate, fn ($q) => $q->whereDate('data', '<=', $this->ate));
     }
 
-    /** @return array<string, string> filtros ativos, legíveis, para cabeçalhos de relatório */
     public function descricao(): array
     {
         return array_filter([

@@ -6,18 +6,12 @@ use App\Enums\Canal;
 use App\Enums\FormaPagamento;
 use Illuminate\Validation\Rule;
 
-/**
- * Como o PDV de uma barraquinha funciona, escolhido pelo gestor dela
- * (barraquinhas.checkout, JSON). Sem nada salvo, vale o PDV padrão: todas as
- * formas de pagamento, itens em grade por categoria e em ordem alfabética.
- */
 final class PreferenciasCheckout
 {
     public const EXIBICOES = ['grade', 'lista'];
 
     public const ORDENS = ['nome', 'mais_vendidos'];
 
-    /** @param list<string> $pagamentos */
     public function __construct(
         public readonly array $pagamentos,
         public readonly ?string $pagamentoPadrao,
@@ -31,7 +25,6 @@ final class PreferenciasCheckout
         public readonly bool $confirmarAntes,
     ) {}
 
-    /** Lê o JSON salvo, ignorando valores que não existem mais (ex.: forma de pagamento removida). */
     public static function de(?array $dados): self
     {
         $dados ??= [];
@@ -42,7 +35,6 @@ final class PreferenciasCheckout
 
         return new self(
             pagamentos: $pagamentos,
-            // Uma forma só: já vem marcada.
             pagamentoPadrao: $padrao ?? (count($pagamentos) === 1 ? $pagamentos[0] : null),
             canalPadrao: Canal::tryFrom((string) ($dados['canal_padrao'] ?? ''))?->value,
             exibicao: in_array($dados['exibicao'] ?? null, self::EXIBICOES, true) ? $dados['exibicao'] : 'grade',
@@ -55,7 +47,6 @@ final class PreferenciasCheckout
         );
     }
 
-    /** Regras do formulário de configuração (nomes em snake_case, como no JSON). */
     public static function regras(): array
     {
         return [
@@ -85,7 +76,6 @@ final class PreferenciasCheckout
         ];
     }
 
-    /** Para salvar em barraquinhas.checkout. */
     public function paraJson(): array
     {
         return [
@@ -102,7 +92,6 @@ final class PreferenciasCheckout
         ];
     }
 
-    /** Para o React (camelCase, como o resto das props). */
     public function paraTela(): array
     {
         return [

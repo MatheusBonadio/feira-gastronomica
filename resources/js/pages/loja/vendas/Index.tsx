@@ -23,7 +23,6 @@ interface Props {
     numerosCombo: number[];
 }
 
-/** Histórico de vendas da barraquinha. Canceladas ficam marcadas e fora dos totais. */
 export default function Index({ vendas, filtro, canais, pagamentos, statusOpcoes, numerosCombo }: Props) {
     const t = useT();
     const { dataHora, moeda } = useFormato();
@@ -45,7 +44,6 @@ export default function Index({ vendas, filtro, canais, pagamentos, statusOpcoes
             />
 
             <Cartao className="mb-5" corpo="p-4">
-                {/* Remonta ao trocar o status, para o "Filtrar" não reaplicar o status antigo. */}
                 <FiltrosVendas
                     key={status}
                     inicial={{ ...filtro, status: status || undefined }}
@@ -91,7 +89,7 @@ export default function Index({ vendas, filtro, canais, pagamentos, statusOpcoes
                             </Celula>
                             <Celula><ChipStatus opcao={v.canal} /></Celula>
                             <Celula><Pagamento opcao={v.pagamento} /></Celula>
-                            <Celula direita>{v.desconto > 0 ? `−${moeda(v.desconto)}` : "—"}</Celula>
+                            <Celula direita>{v.desconto > 0 ? `−${moeda(v.desconto)}` : "-"}</Celula>
                             <Celula direita>
                                 <span className={cx("font-semibold", v.cancelada ? "text-tinta-fraca line-through" : "text-tinta")}>{moeda(v.total)}</span>
                             </Celula>

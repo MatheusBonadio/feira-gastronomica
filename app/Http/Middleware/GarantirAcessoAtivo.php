@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Barraquinha bloqueada pelo admin perde o acesso na próxima requisição, mesmo com sessão aberta. */
 class GarantirAcessoAtivo
 {
     public function handle(Request $request, Closure $next): Response

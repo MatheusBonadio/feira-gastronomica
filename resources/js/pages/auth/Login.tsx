@@ -8,7 +8,6 @@ import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
-/** Tela de login única: o servidor identifica o perfil e leva cada um à sua área. */
 export default function Login() {
     const t = useT();
     const form = useForm({ usuario: "", password: "" });
@@ -20,7 +19,6 @@ export default function Login() {
                 className="flex flex-col gap-5"
                 onSubmit={(e) => {
                     e.preventDefault();
-                    // Com view transition: se o login passa, o quadro recua e o app entra (app.css).
                     form.post(rota("login"), { viewTransition: true, onFinish: () => form.reset("password") });
                 }}
             >
@@ -59,7 +57,6 @@ export default function Login() {
     );
 }
 
-/** Senha com botão de mostrar/ocultar (ajuda a digitar no celular). */
 function CampoSenha({ rotulo, valor, aoMudar, erro }: { rotulo: string; valor: string; aoMudar: (v: string) => void; erro?: string }) {
     const t = useT();
     const id = useId();

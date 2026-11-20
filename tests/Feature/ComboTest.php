@@ -7,7 +7,6 @@ use App\Services\Vendas\VendaService;
 use App\Enums\Canal;
 use Tests\TestCase;
 
-/** Seção 6: combos só com itens cadastrados, numerados pelo sistema, com as validações da especificação. */
 class ComboTest extends TestCase
 {
     private function payload(array $itens, float $valor, string $tipo = 'preco_fechado', array $extra = []): array

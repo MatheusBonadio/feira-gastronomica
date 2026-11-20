@@ -33,10 +33,8 @@ interface Props {
     pagamentos: Opcao[];
 }
 
-/** Recarregadas quando entra venda ou lançamento nesta barraquinha. */
 const PROPS_AO_VIVO = ["indicadores", "porTag", "ranking", "porPagamento", "serie", "ultimas", "pendencias", "saidasCategoria", "estoque"];
 
-/** Painel da barraquinha. O admin vê o mesmo painel, em modo leitura. */
 export default function Painel({ versao, barraquinha, filtro, indicadores: i, porTag, ranking, porPagamento, serie, ultimas, pendencias, saidasCategoria, estoque, canais, pagamentos }: Props) {
     const t = useT();
     const f = useFormato();

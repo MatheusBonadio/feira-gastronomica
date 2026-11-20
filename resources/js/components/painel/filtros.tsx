@@ -23,7 +23,6 @@ export interface FiltroVendas {
 
 export const opcoesSelecao = (opcoes: Opcao[]) => opcoes.map((o) => ({ valor: o.valor, rotulo: o.label }));
 
-/** Aplica o filtro pela URL: o resultado pode ser compartilhado e voltado no navegador. */
 export function aplicarFiltro(dados: FiltroVendas) {
     router.get(window.location.pathname, semVazios(dados), { preserveState: true, preserveScroll: true });
 }
@@ -36,7 +35,6 @@ interface PropsFiltros {
     extras?: ReactNode;
 }
 
-/** Campos e botões dos filtros (período, canal, pagamento, tag — seções 8 e 9). */
 function FormularioFiltros({ inicial, canais, pagamentos, numerosCombo = [], extras, empilhado, aoAplicar }: PropsFiltros & { empilhado?: boolean; aoAplicar?: () => void }) {
     const t = useT();
     const [filtro, setFiltro] = useState<FiltroVendas>(inicial);
@@ -75,10 +73,6 @@ function FormularioFiltros({ inicial, canais, pagamentos, numerosCombo = [], ext
     );
 }
 
-/**
- * Filtros em linha (listas): no celular ficam recolhidos (Radix Collapsible)
- * atrás de "Filtros (n)"; a partir do md, sempre abertos.
- */
 export function FiltrosVendas(props: PropsFiltros) {
     const t = useT();
     const [aberto, setAberto] = useState(false);
@@ -100,7 +94,6 @@ export function FiltrosVendas(props: PropsFiltros) {
     );
 }
 
-/** Filtros num botão com popover (Radix Popover), para o topo dos painéis. */
 export function BotaoFiltros(props: PropsFiltros) {
     const t = useT();
     const [aberto, setAberto] = useState(false);

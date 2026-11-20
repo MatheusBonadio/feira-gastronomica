@@ -44,7 +44,6 @@ export default function Index({ combos }: { combos: Combo[] }) {
                 )}
             </CabecalhoPagina>
 
-            {/* Reativar com item inativo ou excluir combo com vendas: o servidor recusa com uma mensagem. */}
             {errors.combo && (
                 <div className="mb-4">
                     <Faixa tom="perigo" icone={IconAlertTriangle}>{errors.combo}</Faixa>

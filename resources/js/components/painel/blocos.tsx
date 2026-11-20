@@ -14,18 +14,15 @@ import { useT } from "@/lib/i18n";
 import type { Indicadores } from "@/types/dominio";
 import type { Opcao } from "@/types/inertia";
 
-/** Mesma cor por canal em todo o sistema (gráficos, chips, ícones). */
 export const COR_CANAL_GRAFICO: Record<string, Cor> = { pre_venda: CORES[1], feira: CORES[0], pos_evento: CORES[2] };
 export const COR_PAGAMENTO_BARRA: Record<string, string> = { dinheiro: "bg-verde", pix: "bg-azul", cartao: "bg-rosa" };
 const CORES_CATEGORIA = ["bg-grafico-1", "bg-grafico-2", "bg-grafico-5", "bg-grafico-6", "bg-grafico-3", "bg-grafico-4"];
 
-/** Variação entre o valor atual e o da edição anterior (null sem base). */
 export function variacao(atual: number, anterior: number | null | undefined): number | null {
     if (anterior === null || anterior === undefined || anterior === 0) return null;
     return (atual - anterior) / Math.abs(anterior);
 }
 
-/** Cabeçalho "R$ 12.450 / Visão geral" dos cartões de valor. */
 function ValorCartao({ valor, rotulo, tom }: { valor: ReactNode; rotulo: ReactNode; tom?: "negativo" }) {
     return (
         <div className="min-w-0">
@@ -35,16 +32,11 @@ function ValorCartao({ valor, rotulo, tom }: { valor: ReactNode; rotulo: ReactNo
     );
 }
 
-/**
- * Vendas por dia (o cartão grande da referência): total, legenda por canal,
- * barras empilhadas ou linha, e clique num dia para filtrar o painel.
- */
 export function VendasPorDia({ serie, canais, filtro, total, rodape }: { serie: PontoSerie[]; canais: Opcao[]; filtro: FiltroVendas; total: number; rodape: string }) {
     const t = useT();
     const f = useFormato();
     const [modo, setModo] = useState<"barras" | "linha">("barras");
 
-    // Dias sem venda no meio do período entram zerados (até 31 dias), para o eixo ser contínuo.
     const pontos: PontoSerie[] = (() => {
         if (serie.length < 2) return serie;
         const inicio = paraData(serie[0].dia);
@@ -87,7 +79,7 @@ export function VendasPorDia({ serie, canais, filtro, total, rodape }: { serie: 
         >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <Legenda itens={canais.map((c) => ({ rotulo: c.label, cor: COR_CANAL_GRAFICO[c.valor] ?? CORES[5] }))} />
-                {selecionado && <span className="text-rotulo text-tinta-suave">{t("Filtrado em :dia — clique de novo para limpar", { dia: f.data(selecionado) })}</span>}
+                {selecionado && <span className="text-rotulo text-tinta-suave">{t("Filtrado em :dia. Clique de novo para limpar.", { dia: f.data(selecionado) })}</span>}
             </div>
             {pontos.length === 0 ? (
                 <Vazio icone={IconChartBar} titulo={t("Nenhuma venda no período.")} />
@@ -116,7 +108,6 @@ export function VendasPorDia({ serie, canais, filtro, total, rodape }: { serie: 
     );
 }
 
-/** Saídas por categoria (o "Cost analysis" da referência): 5 maiores + "Outras". */
 export function SaidasPorCategoria({ itens, total }: { itens: { categoria: Opcao; total: number }[]; total: number }) {
     const t = useT();
     const f = useFormato();
@@ -134,7 +125,6 @@ export function SaidasPorCategoria({ itens, total }: { itens: { categoria: Opcao
     );
 }
 
-/** Saúde financeira (o medidor da referência): margem operacional. */
 export function SaudeFinanceira({ indicadores: i, anterior }: { indicadores: Indicadores; anterior?: { nome: string; resultado: number } | null }) {
     const t = useT();
     const f = useFormato();
@@ -151,13 +141,12 @@ export function SaudeFinanceira({ indicadores: i, anterior }: { indicadores: Ind
                 </div>
             }
         >
-            <Medidor rotulo={t("Saúde financeira")} fracao={Math.max(0, margem)} valor={i.margem === null ? "—" : f.percentual(i.margem)} legenda={t("de margem operacional")} />
+            <Medidor rotulo={t("Saúde financeira")} fracao={Math.max(0, margem)} valor={i.margem === null ? "-" : f.percentual(i.margem)} legenda={t("de margem operacional")} />
             <p className="mt-3 text-center text-rotulo text-tinta-suave">{t("Vendas menos custos e despesas, sobre as vendas.")}</p>
         </Cartao>
     );
 }
 
-/** Formas de pagamento em barra segmentada. */
 export function PorPagamento({ porPagamento }: { porPagamento: { pagamento: Opcao; total: number }[] }) {
     const t = useT();
     const f = useFormato();
@@ -174,7 +163,6 @@ export function PorPagamento({ porPagamento }: { porPagamento: { pagamento: Opca
     );
 }
 
-/** Progresso até um limite (o "Monthly spending limit" da referência). */
 export function ProgressoMeta({ titulo, descricao, atual, meta, hrefEditar, rotuloEditar, formatar }: {
     titulo: string;
     descricao: string;
@@ -205,7 +193,6 @@ export function ProgressoMeta({ titulo, descricao, atual, meta, hrefEditar, rotu
     );
 }
 
-/** Próximo passo pendente, como dica com chamada para ação. */
 export function ProximoPasso({ pendencias, padrao }: { pendencias: Pendencia[]; padrao: { titulo: string; texto: string; href?: string; rotulo?: string } }) {
     const t = useT();
     const proxima = pendencias.find((p) => !p.feito);

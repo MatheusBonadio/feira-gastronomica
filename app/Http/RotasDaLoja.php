@@ -5,20 +5,13 @@ namespace App\Http;
 use App\Http\Controllers\Loja;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Telas de uma barraquinha, registradas para os dois perfis com os mesmos
- * controllers. A barraquinha em foco vem de App\Support\Loja: da sessão para
- * a barraquinha e do parâmetro {barraquinha} para o admin.
- */
 class RotasDaLoja
 {
     public static function registrar(bool $admin): void
     {
         Route::get('/', [Loja\PainelController::class, 'index'])->name('painel');
-        // Assinatura do estado do painel para a atualização em tempo real.
         Route::get('pulso', [Loja\PainelController::class, 'pulso'])->name('pulso');
         if (! $admin) {
-            // Sino da topbar (o admin vê as pendências da feira inteira).
             Route::get('pendencias', [Loja\PainelController::class, 'pendencias'])->name('pendencias');
         }
 
@@ -28,7 +21,6 @@ class RotasDaLoja
 
         Route::get('vendas', [Loja\VendaController::class, 'index'])->name('vendas.index');
         if (! $admin) {
-            // O admin consulta e corrige (cancela), mas quem registra a venda é a barraquinha.
             Route::get('vendas/nova', [Loja\VendaController::class, 'create'])->name('vendas.create');
             Route::post('vendas', [Loja\VendaController::class, 'store'])->name('vendas.store');
             Route::post('vendas/simular', [Loja\VendaController::class, 'simular'])->name('vendas.simular');
@@ -39,7 +31,6 @@ class RotasDaLoja
         Route::resource('lancamentos', Loja\LancamentoController::class)->except('show');
         Route::get('lancamentos/{lancamento}/comprovante', [Loja\LancamentoController::class, 'comprovante'])->name('lancamentos.comprovante');
 
-        // Foto da barraquinha e personalização do checkout (PDV).
         Route::get('configuracoes', [Loja\ConfiguracaoController::class, 'edit'])->name('configuracoes');
         Route::put('configuracoes/checkout', [Loja\ConfiguracaoController::class, 'checkout'])->name('configuracoes.checkout');
         Route::post('configuracoes/foto', [Loja\ConfiguracaoController::class, 'foto'])->name('configuracoes.foto');

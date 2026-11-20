@@ -50,7 +50,6 @@ class Item extends Model
         return $query->where('ativo', true);
     }
 
-    /** Preço do canal; sem preço próprio, vale o preço de Feira (padrão). */
     public function precoPara(Canal $canal): float
     {
         $precos = $this->precos->keyBy(fn (ItemPreco $p) => $p->canal->value);
@@ -63,7 +62,6 @@ class Item extends Model
         return $this->vendaItens()->exists() || VendaLinha::where('item_id', $this->id)->exists();
     }
 
-    /** Estoque restante calculado (não armazenado); null quando o item não controla estoque. */
     public function estoqueRestante(?int $vendidos = null): ?int
     {
         if ($this->estoque_inicial === null) {

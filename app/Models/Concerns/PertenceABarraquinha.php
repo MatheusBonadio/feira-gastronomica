@@ -28,10 +28,6 @@ trait PertenceABarraquinha
         return $this->belongsTo(Barraquinha::class);
     }
 
-    /**
-     * Link ou id alterado apontando para dado de outra barraquinha: acesso negado
-     * e auditoria, em vez de um 404 que confirmaria a existência do registro.
-     */
     public function resolveRouteBinding($value, $field = null)
     {
         $model = static::withoutGlobalScope(BarraquinhaScope::class)

@@ -19,7 +19,6 @@ const TONS: Record<Tom, string> = {
     inverso: "bg-inverso text-inverso-tinta",
 };
 
-/** Cor só do texto (o "Completed" / "Declined" da lista de transações). */
 const TEXTOS: Partial<Record<Tom, string>> = {
     verde: "text-positivo",
     vermelho: "text-negativo",
@@ -28,18 +27,15 @@ const TEXTOS: Partial<Record<Tom, string>> = {
     cinza: "text-tinta-suave",
 };
 
-/** Chip de status em pastel. */
 export function Chip({ tom = "cinza", children, className }: { tom?: Tom; children: ReactNode; className?: string }) {
     return <span className={cx("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-rotulo font-semibold whitespace-nowrap", TONS[tom], className)}>{children}</span>;
 }
 
-/** Status só em texto colorido, para listas densas. */
 export function TextoStatus({ opcao, className }: { opcao: Opcao | null | undefined; className?: string }) {
     if (!opcao) return null;
     return <span className={cx("text-micro font-semibold", TEXTOS[TOM_DO_VALOR[opcao.valor] ?? "cinza"] ?? "text-tinta-suave", className)}>{opcao.label}</span>;
 }
 
-/** Tom de cada valor de enum vindo do servidor. */
 const TOM_DO_VALOR: Record<string, Tom> = {
     concluida: "verde",
     cancelada: "vermelho",
@@ -60,26 +56,22 @@ export function ChipStatus({ opcao }: { opcao: Opcao | null | undefined }) {
     return <Chip tom={TOM_DO_VALOR[opcao.valor] ?? "cinza"}>{opcao.label}</Chip>;
 }
 
-/** Tag da venda: Comum neutra, Combo N na cor principal. */
 export function ChipTag({ rotulo, combo }: { rotulo: string; combo: boolean }) {
     return <Chip tom={combo ? "primaria" : "cinza"}>{rotulo}</Chip>;
 }
 
-/** Barra/ponto de cor por canal, igual em gráficos, agenda e chips. */
 export const COR_CANAL: Record<string, string> = {
     pre_venda: "bg-secundaria",
     feira: "bg-primaria",
     pos_evento: "bg-verde",
 };
 
-/** Forma de pagamento se reconhece pelo ícone, não pela cor (preenchidos: o Pix só existe assim). */
 export const ICONE_PAGAMENTO: Record<string, Icone> = {
     dinheiro: IconCashBanknoteFilled,
     pix: IconPix,
     cartao: IconCreditCardFilled,
 };
 
-/** Forma de pagamento com o ícone ao lado do nome (listas, detalhe da venda). */
 export function Pagamento({ opcao, className }: { opcao: Opcao; className?: string }) {
     const I = ICONE_PAGAMENTO[opcao.valor];
     return (
@@ -90,7 +82,6 @@ export function Pagamento({ opcao, className }: { opcao: Opcao; className?: stri
     );
 }
 
-/** Quadradinho de cor das legendas. */
 export function Ponto({ cor, className }: { cor: string; className?: string }) {
     return <span aria-hidden className={cx("inline-block size-2.5 shrink-0 rounded-sm", cor, className)} />;
 }
@@ -101,8 +92,6 @@ export function iniciais(nome: string): string {
     return nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 }
 
-/** Avatar de iniciais com cor estável por nome. */
-/** Avatar (Radix Avatar): foto quando houver; senão iniciais com cor estável pelo nome. */
 export function Avatar({ nome, foto, tamanho = "md", forma = "redonda", className }: { nome: string; foto?: string | null; tamanho?: "sm" | "md" | "lg" | "xl" | "2xl"; forma?: "redonda" | "quadrada"; className?: string }) {
     const indice = [...nome].reduce((soma, c) => soma + c.charCodeAt(0), 0) % CORES_AVATAR.length;
     const tamanhos = { sm: "size-6 text-micro", md: "size-8 text-rotulo", lg: "size-10 text-ui", xl: "size-12 text-titulo", "2xl": "size-20 text-cabecalho" };
@@ -118,7 +107,6 @@ export function Kbd({ children }: { children: ReactNode }) {
     return <kbd className="inline-flex h-5 items-center rounded-md border border-linha bg-superficie px-1.5 font-sans text-micro font-semibold text-tinta-suave">{children}</kbd>;
 }
 
-/** Contador em pílula escura (o "19" ao lado de History na referência). */
 export function Contador({ children, tom = "inverso", className }: { children: ReactNode; tom?: Tom; className?: string }) {
     return <span className={cx("inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-micro font-bold tabular-nums", TONS[tom], className)}>{children}</span>;
 }

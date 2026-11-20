@@ -37,7 +37,6 @@ enum TipoRelatorio: string
         return $this === self::Comparativo;
     }
 
-    /** @return list<self> */
     public static function disponiveis(bool $admin): array
     {
         return array_values(array_filter(self::cases(), fn (self $t) => $admin || ! $t->somenteAdmin()));

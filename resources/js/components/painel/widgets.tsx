@@ -16,18 +16,12 @@ export interface PontoSerie {
     porCanal?: Record<string, number>;
 }
 
-/** Saudação conforme o horário. */
 export function useSaudacao() {
     const t = useT();
     const hora = new Date().getHours();
     return hora >= 5 && hora < 12 ? t("Bom dia") : hora >= 12 && hora < 18 ? t("Boa tarde") : t("Boa noite");
 }
 
-/**
- * Ids de vendas que chegaram depois da primeira renderização (id maior que o
- * maior já visto), para acender a linha quando o tempo real traz venda nova.
- * Trocar o filtro para dias antigos não acende nada.
- */
 function useVendasNovas(vendas: Venda[]) {
     const maiorVisto = useRef<number | null>(null);
     const [novas, setNovas] = useState<ReadonlySet<number>>(() => new Set());
@@ -44,20 +38,17 @@ function useVendasNovas(vendas: Venda[]) {
         setNovas(new Set(chegaram));
         const id = window.setTimeout(() => setNovas(new Set()), 2600);
         return () => window.clearTimeout(id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [assinatura]);
 
     return novas;
 }
 
-/** Fundo do ícone da venda pela cor do canal. */
 const ICONE_CANAL: Record<string, string> = {
     pre_venda: "bg-secundaria-suave text-secundaria-texto",
     feira: "bg-primaria-suave text-primaria-texto",
     pos_evento: "bg-verde-suave text-verde-tinta",
 };
 
-/** Últimas vendas no formato de extrato (o "Transaction history" da referência). */
 export function ListaVendas({ vendas, hrefVenda, comBarraquinha }: { vendas: Venda[]; hrefVenda?: (v: Venda) => string; comBarraquinha?: boolean }) {
     const { moeda, hora, diaMes } = useFormato();
     const t = useT();
@@ -111,7 +102,6 @@ export interface Pendencia {
     href: string | null;
 }
 
-/** Checklist: resolvido fica marcado (amarelo) e riscado. */
 export function ListaPendencias({ pendencias, aoNavegar }: { pendencias: Pendencia[]; aoNavegar?: () => void }) {
     return (
         <ul className="flex flex-col">
@@ -148,7 +138,6 @@ export function ListaPendencias({ pendencias, aoNavegar }: { pendencias: Pendenc
     );
 }
 
-/** Quantas e quanto em Comum e em cada Combo N. */
 export function TabelaTags({ tags }: { tags: { rotulo: string; tag: string; quantidade: number; total: number; desconto: number }[] }) {
     const t = useT();
     const { numero, moeda } = useFormato();
@@ -169,11 +158,6 @@ export function TabelaTags({ tags }: { tags: { rotulo: string; tag: string; quan
     );
 }
 
-/**
- * Identidade da feira em uso ou da barraquinha, dentro do cartão do painel:
- * foto (ou iniciais), nome, situação, detalhes e o valor principal à direita.
- * Sem moldura própria: o cartão em volta já é a moldura.
- */
 export function Identidade({ titulo, situacao, linhas, valor, rotuloValor, foto, href }: {
     titulo: string;
     situacao?: ReactNode;
@@ -207,7 +191,6 @@ export function Identidade({ titulo, situacao, linhas, valor, rotuloValor, foto,
     return href ? <Link prefetch href={href} className={cx(classes, "outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco")}>{corpo}</Link> : <div className={classes}>{corpo}</div>;
 }
 
-/** Ações rápidas em botões quadrados com rótulo embaixo ("Top up", "Send"...). */
 export function AcoesRapidas({ acoes }: { acoes: { rotulo: string; icone: Icone; href?: string; aoClicar?: () => void; destaque?: boolean }[] }) {
     return (
         <ul className="grid grid-cols-5 gap-2">
@@ -231,7 +214,6 @@ export function AcoesRapidas({ acoes }: { acoes: { rotulo: string; icone: Icone;
     );
 }
 
-/** Atalhos em avatares (o "Quick payment" da referência): barraquinhas da feira. */
 export function AcessoRapido({ itens }: { itens: { id: number; nome: string; href: string; apagado?: boolean; foto?: string | null }[] }) {
     return (
         <ul className="rolagem-fina flex gap-1 overflow-x-auto pb-1">
@@ -249,10 +231,6 @@ export function AcessoRapido({ itens }: { itens: { id: number; nome: string; hre
     );
 }
 
-/**
- * Dica com chamada para ação e bloquinhos decorativos (o "Optimize your
- * budget" da referência). Usada para o próximo passo pendente.
- */
 export function CartaoDica({ titulo, texto, acao }: { titulo: string; texto: string; acao?: ReactNode }) {
     const blocos = [
         "col-start-3 row-start-1 bg-secundaria",

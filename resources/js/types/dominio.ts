@@ -1,6 +1,5 @@
 import type { Opcao } from "@/types/inertia";
 
-/** Espelha App\Http\Apresentacao::indicadores. */
 export interface Indicadores {
     vendas: number;
     qtdVendas: number;
@@ -25,11 +24,9 @@ export interface Barraquinha {
     responsaveis: string | null;
     status: Opcao;
     meta: number | null;
-    /** URL da foto (public/fotos) ou null: aí aparecem as iniciais. */
     foto: string | null;
 }
 
-/** Como o PDV de uma barraquinha funciona (App\Support\PreferenciasCheckout::paraTela). */
 export interface PreferenciasCheckout {
     pagamentos: string[];
     pagamentoPadrao: string | null;

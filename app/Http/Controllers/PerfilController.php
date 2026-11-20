@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Configurações do próprio perfil (admin e barraquinha): nome e foto. A senha tem tela própria. */
 class PerfilController extends Controller
 {
     public function __construct(private readonly FotoService $fotos) {}

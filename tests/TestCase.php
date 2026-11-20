@@ -22,7 +22,6 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
-    /** Sem mock da saída de console (dispensa a dependência do Mockery). */
     public $mockConsoleOutput = false;
 
     protected function criarAdmin(): User
@@ -91,7 +90,6 @@ abstract class TestCase extends BaseTestCase
         return $item;
     }
 
-    /** @param list<array{0: Item, 1: int}> $composicao */
     protected function criarCombo(Barraquinha $barraquinha, string $nome, array $composicao, float $valor, TipoDesconto $tipo = TipoDesconto::PrecoFechado): Combo
     {
         $combo = Combo::create([
@@ -109,12 +107,6 @@ abstract class TestCase extends BaseTestCase
         return $combo;
     }
 
-    /**
-     * Cenário da seção 7 da especificação: pastel R$ 25, refrigerante R$ 6,
-     * Combo 1 = pastel + refrigerante por R$ 28.
-     *
-     * @return array{0: Barraquinha, 1: Item, 2: Item, 3: Combo}
-     */
     protected function cenarioPastelaria(?Feira $feira = null): array
     {
         $barraquinha = $this->criarBarraquinha($feira);

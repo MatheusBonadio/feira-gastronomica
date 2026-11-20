@@ -7,9 +7,7 @@ import { cx } from "@/lib/cx";
 export interface ItemMenu {
     rotulo: string;
     icone?: Icone;
-    /** Navega pelo Inertia. */
     href?: string;
-    /** Navegação completa (troca de idioma, download). */
     hrefExterno?: string;
     aoSelecionar?: () => void;
     selecionado?: boolean;
@@ -17,13 +15,8 @@ export interface ItemMenu {
     separadorAntes?: boolean;
 }
 
-/** O Radix injeta no gatilho os atributos e o ref (Trigger asChild); basta espalhar as props. */
 export type PropsGatilho = Record<never, never>;
 
-/**
- * Menu suspenso (Radix DropdownMenu): setas, Home/End, busca por letra, Esc,
- * foco de volta ao gatilho e reposicionamento para não sair da tela.
- */
 export function Menu({ gatilho, itens, cabecalho, alinhamento = "inicio", direcao = "baixo", largura = "w-56" }: {
     gatilho: (props: PropsGatilho) => ReactElement;
     itens: ItemMenu[];
@@ -88,10 +81,6 @@ export interface GrupoEscolha {
     aoEscolher: (valor: string) => void;
 }
 
-/**
- * Menu de escolhas (Radix DropdownMenu.RadioGroup): grupos com título e uma
- * opção marcada em cada (tema, idioma). Mesmo visual do Menu.
- */
 export function MenuEscolhas({ gatilho, grupos, alinhamento = "fim", largura = "w-60" }: {
     gatilho: (props: PropsGatilho) => ReactElement;
     grupos: GrupoEscolha[];

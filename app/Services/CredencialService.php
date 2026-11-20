@@ -11,20 +11,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-/**
- * Só o admin cria e controla os acessos das barraquinhas: um login por barraquinha.
- * A senha é guardada com hash (bcrypt, com salt): o admin nunca vê uma senha
- * existente, só gera outra. Ao trocar a senha, as sessões abertas caem.
- */
 class CredencialService
 {
-    /** @return array{usuario: string, senha: string} a senha em texto aparece só esta vez */
     public function gerar(Barraquinha $barraquinha): array
     {
         return $this->definir($barraquinha, $this->sugerirUsuario($barraquinha), $this->gerarSenha());
     }
 
-    /** @return array{usuario: string, senha: string} */
     public function definir(Barraquinha $barraquinha, string $usuario, string $senha): array
     {
         $existente = $barraquinha->usuario;
@@ -52,7 +45,6 @@ class CredencialService
         return ['usuario' => Str::lower(trim($usuario)), 'senha' => $senha];
     }
 
-    /** @return array{usuario: string, senha: string} */
     public function redefinirSenha(Barraquinha $barraquinha): array
     {
         $user = $barraquinha->usuario;
@@ -67,7 +59,6 @@ class CredencialService
         return ['usuario' => $user->usuario, 'senha' => $senha];
     }
 
-    /** Bloquear não apaga dados: só impede o acesso até ser reativada. */
     public function bloquear(Barraquinha $barraquinha): void
     {
         $barraquinha->update(['status' => BarraquinhaStatus::Bloqueada]);
@@ -97,7 +88,6 @@ class CredencialService
         return $usuario;
     }
 
-    /** 12 caracteres sem ambíguos (0/O, 1/l/I), fáceis de ditar para a equipe. */
     public function gerarSenha(): string
     {
         $alfabeto = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -111,11 +101,6 @@ class CredencialService
         return $senha;
     }
 
-    /**
-     * Sessões no banco são apagadas na hora. Com outro driver de sessão, o
-     * middleware auth.session derruba a sessão quando o hash da senha muda,
-     * e o GarantirAcessoAtivo derruba barraquinhas bloqueadas.
-     */
     private function encerrarSessoes(User $user): void
     {
         if (config('session.driver') === 'database') {

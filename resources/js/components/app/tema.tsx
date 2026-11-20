@@ -9,11 +9,6 @@ import { useT } from "@/lib/i18n";
 export type PreferenciaTema = "claro" | "escuro" | "sistema";
 export const CHAVE_TEMA = "tema";
 
-/*
- * Tema claro/escuro pela classe .dark do <html> (os tokens trocam de valor).
- * "sistema" segue o aparelho e acompanha a troca em tempo real. O script do
- * app.blade.php aplica a mesma regra antes da pintura, para não piscar.
- */
 function lerPreferencia(): PreferenciaTema {
     try {
         const valor = localStorage.getItem(CHAVE_TEMA);
@@ -29,16 +24,9 @@ const ouvintes = new Set<() => void>();
 
 function trocarClasse(escuro: boolean) {
     document.documentElement.classList.toggle("dark", escuro);
-    // Síncrono: a "foto" nova da view transition já sai com os ícones do tema certo.
     flushSync(() => ouvintes.forEach((o) => o()));
 }
 
-/*
- * A troca de tema é um esmaecimento único da tela (View Transitions). Sem isso,
- * os elementos com transition-colors mudavam aos poucos e o resto na hora, e a
- * tela trocava em etapas. Durante a troca, "trocando-tema" desliga essas
- * transições (app.css); com movimento reduzido ou sem suporte, troca na hora.
- */
 function aplicar() {
     const escuro = preferencia === "escuro" || (preferencia === "sistema" && !!midia?.matches);
     const raiz = document.documentElement;
@@ -52,7 +40,7 @@ function aplicar() {
     if (!document.startViewTransition || reduzir || document.visibilityState === "hidden") {
         raiz.classList.add("trocando-tema");
         trocarClasse(escuro);
-        void raiz.offsetWidth; // aplica as cores novas antes de religar as transições
+        void raiz.offsetWidth;
         raiz.classList.remove("trocando-tema");
         return;
     }
@@ -69,7 +57,6 @@ export function definirTema(nova: PreferenciaTema) {
     try {
         localStorage.setItem(CHAVE_TEMA, nova);
     } catch {
-        // Sem armazenamento (aba anônima): vale até recarregar.
     }
     aplicar();
 }
@@ -87,7 +74,6 @@ export function useTema() {
     return { preferencia: pref as PreferenciaTema, escuro: escuro === "true", definir: definirTema };
 }
 
-/** Opções para menus (configurações da topbar). */
 export function useOpcoesTema(): { valor: PreferenciaTema; rotulo: string; icone: Icone }[] {
     const t = useT();
     return [
@@ -97,7 +83,6 @@ export function useOpcoesTema(): { valor: PreferenciaTema; rotulo: string; icone
     ];
 }
 
-/** Alternância rápida claro/escuro (tela de login). */
 export function BotaoTema() {
     const t = useT();
     const { escuro, definir } = useTema();

@@ -31,7 +31,6 @@ interface Props {
     acoes: Opcao[];
 }
 
-/** Acessos, redefinições, bloqueios, cancelamentos, alterações de preço e exportações (quem, quando, o quê). */
 export default function Auditoria({ registros, acao, sensiveis, acoes }: Props) {
     const t = useT();
     const { dataHora } = useFormato();
@@ -93,9 +92,9 @@ export default function Auditoria({ registros, acao, sensiveis, acoes }: Props) 
                                         <span className="text-tinta">{r.acao.label}</span>
                                     )}
                                 </Celula>
-                                <Celula><span className="break-words">{r.usuario ?? "—"}</span></Celula>
-                                <Celula><span className="break-words">{r.barraquinha ?? "—"}</span></Celula>
-                                <Celula>{r.entidade ?? "—"}</Celula>
+                                <Celula><span className="break-words">{r.usuario ?? "-"}</span></Celula>
+                                <Celula><span className="break-words">{r.barraquinha ?? "-"}</span></Celula>
+                                <Celula>{r.entidade ?? "-"}</Celula>
                                 <Celula>
                                     {detalhe ? (
                                         <Dica rotulo={<span dir="ltr" className="block font-mono break-all">{detalhe}</span>}>
@@ -107,10 +106,10 @@ export default function Auditoria({ registros, acao, sensiveis, acoes }: Props) 
                                             {detalhe}
                                         </code>
                                         </Dica>
-                                    ) : "—"}
+                                    ) : "-"}
                                 </Celula>
                                 <Celula>
-                                    <span dir="ltr" className="font-mono text-rotulo">{r.ip ?? "—"}</span>
+                                    <span dir="ltr" className="font-mono text-rotulo">{r.ip ?? "-"}</span>
                                 </Celula>
                             </Linha>
                         );

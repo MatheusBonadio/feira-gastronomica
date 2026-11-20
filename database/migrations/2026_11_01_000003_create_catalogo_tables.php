@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Lista fechada (Comida, Bebida, Sobremesa) que só o admin amplia.
         Schema::create('categorias', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->unique();

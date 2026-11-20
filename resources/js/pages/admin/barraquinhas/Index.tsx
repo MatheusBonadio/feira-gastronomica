@@ -37,7 +37,6 @@ interface Props {
 
 type Filtro = "" | "preenchidas" | "vagas" | "sem-acesso" | "bloqueadas";
 
-/** Vagas da feira em uso: nome, acesso da equipe e números de cada barraquinha. */
 export default function Index({ feira, barraquinhas }: Props) {
     const t = useT();
     const { numero, dataHora } = useFormato();
@@ -153,7 +152,7 @@ export default function Index({ feira, barraquinhas }: Props) {
                                         </span>
                                     </span>
                                 ) : b.vaga ? (
-                                    <span className="text-tinta-fraca">—</span>
+                                    <span className="text-tinta-fraca">-</span>
                                 ) : (
                                     <Chip tom="ambar">
                                         <IconUserOff size={13} stroke={2} aria-hidden />

@@ -16,7 +16,6 @@ interface LinhaFeira {
     indicadores: Indicadores;
 }
 
-/** Mesmos indicadores do painel, uma linha por edição da feira. */
 export default function CompararFeiras({ feiras }: { feiras: LinhaFeira[] }) {
     const t = useT();
     const f = useFormato();

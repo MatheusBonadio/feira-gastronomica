@@ -5,10 +5,6 @@ namespace Tests\Feature;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-/**
- * O login troca de perfil sem recarregar a página (mais rápido e com transição):
- * as rotas (Ziggy) do perfil chegam na primeira página renderizada depois dele.
- */
 class LoginSemRecargaTest extends TestCase
 {
     public function test_primeira_pagina_depois_do_login_leva_as_rotas_do_perfil(): void
@@ -21,7 +17,6 @@ class LoginSemRecargaTest extends TestCase
         $this->get(route('admin.painel'))->assertInertia(fn (Assert $p) => $p
             ->where('rotas.routes', fn ($rotas) => $rotas->has('admin.painel') && ! $rotas->has('barraquinha.painel')));
 
-        // Só uma vez: as próximas páginas já usam essas rotas.
         $this->get(route('admin.painel'))->assertInertia(fn (Assert $p) => $p->where('rotas', null));
     }
 
@@ -31,7 +26,6 @@ class LoginSemRecargaTest extends TestCase
 
         $this->post(route('login'), ['usuario' => $usuario->usuario, 'password' => 'senha1234']);
 
-        // O painel redireciona para a troca de senha sem renderizar: as rotas esperam a tela da senha.
         $this->get(route('barraquinha.painel'))->assertRedirect(route('senha.edit'));
         $this->get(route('senha.edit'))->assertInertia(fn (Assert $p) => $p
             ->component('auth/Senha')

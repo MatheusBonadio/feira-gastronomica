@@ -4,10 +4,6 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * Toda frase passada a __() (PHP) ou t() (React) precisa estar em lang/en.json,
- * com os mesmos :parametros. As chaves são as frases em português.
- */
 class TraducoesTest extends TestCase
 {
     private const CATEGORIAS_PADRAO = ['Comida', 'Bebida', 'Sobremesa'];
@@ -19,7 +15,6 @@ class TraducoesTest extends TestCase
 
         $chaves = [];
         $this->coletar("$raiz/app", ['php'], "/__\(\s*'((?:[^'\\\\]|\\\\.)*)'/", fn ($k) => str_replace("\\'", "'", $k), $chaves);
-        // Todo o front: páginas, kit (ui, painel, graficos, app), layouts e hooks.
         $this->coletar("$raiz/resources/js", ['ts', 'tsx'], '/\bt\(\s*"((?:[^"\\\\]|\\\\.)*)"/', 'stripcslashes', $chaves);
         $chaves = array_filter(array_keys($chaves), fn ($k) => ! str_starts_with($k, 'formato.'));
 

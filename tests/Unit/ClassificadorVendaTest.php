@@ -6,7 +6,6 @@ use App\Services\Vendas\ClassificadorVenda;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
-/** Regra de classificação automática (seção 7 da especificação). */
 class ClassificadorVendaTest extends TestCase
 {
     private const PASTEL = 1;
@@ -24,7 +23,6 @@ class ClassificadorVendaTest extends TestCase
         return ['id' => $numero, 'numero' => $numero, 'nome' => "Combo {$numero}", 'composicao' => $composicao, 'preco' => $preco];
     }
 
-    /** Tabela de exemplos da especificação: combo 1 = pastel + refrigerante a R$ 28. */
     public static function exemplosDaEspecificacao(): array
     {
         return [
@@ -48,7 +46,6 @@ class ClassificadorVendaTest extends TestCase
 
     public function test_item_em_dois_combos_escolhe_o_maior_desconto_para_o_cliente(): void
     {
-        // Combo 1 (pastel + refri) dá R$ 3 de desconto; combo 2 (pastel + sobremesa) dá R$ 10.
         $combos = [
             $this->combo(1, [self::PASTEL => 1, self::REFRI => 1], 28.00),
             $this->combo(2, [self::PASTEL => 1, self::SOBREMESA => 1], 30.00),
@@ -88,7 +85,6 @@ class ClassificadorVendaTest extends TestCase
 
     public function test_combo_com_quantidade_maior_que_um(): void
     {
-        // "Eu Mereço" da CrepeUna: 2 crepes + 1 bebida.
         $resultado = (new ClassificadorVenda)->classificar(
             [self::PASTEL => 5, self::REFRI => 2],
             self::ITENS,

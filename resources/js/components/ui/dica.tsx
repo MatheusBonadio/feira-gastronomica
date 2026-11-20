@@ -1,11 +1,6 @@
 import { Tooltip } from "radix-ui";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
-/**
- * Dica (Radix Tooltip) para botões só de ícone: aparece no hover e no foco do
- * teclado, some com Esc. O botão continua com aria-label próprio.
- * Repassa props e ref ao gatilho, então pode envolver o gatilho de um Menu.
- */
 export function Dica({ rotulo, children, lado = "bottom", ...gatilho }: {
     rotulo: ReactNode;
     children: ReactElement;

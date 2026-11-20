@@ -22,7 +22,6 @@ interface Props {
 
 const QTD_MAXIMA = 99;
 
-/** − 2 + com alvos de toque de 40px. */
 function Quantidade({ valor, aoMudar, rotulo }: { valor: number; aoMudar: (valor: number) => void; rotulo: string }) {
     const t = useT();
     const classeBotao =
@@ -53,11 +52,6 @@ function Quantidade({ valor, aoMudar, rotulo }: { valor: number; aoMudar: (valor
     );
 }
 
-/**
- * Seção 6: nome, itens já cadastrados (seleção + quantidade), soma avulsa e
- * desconto por preço fechado ou percentual; o outro valor é calculado. A tag
- * Combo N é numerada pelo sistema.
- */
 export default function Form({ combo, itens, tiposDesconto }: Props) {
     const t = useT();
     const { moeda, numero, percentual } = useFormato();
@@ -272,7 +266,6 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
                     </Cartao>
                 </div>
 
-                {/* Resumo: ao lado no desktop, entre o formulário e os botões no celular. */}
                 <aside className="flex min-w-0 flex-col gap-4 lg:row-span-2 lg:self-start">
                     <section className="flex flex-col gap-3 rounded-cartao border border-primaria bg-primaria p-4 text-primaria-tinta">
                         <div className="flex items-center justify-between gap-2">
@@ -283,7 +276,7 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
                         </div>
                         <div>
                             <p className="text-rotulo text-primaria-tinta/75">{t("Preço do combo")}</p>
-                            <p className="text-numero font-semibold tracking-tight tabular-nums">{calculado ? moeda(precoCombo) : "—"}</p>
+                            <p className="text-numero font-semibold tracking-tight tabular-nums">{calculado ? moeda(precoCombo) : "-"}</p>
                         </div>
                         <p className="text-rotulo text-primaria-tinta/75">
                             {calculado && economia > 0
@@ -308,13 +301,13 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
                         )}
                         <dl className="divide-y divide-linha border-t border-linha">
                             <Detalhe rotulo={t("Soma avulsa (preço de Feira)")}>{moeda(somaAvulsa)}</Detalhe>
-                            <Detalhe rotulo={t("Preço do combo")}>{calculado ? moeda(precoCombo) : "—"}</Detalhe>
+                            <Detalhe rotulo={t("Preço do combo")}>{calculado ? moeda(precoCombo) : "-"}</Detalhe>
                             <Detalhe rotulo={t("Desconto para o cliente")}>
                                 {calculado ? (
                                     <span className={cx("tabular-nums", economia > 0 ? "text-positivo" : "text-negativo")}>
                                         {moeda(economia)} ({percentual(descontoPct)})
                                     </span>
-                                ) : "—"}
+                                ) : "-"}
                             </Detalhe>
                         </dl>
                         {marcados.length > 0 && unidades < 2 && (

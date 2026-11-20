@@ -1,11 +1,9 @@
 @php
-    /** @var \App\Services\Relatorios\Relatorio $relatorio */
     $formatar = fn ($valor) => match (true) {
         is_float($valor) => moeda($valor),
         is_int($valor) => numero($valor),
         default => $valor ?? '',
     };
-    // Símbolo da UNAERP embutido em JPEG: o dompdf lê JPEG sem a extensão GD (PNG exigiria).
     $simbolo = 'data:image/jpeg;base64,'.base64_encode(file_get_contents(public_path('brand/unaerp-simbolo-pdf.jpg')));
 @endphp
 <!DOCTYPE html>
@@ -13,7 +11,6 @@
 <head>
     <meta charset="utf-8">
     <title>{{ $relatorio->tipo->label() }}</title>
-    {{-- Cores lidas de resources/js/styles/tokens.css (dompdf não entende var()). --}}
     <style>
         @page { margin: 28px 32px; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9.5px; color: {{ $cor('impressao-titulo') }}; }
@@ -74,7 +71,7 @@
                             @endforeach
                         </tr>
                     @empty
-                        <tr><td colspan="{{ count($bloco['colunas']) }}">—</td></tr>
+                        <tr><td colspan="{{ count($bloco['colunas']) }}">-</td></tr>
                     @endforelse
                 </tbody>
                 @if($bloco['rodape'])

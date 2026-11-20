@@ -69,7 +69,6 @@ class ComboController extends Controller
         return redirect($this->loja->rota('combos.index'))->with('success', __('Combo excluído.'));
     }
 
-    /** Itens primeiro, combos depois: a tela lista os itens ativos da barraquinha com caixa seletora. */
     private function formulario(Combo $combo): Response
     {
         $selecionados = $combo->exists ? $combo->itens->pluck('id')->all() : [];

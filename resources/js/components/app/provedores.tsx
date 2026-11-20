@@ -4,14 +4,8 @@ import { useEffect, type ReactNode } from "react";
 import { Avisos, avisar } from "@/components/ui/avisos";
 import { useLocale, useT } from "@/lib/i18n";
 
-/** Idiomas escritos da direita para a esquerda. */
 const RTL = ["ar", "he", "fa", "ur"];
 
-/**
- * Base de todos os primitivos Radix: direção do texto (teclado e posicionamento
- * dos menus seguem o idioma), atraso comum das dicas e avisos flutuantes com
- * as mensagens de sucesso/erro vindas do servidor.
- */
 export function Provedores({ children }: { children: ReactNode }) {
     const t = useT();
     const locale = useLocale();

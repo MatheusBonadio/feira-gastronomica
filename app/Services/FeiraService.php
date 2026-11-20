@@ -43,11 +43,6 @@ class FeiraService
         });
     }
 
-    /**
-     * Aumentar cria vagas em branco. Reduzir remove primeiro as vagas vazias e
-     * depois barraquinhas sem vendas, das últimas posições para as primeiras;
-     * nunca fica abaixo do número de barraquinhas que já têm vendas.
-     */
     public function ajustarQuantidade(Feira $feira, int $quantidade): void
     {
         $barraquinhas = $feira->barraquinhas()->withCount('vendas')->get();
@@ -92,7 +87,6 @@ class FeiraService
         AuditoriaLog::registrar(AcaoAuditoria::FeiraReaberta, $feira);
     }
 
-    /** Copia barraquinhas e itens (com preços) para agilizar a próxima edição. Vendas, combos e logins não vêm junto. */
     public function duplicar(Feira $origem, array $dados): Feira
     {
         return DB::transaction(function () use ($origem, $dados) {

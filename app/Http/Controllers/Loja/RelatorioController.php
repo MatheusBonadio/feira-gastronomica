@@ -22,11 +22,6 @@ use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Exportação de relatórios. O escopo nunca vem da tela para a barraquinha:
- * ela exporta só os próprios dados, sem total geral da feira.
- * O admin escolhe a feira e uma, várias ou todas as barraquinhas.
- */
 class RelatorioController extends Controller
 {
     public function index(Request $request): InertiaResponse
@@ -87,7 +82,6 @@ class RelatorioController extends Controller
         return $exportador->responder($relatorio, $dados['formato']);
     }
 
-    /** @return array{0: Feira, 1: Collection} */
     private function escopoAdmin(int $feiraId, array $ids): array
     {
         $feira = Feira::findOrFail($feiraId);

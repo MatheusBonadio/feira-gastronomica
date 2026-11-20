@@ -13,20 +13,13 @@ use App\Services\Financeiro\Indicadores;
 use BackedEnum;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-/**
- * Converte models em arrays enxutos para as páginas React.
- * Só sai o que a tela usa: nunca o model inteiro (hashes, ids internos de outros donos).
- * Valores monetários vão como número; a formatação é feita no navegador, no idioma ativo.
- */
 class Apresentacao
 {
-    /** @return array{valor: string, label: string} */
     public static function enum(?BackedEnum $enum): ?array
     {
         return $enum ? ['valor' => $enum->value, 'label' => $enum->label()] : null;
     }
 
-    /** @param list<BackedEnum> $casos */
     public static function opcoes(array $casos): array
     {
         return array_map(fn (BackedEnum $c) => self::enum($c), $casos);

@@ -7,8 +7,6 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
-  /* O tamanho do texto vai no body: no html ele mudaria a base do rem e
-     encolheria toda a escala (espaços, alturas, fontes) em 12,5%. */
   html {
     @apply bg-fundo font-sans text-tinta antialiased;
   }
@@ -30,17 +28,10 @@
   }
 }
 
-/* Listras diagonais das barras de dados (a assinatura visual dos gráficos). */
 @utility hachura {
   background-image: repeating-linear-gradient(-45deg, var(--hachura) 0 1.5px, transparent 1.5px 6px);
 }
 
-/* ---------------------------------------------------------------------------
- * Transições de tela (View Transitions). Sem suporte no navegador, ou com
- * movimento reduzido, a troca é instantânea.
- * ------------------------------------------------------------------------- */
-
-/* Tema claro/escuro: a tela inteira esmaece de um tema para o outro (tema.tsx). */
 html.transicao-tema::view-transition-group(*),
 html.transicao-tema::view-transition-old(*),
 html.transicao-tema::view-transition-new(*) {
@@ -48,7 +39,6 @@ html.transicao-tema::view-transition-new(*) {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Durante a troca de tema nenhuma cor anima sozinha: tudo muda junto. */
 html.trocando-tema,
 html.trocando-tema *,
 html.trocando-tema *::before,
@@ -56,8 +46,6 @@ html.trocando-tema *::after {
   transition: none !important;
 }
 
-/* Login aceito: o quadro do login recua e some, o app sobe e o símbolo da
-   UNAERP voa do topo do login até a sidebar ("moldura", "app" e "marca"). */
 ::view-transition-old(moldura):only-child {
   animation: sair-login 240ms cubic-bezier(0.4, 0, 1, 1) both;
 }
@@ -83,7 +71,6 @@ html.trocando-tema *::after {
   }
 }
 
-/* Barra de rolagem fina nas áreas internas (sidebar, tabelas largas). */
 @utility rolagem-fina {
   scrollbar-width: thin;
   scrollbar-color: var(--linha-forte) transparent;

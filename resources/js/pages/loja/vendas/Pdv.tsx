@@ -23,11 +23,9 @@ interface Props {
     canais: Opcao[];
     pagamentos: Opcao[];
     canalInicial: string;
-    /** Jeito do PDV escolhido pelo gestor da barraquinha (Configurações). */
     checkout: PreferenciasCheckout;
 }
 
-/** Resposta de vendas.simular (ResultadoClassificacao::paraArray). */
 interface Previa {
     linhas: { tag: string; combo: boolean; descricao: string; quantidade: number; preco_unitario: number; desconto: number; total: number }[];
     resumo: string;
@@ -40,15 +38,8 @@ type Carrinho = Record<number, number>;
 
 const precoNoCanal = (item: Item, canal: string) => item.precos[canal] ?? item.precos.feira ?? item.precoFeira;
 
-/** Busca sem diferenciar maiúsculas e acentos ("pao" acha "Pão"). */
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-/**
- * Ponto de venda, pensado para o celular na barraquinha: o operador só toca
- * nos itens; o servidor decide Comum ou Combo N e aplica o desconto (a prévia
- * usa o mesmo algoritmo que grava a venda). No celular o carrinho abre numa
- * folha a partir da barra fixa no rodapé; no desktop fica numa coluna fixa.
- */
 export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout }: Props) {
     const desktop = useMidia("(min-width: 64rem)");
     const t = useT();
@@ -58,7 +49,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
 
     const [canal, setCanal] = useState(canalInicial);
     const [pagamento, setPagamento] = useState<string | null>(checkout.pagamentoPadrao);
-    // Troco: quanto o cliente entregou em dinheiro (só com "Calcular o troco" ligado).
     const [recebido, setRecebido] = useState<number | null>(null);
     const [confirmando, setConfirmando] = useState(false);
     const [carrinho, setCarrinho] = useState<Carrinho>({});
@@ -89,7 +79,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
             return proxima > 0 ? { ...resto, [item.id]: proxima } : resto;
         });
 
-    // Prévia no servidor, com espera curta para não disparar a cada toque.
     useEffect(() => {
         if (quantidade === 0) {
             setPrevia(null);
@@ -144,8 +133,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                     setEnviando(false);
                     setConfirmando(false);
                 },
-                // A resposta volta para esta mesma página: sem limpar, o próximo
-                // "Confirmar" repetiria a venda.
                 onSuccess: () => {
                     setCarrinho({});
                     setPagamento(checkout.pagamentoPadrao);
@@ -266,7 +253,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                     )}
                 </div>
 
-                {/* Desktop: carrinho fixo na coluna da direita. */}
                 <aside className="sticky top-[calc(var(--spacing-topbar)+1.5rem)] hidden max-h-[calc(100dvh-var(--spacing-topbar)-3rem)] flex-col overflow-hidden rounded-cartao border border-linha bg-superficie lg:flex">
                     <div className="rolagem-fina min-h-0 overflow-y-auto p-4">
                         <ConteudoCarrinho {...propsCarrinho} />
@@ -274,7 +260,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                 </aside>
             </div>
 
-            {/* Celular e tablet: barra fixa com o total; abre a folha do carrinho. */}
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-linha bg-superficie px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-flutuante lg:hidden">
                 <div className="mx-auto flex max-w-3xl items-center gap-3">
                     <button
@@ -309,12 +294,10 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                 </div>
             </div>
 
-            {/* Folha do carrinho (Radix Dialog) só abaixo de lg; acima, o carrinho já está na coluna. */}
             <Folha aberta={folhaAberta && !desktop} aoFechar={() => setFolhaAberta(false)} titulo={t("Carrinho")} ocultarCabecalho semFechar corpo="rolagem-fina min-h-0 overflow-y-auto px-4 pt-3 pb-4">
                 <ConteudoCarrinho {...propsCarrinho} aoFechar={() => setFolhaAberta(false)} />
             </Folha>
 
-            {/* "Confirmar antes de registrar" (Configurações): resumo e segundo toque. */}
             <Confirmar
                 aberto={confirmando}
                 aoFechar={() => !enviando && setConfirmando(false)}
@@ -327,7 +310,7 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                 <dl className="flex flex-col gap-2 text-corpo">
                     <div className="flex justify-between gap-4">
                         <dt className="text-tinta-suave">{t(":n itens", { n: quantidade })}</dt>
-                        <dd className="text-titulo font-semibold tabular-nums text-tinta">{previa ? moeda(previa.total) : "—"}</dd>
+                        <dd className="text-titulo font-semibold tabular-nums text-tinta">{previa ? moeda(previa.total) : "-"}</dd>
                     </div>
                     {pagamento && (
                         <div className="flex justify-between gap-4">
@@ -349,7 +332,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
     );
 }
 
-/** Cartão de toque grande: tocar adiciona um; com quantidade, aparecem − e +. */
 function CartaoItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco: number | null; quantidade: number; aoAlterar: (delta: number) => void }) {
     const t = useT();
     const { moeda, numero } = useFormato();
@@ -407,7 +389,6 @@ function CartaoItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco:
     );
 }
 
-/** Carrinho classificado pelo servidor + pagamento + confirmar. Usado na coluna (desktop) e na folha (celular). */
 function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamentos, pagamento, aoPagar, checkout, recebido, aoReceber, aoLimpar, aoConfirmar, enviando, aoFechar }: {
     previa: Previa | null;
     quantidade: number;
@@ -509,7 +490,6 @@ function ConteudoCarrinho({ previa, quantidade, calculando, falhaPrevia, pagamen
     );
 }
 
-/** Exibição em lista (Configurações → Itens): linha compacta, com − e + sempre à mão. */
 function LinhaItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco: number | null; quantidade: number; aoAlterar: (delta: number) => void }) {
     const t = useT();
     const { moeda, numero } = useFormato();
@@ -561,7 +541,6 @@ function LinhaItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco: 
     );
 }
 
-/** Dinheiro com "Calcular o troco": quanto o cliente entregou e quanto volta. */
 function Troco({ total, recebido, aoReceber }: { total: number | null; recebido: number | null; aoReceber: (valor: number | null) => void }) {
     const t = useT();
     const { moeda } = useFormato();
@@ -580,7 +559,6 @@ function Troco({ total, recebido, aoReceber }: { total: number | null; recebido:
     );
 }
 
-/** Pix com chave cadastrada: o operador mostra ou copia a chave para o cliente. */
 function ChavePix({ chave }: { chave: string }) {
     const t = useT();
 

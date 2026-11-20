@@ -7,10 +7,8 @@ use App\Models\User;
 use App\Services\Financeiro\IndicadoresService;
 use Tests\TestCase;
 
-/** Blocos do painel: série por canal, saídas por categoria, edição anterior, estoque e pendências. */
 class PainelTest extends TestCase
 {
-    /** Troca de usuário como um login novo faria (o auth.session confere o hash da senha na sessão). */
     private function como(User $user): static
     {
         return $this->flushSession()->actingAs($user);
@@ -25,9 +23,9 @@ class PainelTest extends TestCase
     {
         [$barraquinha, $pastel, $refri] = $this->cenarioPastelaria();
         $user = $this->usuarioDa($barraquinha);
-        $this->vender($user, 'feira', [$pastel->id => 1]);          // 25
-        $this->vender($user, 'pre_venda', [$pastel->id => 1]);      // 18 (preço de pré-venda)
-        $this->vender($user, 'feira', [$refri->id => 2]);           // 12
+        $this->vender($user, 'feira', [$pastel->id => 1]);
+        $this->vender($user, 'pre_venda', [$pastel->id => 1]);
+        $this->vender($user, 'feira', [$refri->id => 2]);
 
         $serie = app(IndicadoresService::class)->serieDiaria([$barraquinha->id]);
 

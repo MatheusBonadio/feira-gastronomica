@@ -4,16 +4,8 @@ namespace App\Services\Financeiro;
 
 use App\Enums\Canal;
 
-/**
- * Indicadores de uma barraquinha (ou consolidado). Calculados, nunca armazenados.
- *
- *   Resultado operacional = vendas − custos − despesas
- *   Saldo de caixa        = vendas + outras entradas − todas as saídas (inclusive investimento)
- *   Margem                = resultado operacional ÷ vendas
- */
 final class Indicadores
 {
-    /** @param array<string, float> $vendasPorCanal */
     public function __construct(
         public float $vendas = 0,
         public int $qtdVendas = 0,
@@ -74,7 +66,6 @@ final class Indicadores
         );
     }
 
-    /** Valor de uma coluna, para ordenar a tabela comparativa do admin. */
     public function valor(string $coluna): float
     {
         return match ($coluna) {

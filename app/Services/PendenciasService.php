@@ -12,18 +12,10 @@ use App\Models\VendaItem;
 use App\Services\Financeiro\Indicadores;
 use App\Support\Loja;
 
-/**
- * Checklist do painel (cartão "Pendências"): o que falta para a feira ou a
- * barraquinha funcionar bem. Cada item já vem marcado quando está resolvido.
- */
 class PendenciasService
 {
     private const ESTOQUE_BAIXO = 5;
 
-    /**
-     * @param  array<int, Indicadores>  $indicadores  barraquinha_id => indicadores
-     * @return list<array{titulo: string, descricao: string, feito: bool, href: ?string}>
-     */
     public function daFeira(Feira $feira, array $indicadores): array
     {
         $barraquinhas = $feira->barraquinhas()->with('usuario')->get();
@@ -47,7 +39,6 @@ class PendenciasService
         ];
     }
 
-    /** @return list<array{titulo: string, descricao: string, feito: bool, href: ?string}> */
     public function daBarraquinha(Barraquinha $barraquinha): array
     {
         $loja = app(Loja::class);

@@ -7,7 +7,6 @@ use App\Support\Formato;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-/** Validações de negócio (mínimo de itens, desconto, composição repetida) ficam no ComboService. */
 class ComboRequest extends FormRequest
 {
     public function authorize(): bool
@@ -17,7 +16,6 @@ class ComboRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        // Só entram os itens com a caixa marcada; a quantidade padrão é 1.
         $itens = [];
         foreach ((array) $this->input('selecionado', []) as $itemId => $marcado) {
             if ($marcado) {

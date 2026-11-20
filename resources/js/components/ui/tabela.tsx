@@ -14,24 +14,11 @@ export interface Coluna {
     alinhar?: "esquerda" | "direita";
     ordenavel?: boolean;
     className?: string;
-    /**
-     * Papel no modo cartão (telas < md). Padrão: a célula `cabecalho` vira o
-     * título; a coluna "acoes" vai para o rodapé; as demais viram "rótulo: valor".
-     * "oculta" esconde a coluna no cartão (informação secundária).
-     */
     cartao?: "titulo" | "acoes" | "oculta" | "campo";
 }
 
 const ColunasContexto = createContext<Coluna[]>([]);
 
-/**
- * Tabela da referência: cabeçalho cinza com ícones, divisórias verticais finas
- * entre colunas e linhas separadas por borda. Ordenação opcional por coluna.
- *
- * Abaixo de md (768px) vira lista de cartões: cada linha é um cartão com o
- * título no topo, um "rótulo: valor" por campo e as ações no rodapé. Os
- * rótulos vêm das colunas, então as páginas não repetem nada.
- */
 export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, vazio }: {
     colunas: Coluna[];
     children: ReactNode;
@@ -47,7 +34,6 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
 
     return (
         <ColunasContexto.Provider value={colunas}>
-            {/* No modo cartão o cabeçalho some; a ordenação continua num seletor. */}
             {ordenaveis.length > 0 && !semLinhas && (
                 <div className="flex items-center gap-2 border-t border-linha px-3 pt-3 md:hidden">
                     <Selecao
@@ -122,18 +108,14 @@ interface PropsCelula {
     direita?: boolean;
     className?: string;
     cabecalho?: boolean;
-    /** Preenchido pela Linha a partir das colunas da Tabela. */
     coluna?: Coluna;
 }
 
-/** Linha clicável opcional (abre o detalhe pelo Inertia). No celular, um cartão. */
 export function Linha({ children, href, apagada, className }: { children: ReactNode; href?: string; apagada?: boolean; className?: string }) {
     const colunas = useContext(ColunasContexto);
-    // Como os links do kit: com o mouse parado na linha, o detalhe já vem antes do clique.
     const espera = useRef<number | undefined>(undefined);
     const preCarregar = href ? () => (espera.current = window.setTimeout(() => router.prefetch(href, { method: "get" }), 75)) : undefined;
     const cancelar = href ? () => window.clearTimeout(espera.current) : undefined;
-    // Cada célula recebe a sua coluna pela posição (ignora null/false de células condicionais).
     const celulas = Children.toArray(children).map((filho, i) =>
         isValidElement(filho) && filho.type === Celula ? cloneElement(filho as ReactElement<PropsCelula>, { coluna: colunas[i] }) : filho,
     );
@@ -166,7 +148,6 @@ export function Celula({ children, direita, className, cabecalho, coluna }: Prop
             className={cx(
                 "h-12 px-4 py-2 font-normal md:first:ps-5 md:last:pe-5",
                 direita ? "text-end tabular-nums" : "text-start",
-                // Modo cartão
                 "max-md:flex max-md:h-auto max-md:min-w-0 max-md:items-center max-md:gap-3 max-md:px-3",
                 papel === "titulo" && "max-md:border-b max-md:bg-superficie-suave max-md:py-2.5 max-md:text-start max-md:text-ui max-md:font-medium",
                 papel === "campo" && "max-md:justify-between max-md:py-1.5",
@@ -178,7 +159,6 @@ export function Celula({ children, direita, className, cabecalho, coluna }: Prop
             {papel === "campo" && coluna && (
                 <span className="shrink-0 text-start text-rotulo text-tinta-suave md:hidden">{coluna.rotulo}</span>
             )}
-            {/* Some do layout no desktop (contents); no cartão alinha o valor à direita. */}
             <span className={cx("min-w-0 md:contents", papel === "campo" && "max-md:text-end", papel === "titulo" && "max-md:flex-1")}>{children}</span>
         </Tag>
     );

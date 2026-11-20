@@ -53,7 +53,6 @@ class Combo extends Model
         return __('Combo :n', ['n' => $this->numero]);
     }
 
-    /** Item inativado dentro do combo: sinalizado e fora da classificação até ser corrigido. */
     public function estaIncompleto(): bool
     {
         return $this->itens->contains(fn (Item $item) => ! $item->ativo);
@@ -81,7 +80,6 @@ class Combo extends Model
             : round($somaAvulsa * (1 - $valor / 100), 2);
     }
 
-    /** @return array<int, int> item_id => quantidade, ordenado, para comparar composições */
     public function composicao(): array
     {
         $composicao = $this->itens->mapWithKeys(fn (Item $i) => [$i->id => (int) $i->pivot->quantidade])->all();

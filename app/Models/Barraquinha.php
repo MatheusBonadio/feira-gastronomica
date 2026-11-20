@@ -31,7 +31,6 @@ class Barraquinha extends Model
         return FotoService::url($this->foto_path);
     }
 
-    /** Como o PDV desta barraquinha funciona (escolhido pelo gestor dela). */
     public function preferenciasCheckout(): PreferenciasCheckout
     {
         return PreferenciasCheckout::de($this->checkout);
@@ -67,7 +66,6 @@ class Barraquinha extends Model
         return $this->hasMany(Lancamento::class);
     }
 
-    /** Vaga criada pela quantidade da feira e ainda não preenchida pelo admin. */
     public function ehVaga(): bool
     {
         return blank($this->nome);

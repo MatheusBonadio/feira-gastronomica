@@ -6,7 +6,6 @@ import { TRACO } from "@/components/ui/icone";
 import { cx } from "@/lib/cx";
 import { useT } from "@/lib/i18n";
 
-/** Véu atrás de qualquer camada modal. */
 export const CLASSE_VEU = "fixed inset-0 z-50 bg-veu data-[state=open]:animate-esmaecer";
 
 const CLASSE_CAIXA =
@@ -24,10 +23,6 @@ function BotaoFechar() {
     );
 }
 
-/**
- * Diálogo (Radix Dialog): foco preso, Esc e clique fora fecham, foco volta a
- * quem abriu, conteúdo rola dentro da tela em telas baixas.
- */
 export function Dialogo({ aberto, aoFechar, titulo, descricao, children, rodape, largura = "max-w-md" }: {
     aberto: boolean;
     aoFechar: () => void;
@@ -57,11 +52,6 @@ export function Dialogo({ aberto, aoFechar, titulo, descricao, children, rodape,
     );
 }
 
-/**
- * Confirmação de ação (Radix AlertDialog: não fecha clicando fora).
- * `aoConfirmar` pode devolver uma Promise: o botão fica ocupado até ela terminar
- * e, se ela falhar, o diálogo continua aberto.
- */
 export function Confirmar({ aberto, aoFechar, titulo, descricao, children, rotuloConfirmar, perigo = true, desabilitado, aoConfirmar }: {
     aberto: boolean;
     aoFechar: () => void;
@@ -82,7 +72,6 @@ export function Confirmar({ aberto, aoFechar, titulo, descricao, children, rotul
             await aoConfirmar();
             aoFechar();
         } catch {
-            // Mantém aberto: a mensagem de erro aparece no próprio formulário.
         } finally {
             setOcupado(false);
         }
@@ -115,10 +104,6 @@ export function Confirmar({ aberto, aoFechar, titulo, descricao, children, rotul
     );
 }
 
-/**
- * Folha (Radix Dialog): sobe do rodapé no celular (carrinho do PDV) ou entra
- * pela lateral de início (menu). Respeita a área segura do aparelho.
- */
 export function Folha({ aberta, aoFechar, titulo, descricao, children, lado = "baixo", ocultarCabecalho, semFechar, corpo = "rolagem-fina min-h-0 flex-1 overflow-y-auto px-4 pb-4", acoes }: {
     aberta: boolean;
     aoFechar: () => void;
@@ -126,12 +111,9 @@ export function Folha({ aberta, aoFechar, titulo, descricao, children, lado = "b
     descricao?: ReactNode;
     children: ReactNode;
     lado?: "baixo" | "inicio";
-    /** O título continua para leitores de tela, mas some da tela (o menu tem a própria marca). */
     ocultarCabecalho?: boolean;
-    /** O conteúdo já tem o próprio botão de fechar. */
     semFechar?: boolean;
     corpo?: string;
-    /** Ações no cabeçalho, ao lado do fechar. */
     acoes?: ReactNode;
 }) {
     return (

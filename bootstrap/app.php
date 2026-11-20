@@ -12,12 +12,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Env;
 
-/*
- * O .env só vai para $_SERVER/$_ENV, que são de cada requisição, e nunca para
- * putenv(), que é do processo inteiro. No Apache do Windows (XAMPP, PHP com
- * threads) uma requisição desfazia o putenv da outra no meio do caminho: a
- * outra ficava sem APP_KEY, caía em "production" e respondia 500.
- */
 Env::disablePutenv();
 
 return Application::configure(basePath: dirname(__DIR__))

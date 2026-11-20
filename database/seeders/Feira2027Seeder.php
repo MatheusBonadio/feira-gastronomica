@@ -22,14 +22,8 @@ use App\Services\CredencialService;
 use App\Services\Vendas\VendaService;
 use Illuminate\Database\Seeder;
 
-/**
- * Edição aberta para demonstração: 12 vagas (11 barraquinhas de 2026 + 1 em
- * branco). Itens e combos de Senhor dos Pastéis, CrepeUna, Pizzarito e Mundo
- * Fritas seguem os exemplos do relatório 2026; os demais itens são ilustrativos.
- */
 class Feira2027Seeder extends Seeder
 {
-    /** nome => [itens: [nome, categoria, preço feira, preço pré-venda, custo], combos: [nome, [[item, qtd]], tipo, valor]] */
     private const CARDAPIO = [
         'Senhor dos Pastéis' => [
             'itens' => [
@@ -56,7 +50,6 @@ class Feira2027Seeder extends Seeder
                 ['Minipizza', 'Comida', 8.00, 7.00, 2.50],
                 ['Refrigerante 2 L', 'Bebida', 14.00, null, 8.00],
             ],
-            // Preço "a confirmar" no relatório: aqui como 10% de desconto.
             'combos' => [['Combo família', [['Minipizza', 5], ['Refrigerante 2 L', 1]], 'percentual', 10.00]],
         ],
         'Mundo Fritas' => [
@@ -76,7 +69,6 @@ class Feira2027Seeder extends Seeder
         'Entre Chocolates' => ['itens' => [['Brigadeiro gourmet', 'Sobremesa', 5.00, 4.00, 1.50], ['Bolo de pote', 'Sobremesa', 14.00, 12.00, 5.00]], 'combos' => []],
     ];
 
-    /** Carrinhos de demonstração: [barraquinha, canal, pagamento, [item => qtd]] */
     private const VENDAS = [
         ['Senhor dos Pastéis', 'feira', 'pix', ['Pastel de carne' => 1, 'Refrigerante lata' => 1]],
         ['Senhor dos Pastéis', 'feira', 'cartao', ['Pastel de carne' => 2, 'Refrigerante lata' => 2]],
@@ -169,7 +161,6 @@ class Feira2027Seeder extends Seeder
             ]);
         }
 
-        // Vaga 12: criada pela quantidade da feira e ainda não preenchida.
         Barraquinha::create(['feira_id' => $feira->id, 'posicao' => ++$posicao, 'status' => BarraquinhaStatus::Ativa]);
 
         Lancamento::create([

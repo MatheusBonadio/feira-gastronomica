@@ -34,7 +34,6 @@ class ItemRequest extends FormRequest
         $barraquinha = app(Loja::class)->barraquinha();
 
         return [
-            // Nome único dentro da barraquinha (a regra lê a view/escopo da própria barraquinha).
             'nome' => ['required', 'string', 'max:120', Rule::unique('itens', 'nome')
                 ->where('barraquinha_id', $barraquinha->id)
                 ->ignore($this->route('item'))],

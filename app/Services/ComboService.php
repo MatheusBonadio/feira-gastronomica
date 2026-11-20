@@ -17,9 +17,6 @@ class ComboService
 {
     public function __construct(private readonly VendaService $vendas) {}
 
-    /**
-     * @param  array{nome: string, tipo_desconto: string, valor: float|string, itens: array<int, int>, confirmar_sem_desconto?: bool}  $dados
-     */
     public function salvar(Barraquinha $barraquinha, ?Combo $combo, array $dados): Combo
     {
         $this->vendas->garantirFeiraAberta($barraquinha);
@@ -98,7 +95,6 @@ class ComboService
         return $combo;
     }
 
-    /** Combo que já teve vendas nunca é excluído: só desativado. */
     public function excluir(Combo $combo): void
     {
         $this->vendas->garantirFeiraAberta($combo->barraquinha);
@@ -111,7 +107,6 @@ class ComboService
         $combo->delete();
     }
 
-    /** @return array<int, int> item_id => quantidade (só os marcados, com quantidade ≥ 1) */
     private function composicao(array $itens): array
     {
         $composicao = [];
@@ -131,7 +126,6 @@ class ComboService
             throw ValidationException::withMessages(['itens' => __('O combo precisa de pelo menos 2 itens (ou 2 unidades).')]);
         }
 
-        // Itens primeiro, combos depois: só itens já cadastrados, ativos e da própria barraquinha.
         foreach (array_keys($composicao) as $itemId) {
             $item = $itens->get($itemId);
             if (! $item || ! $item->ativo) {

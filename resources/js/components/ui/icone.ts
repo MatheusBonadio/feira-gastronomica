@@ -1,14 +1,9 @@
 import { createReactComponent, type Icon } from "@tabler/icons-react";
 
-/** Ícones do Tabler (traço 1,5 px, como na referência). */
 export type Icone = Icon;
 
 export const TRACO = 1.5;
 
-/**
- * Símbolo do Pix, que o Tabler não tem: a marca do Banco Central, preenchida,
- * com a mesma API dos ícones do Tabler (size, className, aria-hidden).
- */
 export const IconPix: Icone = createReactComponent("filled", "pix", "Pix", [
     [
         "path",

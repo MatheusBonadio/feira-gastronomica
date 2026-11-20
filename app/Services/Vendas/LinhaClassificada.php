@@ -4,10 +4,8 @@ namespace App\Services\Vendas;
 
 use App\Models\VendaLinha;
 
-/** Uma linha do pedido já classificada. Valores monetários em centavos. */
 final class LinhaClassificada
 {
-    /** @param array<int, int> $componentes item_id => quantidade por unidade da linha */
     public function __construct(
         public readonly string $tag,
         public readonly string $descricao,

@@ -55,7 +55,6 @@ class Exportador
         ])->deleteFileAfterSend();
     }
 
-    /** CSV com BOM e separador do idioma (";" em pt_BR, para o Excel abrir certo). Abas viram seções. */
     private function csv(Relatorio $relatorio): StreamedResponse
     {
         $separador = __('formato.csv_separador');

@@ -12,7 +12,6 @@ use App\Services\Vendas\VendaService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-/** Entradas extras, custos, despesas e investimentos. Toda alteração fica na trilha de auditoria. */
 class LancamentoService
 {
     private const DISCO = 'local';
@@ -54,7 +53,6 @@ class LancamentoService
         return $lancamento;
     }
 
-    /** Exclusão lógica: o lançamento sai dos totais, mas continua no histórico. */
     public function excluir(Lancamento $lancamento): void
     {
         $this->vendas->garantirFeiraAberta($lancamento->barraquinha);

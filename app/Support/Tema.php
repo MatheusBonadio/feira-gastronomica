@@ -4,15 +4,10 @@ namespace App\Support;
 
 use Illuminate\Support\Facades\Cache;
 
-/**
- * Lê as cores em hex do bloco :root de resources/js/styles/tokens.css, a fonte
- * única do design system. Usado onde CSS var() não funciona, como nos PDFs.
- */
 class Tema
 {
     public const ARQUIVO = 'js/styles/tokens.css';
 
-    /** @return array<string, string> token (sem "--") => cor hexadecimal do tema claro */
     public static function tokens(): array
     {
         $arquivo = resource_path(self::ARQUIVO);

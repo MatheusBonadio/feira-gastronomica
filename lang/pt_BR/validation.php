@@ -1,6 +1,5 @@
 <?php
 
-// Mensagens das regras usadas no projeto. Em inglês vale o padrão do Laravel.
 return [
     'accepted' => 'O campo :attribute precisa ser aceito.',
     'after_or_equal' => 'A :attribute deve ser igual ou posterior a :date.',

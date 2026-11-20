@@ -5,11 +5,6 @@ namespace App\Support\Xlsx;
 use RuntimeException;
 use ZipArchive;
 
-/**
- * Gerador mínimo de .xlsx (Office Open XML) com várias abas, usando só a
- * extensão zip. Suficiente para relatórios tabulares: texto, números e
- * linhas em negrito. Evita uma dependência pesada só para exportar planilhas.
- */
 class XlsxWriter
 {
     private const ESTILO_NORMAL = 0;
@@ -17,7 +12,6 @@ class XlsxWriter
     private const ESTILO_DINHEIRO = 2;
     private const ESTILO_DINHEIRO_NEGRITO = 3;
 
-    /** @var list<array{nome: string, linhas: list<array{celulas: list<mixed>, negrito: bool}>}> */
     private array $abas = [];
 
     public function adicionarAba(string $nome): self
@@ -27,7 +21,6 @@ class XlsxWriter
         return $this;
     }
 
-    /** @param list<mixed> $celulas floats viram número com 2 casas; int, número inteiro; o resto, texto */
     public function linha(array $celulas, bool $negrito = false): self
     {
         if (! $this->abas) {

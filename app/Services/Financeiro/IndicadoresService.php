@@ -16,12 +16,6 @@ use Illuminate\Support\Collection;
 
 class IndicadoresService
 {
-    /**
-     * Indicadores por barraquinha, com poucas consultas agrupadas.
-     *
-     * @param  Collection<int, Barraquinha>  $barraquinhas
-     * @return array<int, Indicadores> barraquinha_id => indicadores
-     */
     public function porBarraquinha(Collection $barraquinhas, Filtro $filtro = new Filtro): array
     {
         $ids = $barraquinhas->pluck('id')->all();
@@ -70,17 +64,11 @@ class IndicadoresService
         return $this->porBarraquinha(collect([$barraquinha]), $filtro)[$barraquinha->id];
     }
 
-    /** @param array<int, Indicadores> $porBarraquinha */
     public function consolidar(array $porBarraquinha): Indicadores
     {
         return array_reduce($porBarraquinha, fn (Indicadores $soma, Indicadores $i) => $soma->somar($i), new Indicadores);
     }
 
-    /**
-     * Quantas e quanto em Comum e em cada Combo N.
-     *
-     * @return Collection<int, object{tag: string, combo_numero: ?int, rotulo: string, linhas: int, quantidade: int, total: float, desconto: float}>
-     */
     public function porTag(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
     {
         return VendaLinha::withoutGlobalScopes()
@@ -103,11 +91,6 @@ class IndicadoresService
             ]);
     }
 
-    /**
-     * Itens mais vendidos, contando também os que saíram dentro de combos.
-     *
-     * @return Collection<int, object{item_id: int, item_nome: string, quantidade: int}>
-     */
     public function rankingItens(array $barraquinhaIds, Filtro $filtro = new Filtro, ?int $limite = 10): Collection
     {
         return VendaItem::withoutGlobalScopes()
@@ -127,11 +110,6 @@ class IndicadoresService
             ]);
     }
 
-    /**
-     * Vendas por dia, com a quebra por canal (barras empilhadas do painel).
-     *
-     * @return Collection<int, array{dia: string, total: float, qtd: int, porCanal: array<string, float>}>
-     */
     public function serieDiaria(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
     {
         if (! $barraquinhaIds) {
@@ -158,11 +136,6 @@ class IndicadoresService
             ->values();
     }
 
-    /**
-     * Saídas por categoria (custos, despesas e investimento), da maior para a menor.
-     *
-     * @return Collection<int, array{categoria: LancamentoCategoria, total: float}>
-     */
     public function saidasPorCategoria(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
     {
         if (! $barraquinhaIds) {
@@ -179,7 +152,6 @@ class IndicadoresService
             ->values();
     }
 
-    /** @return Collection<int, Venda> as mais recentes, com linhas e barraquinha */
     public function ultimasVendas(array $barraquinhaIds, Filtro $filtro = new Filtro, int $limite = 6): Collection
     {
         if (! $barraquinhaIds) {
@@ -194,7 +166,6 @@ class IndicadoresService
             ->get();
     }
 
-    /** @return Collection<string, float> pagamento => total */
     public function porPagamento(array $barraquinhaIds, Filtro $filtro = new Filtro): Collection
     {
         return $filtro->aplicarEmVendas(Venda::withoutGlobalScopes()->concluidas()->whereIn('barraquinha_id', $barraquinhaIds))
@@ -205,11 +176,6 @@ class IndicadoresService
             ->map(fn ($v) => (float) $v);
     }
 
-    /**
-     * Mesmos indicadores consolidados por feira, para comparar edições.
-     *
-     * @return Collection<int, object{feira: Feira, indicadores: Indicadores, barraquinhas: int}>
-     */
     public function porFeira(): Collection
     {
         $feiras = Feira::recentes()->withCount('barraquinhas')->get();

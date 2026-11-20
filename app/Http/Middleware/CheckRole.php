@@ -6,7 +6,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Uso: ->middleware('perfil:admin') ou 'perfil:barraquinha'. Checado no servidor, não só escondido na tela. */
 class CheckRole
 {
     public function handle(Request $request, Closure $next, string ...$perfis): Response

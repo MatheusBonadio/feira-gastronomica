@@ -20,7 +20,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Binding explícito: {barraquinha} vira model mesmo sem aparecer na assinatura do controller.
         Route::model('barraquinha', Barraquinha::class);
 
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
@@ -29,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
         $this->paginasDeErro();
     }
 
-    /** Erros viram uma página React no próprio layout, em vez da tela padrão do Laravel. */
     private function paginasDeErro(): void
     {
         Inertia::handleExceptionsUsing(function (ExceptionResponse $resposta) {
@@ -40,8 +38,6 @@ class AppServiceProvider extends ServiceProvider
                 return null;
             }
 
-            // Arquivo que não existe (JS de um build anterior numa aba aberta, foto apagada,
-            // sondagem do DevTools): 404 simples, sem montar a página de erro do app.
             if ($request->is('build/*', 'brand/*', 'fotos/*', '.well-known/*')) {
                 return null;
             }

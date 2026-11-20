@@ -6,7 +6,6 @@ import type { EstadoTempoReal } from "@/hooks/useTempoReal";
 import { cx } from "@/lib/cx";
 import { useLocale, useT } from "@/lib/i18n";
 
-/** "há 12 segundos" / "12 seconds ago", no idioma ativo; re-renderiza só este pedaço. */
 function useTempoDesde(instante: number) {
     const locale = useLocale();
     const formatador = useMemo(() => new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "short" }), [locale]);
@@ -23,10 +22,6 @@ function useTempoDesde(instante: number) {
     return formatador.format(-Math.floor(segundos / 60), "minute");
 }
 
-/**
- * Selo de tempo real do painel: ponto pulsando + "Ao vivo" + quando
- * sincronizou. Anuncia mudanças de estado para leitores de tela.
- */
 export function AoVivo({ estado, sincronizadoEm, aoTentar }: { estado: EstadoTempoReal; sincronizadoEm: number; aoTentar: () => void }) {
     const t = useT();
     const desde = useTempoDesde(sincronizadoEm);

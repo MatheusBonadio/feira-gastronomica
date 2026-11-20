@@ -9,7 +9,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    // Mesmos defaults do banco, para o model recém-criado já tê-los em memória.
     protected $attributes = ['ativo' => true, 'trocar_senha' => false];
 
     protected $fillable = [
@@ -19,7 +18,6 @@ class User extends Authenticatable
 
     protected $hidden = ['password'];
 
-    // Sem "lembrar-me": a sessão expira por inatividade (SESSION_LIFETIME).
     protected $rememberTokenName = '';
 
     protected function casts(): array

@@ -416,7 +416,7 @@
     "Vazio = preço de Feira": "Empty = Fair price",
     "Venda": "Sale",
     "Venda #:n": "Sale #:n",
-    "Venda #:n registrada: :resumo — :total": "Sale #:n recorded: :resumo — :total",
+    "Venda #:n registrada: :resumo · :total": "Sale #:n recorded: :resumo · :total",
     "Venda cancelada": "Sale cancelled",
     "Venda cancelada.": "Sale cancelled.",
     "Vendas": "Sales",
@@ -661,7 +661,7 @@
     "Tipo de gráfico": "Chart type",
     "Barras": "Bars",
     "Linha": "Line",
-    "Filtrado em :dia — clique de novo para limpar": "Filtered on :dia — click again to clear",
+    "Filtrado em :dia. Clique de novo para limpar.": "Filtered on :dia. Click again to clear.",
     "Vendas por dia e canal": "Sales per day and channel",
     "Outras": "Others",
     "Saídas por categoria": "Expenses by category",
@@ -772,5 +772,6 @@
     "Perfil": "Profile",
     "Preferências": "Preferences",
     "Valem só neste aparelho (tema) e na sua conta (idioma).": "Apply to this device only (theme) and to your account (language).",
-    "Segurança": "Security"
+    "Segurança": "Security",
+    "Feira UNAERP": "UNAERP Fair"
 }
