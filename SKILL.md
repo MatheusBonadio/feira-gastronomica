@@ -63,6 +63,8 @@ Design system: `DESIGN.md`. Regras de interface: `AGENTS.md`.
   `paraJson`, `paraTela`), no tipo `PreferenciasCheckout` do front, em `loja/Configuracoes`
   e no `Pdv`. Forma de pagamento desativada também é recusada no `VendaController`.
 - **Marca**: `Marca`/`SimboloUnaerp` (`components/app/marca.tsx`), arquivos em `public/brand`.
+- **Gráficos**: Recharts só dentro de `components/graficos`; as telas usam os componentes do kit.
+  Barra nova desenha o próprio `rect` (token, `hachura`, `grafico-inativo` fora de foco).
 - **Transições**: troca de tema e login usam View Transitions (`tema.tsx`, `app.css`);
   os nomes `marca`, `moldura` e `app` precisam ser únicos na tela.
 - Comentários só para explicar o porquê não óbvio.

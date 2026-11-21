@@ -1,5 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
 import { cx } from "@/lib/cx";
+import { useMidia } from "@/lib/midia";
 
 export const CORES = [
     { texto: "text-grafico-1", fundo: "bg-grafico-1", preenchimento: "fill-grafico-1" },
@@ -12,16 +14,18 @@ export const CORES = [
 
 export type Cor = (typeof CORES)[number];
 
-function useLargura<T extends HTMLElement>() {
-    const ref = useRef<T>(null);
-    const [largura, setLargura] = useState(0);
-    useEffect(() => {
-        if (!ref.current) return;
-        const observador = new ResizeObserver(([e]) => setLargura(e.contentRect.width));
-        observador.observe(ref.current);
-        return () => observador.disconnect();
-    }, []);
-    return [ref, largura] as const;
+type Forma = { x: number; y: number; width: number; height: number; index: number; value: number | [number, number] };
+type Marca = { x?: number | string; y?: number | string; width?: number | string; visibleTicksCount?: number; payload?: { value?: unknown; index?: number } };
+type LinhaGrade = { x1: number; x2: number; y1: number; y2: number; key?: string };
+
+const MARGEM = { top: 12, right: 4, bottom: 0, left: 0 };
+
+const SUPERFICIE = "relative w-full [&_:focus:not(:focus-visible)]:outline-none";
+
+const MARCA_Y = { className: "fill-tinta-fraca text-micro tabular-nums" };
+
+function useSemMovimento() {
+    return useMidia("(prefers-reduced-motion: reduce)");
 }
 
 function escala(maximo: number, divisoes = 4): number[] {
@@ -32,6 +36,19 @@ function escala(maximo: number, divisoes = 4): number[] {
     return Array.from({ length: divisoes + 1 }, (_, i) => i * passo);
 }
 
+let contextoTexto: CanvasRenderingContext2D | null = null;
+
+function larguraTexto(texto: string): number {
+    contextoTexto ??= document.createElement("canvas").getContext("2d");
+    if (!contextoTexto) return texto.length * 7;
+    contextoTexto.font = `11px ${getComputedStyle(document.body).fontFamily}`;
+    return contextoTexto.measureText(texto).width;
+}
+
+function larguraEixoY(marcas: number[], formatar: (v: number) => string): number {
+    return Math.ceil(Math.max(...marcas.map((m) => larguraTexto(formatar(m))))) + 14;
+}
+
 function PadraoHachura({ id }: { id: string }) {
     return (
         <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -40,39 +57,121 @@ function PadraoHachura({ id }: { id: string }) {
     );
 }
 
-function DicaGrafico({ x, y, children, largura, abaixo }: { x: number; y: number; children: ReactNode; largura: number; abaixo?: boolean }) {
-    const alinharDireita = x > largura - 170;
+function retangulo(x: number, y: number, w: number, h: number, raioTopo: number, raioBase: number): string {
+    const rt = Math.max(0, Math.min(raioTopo, w / 2, raioBase ? h / 2 : h));
+    const rb = Math.max(0, Math.min(raioBase, w / 2, h - rt));
+    return [
+        `M${x},${y + rt}`,
+        `Q${x},${y} ${x + rt},${y}`,
+        `L${x + w - rt},${y}`,
+        `Q${x + w},${y} ${x + w},${y + rt}`,
+        `L${x + w},${y + h - rb}`,
+        `Q${x + w},${y + h} ${x + w - rb},${y + h}`,
+        `L${x + rb},${y + h}`,
+        `Q${x},${y + h} ${x},${y + h - rb}`,
+        "Z",
+    ].join(" ");
+}
+
+function linhaGrade(p: LinhaGrade) {
+    return <line key={p.key ?? `${p.y1}`} x1={p.x1} x2={p.x2} y1={p.y1} y2={p.y2} className="stroke-grafico-grade" />;
+}
+
+function encurtar(texto: string, maximo: number): string {
+    return texto.length > maximo ? `${texto.slice(0, maximo - 1)}…` : texto;
+}
+
+function marcaX(classe: (indice: number) => string, maximoPadrao = 24) {
+    return function MarcaX(p: Marca) {
+        const espaco = Number(p.width) / Math.max(p.visibleTicksCount ?? 1, 1);
+        const maximo = Number.isFinite(espaco) && espaco > 0 ? Math.max(4, Math.min(maximoPadrao, Math.floor(espaco / 6.5))) : maximoPadrao;
+        return (
+            <text x={Number(p.x)} y={Number(p.y)} dy="0.9em" textAnchor="middle" className={cx("text-micro", classe(p.payload?.index ?? -1))}>
+                {encurtar(String(p.payload?.value ?? ""), maximo)}
+            </text>
+        );
+    };
+}
+
+function CaixaDica({ titulo, children }: { titulo: ReactNode; children: ReactNode }) {
     return (
-        <div
-            role="presentation"
-            className={cx("pointer-events-none absolute z-10 rounded-xl border border-linha bg-superficie px-3 py-2 text-rotulo whitespace-nowrap text-tinta shadow-flutuante", !abaixo && "-translate-y-full")}
-            style={{ left: alinharDireita ? undefined : x + 12, right: alinharDireita ? largura - x + 12 : undefined, top: abaixo ? Math.max(y, 0) : y - 6 }}
-        >
+        <div className="rounded-xl border border-linha bg-superficie px-3 py-2 text-rotulo whitespace-nowrap text-tinta shadow-flutuante">
+            <span className="mb-1 block text-micro text-tinta-suave">{titulo}</span>
             {children}
         </div>
     );
 }
 
-const MARGEM = { topo: 16, direita: 8, base: 28, esquerda: 52 };
-
-function Grade({ marcas, y, largura, formatarEixo }: { marcas: number[]; y: (v: number) => number; largura: number; formatarEixo: (v: number) => string }) {
+function LinhaDica({ nome, cor, valor }: { nome: string; cor: Cor; valor: string }) {
     return (
-        <>
-            {marcas.map((m) => (
-                <g key={m}>
-                    <line x1={MARGEM.esquerda} x2={largura - MARGEM.direita} y1={y(m)} y2={y(m)} className="stroke-grafico-grade" />
-                    <text x={MARGEM.esquerda - 10} y={y(m)} dy="0.32em" textAnchor="end" className="fill-tinta-fraca text-micro tabular-nums">{formatarEixo(m)}</text>
-                </g>
-            ))}
-        </>
+        <span className="flex items-center gap-2 py-px">
+            <span className={cx("size-2 rounded-full", cor.fundo)} aria-hidden />
+            <span className="flex-1 text-tinta-media">{nome}</span>
+            <span className="ps-4 font-semibold tabular-nums">{valor}</span>
+        </span>
     );
 }
+
+function useIndiceAtivo(conteudo: Pick<TooltipContentProps, "active" | "activeIndex">, aoMudar: (indice: number | null) => void): number | null {
+    const indice = conteudo.active && conteudo.activeIndex !== null && conteudo.activeIndex !== undefined ? Number(conteudo.activeIndex) : null;
+    useEffect(() => aoMudar(Number.isInteger(indice) ? indice : null), [indice, aoMudar]);
+    return Number.isInteger(indice) ? indice : null;
+}
+
+const DICA = { cursor: false, isAnimationActive: false, wrapperStyle: { outline: "none", zIndex: 20 } } as const;
 
 export interface DiaBarras {
     chave: string;
     rotulo: string;
     detalhe?: string;
     valores: number[];
+}
+
+function DicaDias({ conteudo, dias, series, formatarValor, rotuloTotal, aoMudar }: {
+    conteudo: TooltipContentProps;
+    dias: DiaBarras[];
+    series: { nome: string; cor: Cor }[];
+    formatarValor: (v: number) => string;
+    rotuloTotal: string;
+    aoMudar: (indice: number | null) => void;
+}) {
+    const indice = useIndiceAtivo(conteudo, aoMudar);
+    const dia = indice !== null ? dias[indice] : undefined;
+    if (!dia) return null;
+    const total = dia.valores.reduce((s, v) => s + Math.max(v, 0), 0);
+
+    return (
+        <CaixaDica titulo={dia.detalhe ?? dia.rotulo}>
+            {series.map((s, j) => <LinhaDica key={s.nome} nome={s.nome} cor={s.cor} valor={formatarValor(dia.valores[j] ?? 0)} />)}
+            <span className="mt-1 flex items-center justify-between gap-4 border-t border-linha pt-1">
+                <span className="text-tinta-suave">{rotuloTotal}</span>
+                <span className="font-semibold tabular-nums">{formatarValor(total)}</span>
+            </span>
+        </CaixaDica>
+    );
+}
+
+function SegmentoDia({ forma, valores, serie, cor, destaque, hachura }: { forma: Forma; valores: number[]; serie: number; cor: Cor; destaque: number; hachura: string }) {
+    const { x, y, width, height, index } = forma;
+    const v = Math.max(valores[serie] ?? 0, 0);
+    if (v <= 0 || width <= 0) return <g />;
+
+    const positivos = valores.map((n) => Math.max(n, 0));
+    const primeiro = positivos.findIndex((n) => n > 0);
+    const ultimo = positivos.length - 1 - [...positivos].reverse().findIndex((n) => n > 0);
+
+    if (index !== destaque) {
+        const alturaMinima = serie === ultimo ? Math.max(height, 3) : height;
+        return <path d={retangulo(x, y + height - alturaMinima, width, alturaMinima, serie === ultimo ? 6 : 0, serie === primeiro ? 6 : 0)} className="fill-grafico-inativo" />;
+    }
+
+    const altura = Math.max(height - (serie > primeiro ? 2 : 0), 2);
+    return (
+        <g>
+            <rect x={x} y={y} width={width} height={altura} rx={5} className={cor.preenchimento} />
+            <rect x={x} y={y} width={width} height={altura} rx={5} fill={`url(#${hachura})`} />
+        </g>
+    );
 }
 
 export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, altura = 260, rotulo, rotuloTotal, focoInicial, aoEscolher }: {
@@ -86,114 +185,77 @@ export function GraficoBarrasDias({ dias, series, formatarValor, formatarEixo, a
     focoInicial?: number;
     aoEscolher?: (dia: DiaBarras) => void;
 }) {
-    const [ref, largura] = useLargura<HTMLDivElement>();
-    const [foco, setFoco] = useState<number>(() => focoInicial ?? dias.length - 1);
-    const idHachura = useId();
+    const hachura = useId();
+    const semMovimento = useSemMovimento();
+    const [ativo, setAtivo] = useState<number | null>(null);
+    const destaque = ativo ?? focoInicial ?? dias.length - 1;
+    const atual = dias[destaque];
 
-    useEffect(() => setFoco(focoInicial ?? dias.length - 1), [dias.length, focoInicial]);
+    const dados = useMemo(
+        () => dias.map((d) => Object.fromEntries([["rotulo", d.rotulo], ...series.map((_, j) => [`s${j}`, Math.max(d.valores[j] ?? 0, 0)])])),
+        [dias, series],
+    );
+    const marcas = useMemo(() => escala(Math.max(0, ...dias.map((d) => d.valores.reduce((s, v) => s + Math.max(v, 0), 0)))), [dias]);
+    const marcaDia = useMemo(() => marcaX((i) => (i === destaque ? "fill-tinta font-semibold" : "fill-tinta-fraca"), 12), [destaque]);
 
-    const totais = dias.map((d) => d.valores.reduce((s, v) => s + Math.max(v, 0), 0));
-    const marcas = escala(Math.max(...totais, 0));
-    const topo = marcas[marcas.length - 1] || 1;
-    const w = Math.max(largura - MARGEM.esquerda - MARGEM.direita, 1);
-    const h = altura - MARGEM.topo - MARGEM.base;
-    const passo = w / Math.max(dias.length, 1);
-    const larguraBarra = Math.min(56, passo * 0.62);
-    const y = (v: number) => MARGEM.topo + h - (v / topo) * h;
-    const xCentro = (i: number) => MARGEM.esquerda + passo * i + passo / 2;
-    const passoRotulo = Math.max(1, Math.ceil(dias.length / Math.max(1, Math.floor(w / 56))));
-    const atual = dias[foco];
-
-    const teclar = (e: KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-            e.preventDefault();
-            const sentido = (e.key === "ArrowRight") !== (getComputedStyle(e.currentTarget).direction === "rtl") ? 1 : -1;
-            setFoco((f) => Math.min(dias.length - 1, Math.max(0, f + sentido)));
-        } else if ((e.key === "Enter" || e.key === " ") && atual && aoEscolher) {
-            e.preventDefault();
-            aoEscolher(atual);
-        }
+    const escolher = (indice: unknown) => {
+        const i = Number(indice);
+        if (aoEscolher && Number.isInteger(i) && dias[i]) aoEscolher(dias[i]);
     };
 
     return (
         <div
-            ref={ref}
-            className="relative w-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-foco"
+            className={cx(SUPERFICIE, aoEscolher && "[&_.recharts-surface]:cursor-pointer")}
             style={{ height: altura }}
-            tabIndex={0}
             role="group"
             aria-label={rotulo}
             aria-roledescription="gráfico"
-            onKeyDown={teclar}
+            onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && ativo !== null) {
+                    e.preventDefault();
+                    escolher(ativo);
+                }
+            }}
         >
             <p className="sr-only" aria-live="polite">
                 {atual && `${atual.rotulo}: ${series.map((s, i) => `${s.nome} ${formatarValor(atual.valores[i] ?? 0)}`).join(", ")}`}
             </p>
-            {largura > 0 && (
-                <svg
-                    width={largura}
-                    height={altura}
-                    aria-hidden
-                    onMouseMove={(e) => {
-                        if (!dias.length) return;
-                        const caixa = e.currentTarget.getBoundingClientRect();
-                        const i = Math.floor((e.clientX - caixa.left - MARGEM.esquerda) / passo);
-                        if (i >= 0 && i < dias.length) setFoco(i);
-                    }}
-                    onClick={() => atual && aoEscolher?.(atual)}
-                    className={aoEscolher ? "cursor-pointer" : undefined}
-                >
-                    <defs><PadraoHachura id={idHachura} /></defs>
-                    <Grade marcas={marcas} y={y} largura={largura} formatarEixo={formatarEixo} />
-                    {dias.map((d, i) => {
-                        const x = xCentro(i) - larguraBarra / 2;
-                        const total = totais[i];
-                        if (i !== foco) {
-                            const alturaBarra = Math.max(total > 0 ? y(0) - y(total) : 0, total > 0 ? 3 : 0);
-                            return <rect key={d.chave} x={x} y={y(0) - alturaBarra} width={larguraBarra} height={alturaBarra} rx={6} className="fill-grafico-inativo" />;
-                        }
-                        let base = 0;
-                        return (
-                            <g key={d.chave}>
-                                {series.map((s, j) => {
-                                    const v = Math.max(d.valores[j] ?? 0, 0);
-                                    if (v <= 0) return null;
-                                    const topoSeg = y(base + v);
-                                    const alturaSeg = Math.max(y(base) - topoSeg - (base > 0 ? 2 : 0), 2);
-                                    base += v;
-                                    return (
-                                        <g key={s.nome}>
-                                            <rect x={x} y={topoSeg} width={larguraBarra} height={alturaSeg} rx={5} className={s.cor.preenchimento} />
-                                            <rect x={x} y={topoSeg} width={larguraBarra} height={alturaSeg} rx={5} fill={`url(#${idHachura})`} />
-                                        </g>
-                                    );
-                                })}
-                            </g>
-                        );
-                    })}
-                    {dias.map((d, i) => i % passoRotulo === 0 && (
-                        <text key={d.chave} x={xCentro(i)} y={altura - 8} textAnchor="middle" className={cx("text-micro", i === foco ? "fill-tinta font-semibold" : "fill-tinta-fraca")}>{d.rotulo}</text>
-                    ))}
-                </svg>
-            )}
-            {atual && totais[foco] > 0 && largura > 0 && (
-                <DicaGrafico x={xCentro(foco) + larguraBarra / 2 - 6} y={y(totais[foco]) + 8} largura={largura} abaixo={y(totais[foco]) < 130}>
-                    <span className="mb-1 block text-micro text-tinta-suave">{atual.detalhe ?? atual.rotulo}</span>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dados} margin={MARGEM} barCategoryGap="34%" onClick={(estado) => escolher(estado?.activeTooltipIndex)} onMouseLeave={() => setAtivo(null)}>
+                    <defs><PadraoHachura id={hachura} /></defs>
+                    <CartesianGrid vertical={false} horizontal={linhaGrade} />
+                    <XAxis dataKey="rotulo" axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={8} tick={marcaDia} height={26} />
+                    <YAxis width={larguraEixoY(marcas, formatarEixo)} axisLine={false} tickLine={false} domain={[0, marcas[marcas.length - 1]]} ticks={marcas} interval={0} tickFormatter={formatarEixo} tick={MARCA_Y} />
+                    <Tooltip
+                        {...DICA}
+                        content={(conteudo) => <DicaDias conteudo={conteudo} dias={dias} series={series} formatarValor={formatarValor} rotuloTotal={rotuloTotal} aoMudar={setAtivo} />}
+                    />
                     {series.map((s, j) => (
-                        <span key={s.nome} className="flex items-center gap-2 py-px">
-                            <span className={cx("size-2 rounded-full", s.cor.fundo)} aria-hidden />
-                            <span className="flex-1 text-tinta-media">{s.nome}</span>
-                            <span className="ps-4 font-semibold tabular-nums">{formatarValor(atual.valores[j] ?? 0)}</span>
-                        </span>
+                        <Bar
+                            key={s.nome}
+                            dataKey={`s${j}`}
+                            stackId="dia"
+                            maxBarSize={56}
+                            isAnimationActive={!semMovimento}
+                            animationDuration={450}
+                            shape={(forma: unknown) => {
+                                const f = forma as Forma;
+                                return <SegmentoDia forma={f} valores={dias[f.index]?.valores ?? []} serie={j} cor={s.cor} destaque={destaque} hachura={hachura} />;
+                            }}
+                        />
                     ))}
-                    <span className="mt-1 flex items-center justify-between gap-4 border-t border-linha pt-1">
-                        <span className="text-tinta-suave">{rotuloTotal}</span>
-                        <span className="font-semibold tabular-nums">{formatarValor(totais[foco])}</span>
-                    </span>
-                </DicaGrafico>
-            )}
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     );
+}
+
+function CursorVertical({ points, height, top }: { points?: { x: number; y: number }[]; height?: number; top?: number }) {
+    const x = points?.[0]?.x;
+    if (x === undefined) return null;
+    const inicio = points?.[0]?.y ?? top ?? 0;
+    const fim = points?.[1]?.y ?? inicio + (height ?? 0);
+    return <line x1={x} x2={x} y1={inicio} y2={fim} className="stroke-linha-forte" strokeDasharray="3 3" />;
 }
 
 export function GraficoArea({ pontos, formatarValor, formatarEixo, altura = 240, cor = CORES[0], rotulo }: {
@@ -204,76 +266,96 @@ export function GraficoArea({ pontos, formatarValor, formatarEixo, altura = 240,
     cor?: Cor;
     rotulo: string;
 }) {
-    const [ref, largura] = useLargura<HTMLDivElement>();
-    const [foco, setFoco] = useState<number | null>(null);
-    const idGradiente = useId();
-
-    const geometria = useMemo(() => {
-        const marcas = escala(Math.max(...pontos.map((p) => p.valor), 0));
-        const topo = marcas[marcas.length - 1] || 1;
-        const w = Math.max(largura - MARGEM.esquerda - MARGEM.direita, 1);
-        const h = altura - MARGEM.topo - MARGEM.base;
-        const x = (i: number) => MARGEM.esquerda + (pontos.length <= 1 ? w / 2 : (i / (pontos.length - 1)) * w);
-        const y = (v: number) => MARGEM.topo + h - (v / topo) * h;
-        const linha = pontos.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.valor)}`).join(" ");
-        const area = pontos.length ? `${linha} L${x(pontos.length - 1)},${y(0)} L${x(0)},${y(0)} Z` : "";
-        return { marcas, x, y, linha, area, w };
-    }, [pontos, largura, altura]);
-
-    const passoRotulo = Math.max(1, Math.ceil(pontos.length / Math.max(1, Math.floor(geometria.w / 64))));
+    const gradiente = useId();
+    const semMovimento = useSemMovimento();
+    const marcas = useMemo(() => escala(Math.max(0, ...pontos.map((p) => p.valor))), [pontos]);
+    const marcaDia = useMemo(() => marcaX(() => "fill-tinta-fraca", 12), []);
+    const ponto = { r: 5, fill: "currentColor", strokeWidth: 2, className: "stroke-superficie" };
 
     return (
-        <div ref={ref} className="relative w-full" style={{ height: altura }}>
-            {largura > 0 && (
-                <svg
-                    width={largura}
-                    height={altura}
-                    role="img"
-                    aria-label={rotulo}
-                    className={cor.texto}
-                    onMouseLeave={() => setFoco(null)}
-                    onMouseMove={(e) => {
-                        if (pontos.length === 0) return;
-                        const caixa = e.currentTarget.getBoundingClientRect();
-                        const rel = (e.clientX - caixa.left - MARGEM.esquerda) / Math.max(geometria.w, 1);
-                        setFoco(Math.min(pontos.length - 1, Math.max(0, Math.round(rel * (pontos.length - 1)))));
-                    }}
-                >
+        <div className={cx(SUPERFICIE, cor.texto)} style={{ height: altura }} role="group" aria-label={rotulo} aria-roledescription="gráfico">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={pontos} margin={{ ...MARGEM, right: 12, left: 4 }}>
                     <defs>
-                        <linearGradient id={idGradiente} x1="0" x2="0" y1="0" y2="1">
+                        <linearGradient id={gradiente} x1="0" x2="0" y1="0" y2="1">
                             <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
                             <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                         </linearGradient>
                     </defs>
-                    <Grade marcas={geometria.marcas} y={geometria.y} largura={largura} formatarEixo={formatarEixo} />
-                    {pontos.map((p, i) => i % passoRotulo === 0 && (
-                        <text key={i} x={geometria.x(i)} y={altura - 8} textAnchor="middle" className="fill-tinta-fraca text-micro">{p.rotulo}</text>
-                    ))}
-                    <path d={geometria.area} fill={`url(#${idGradiente})`} />
-                    <path d={geometria.linha} fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinejoin="round" strokeLinecap="round" />
-                    {pontos.length === 1 && (
-                        <g aria-hidden>
-                            <line x1={geometria.x(0)} x2={geometria.x(0)} y1={geometria.y(pontos[0].valor)} y2={geometria.y(0)} stroke="currentColor" strokeWidth={2} strokeDasharray="3 4" />
-                            <circle cx={geometria.x(0)} cy={geometria.y(pontos[0].valor)} r={5} fill="currentColor" className="stroke-superficie" strokeWidth={2} />
-                            <text x={geometria.x(0)} y={geometria.y(pontos[0].valor) - 12} textAnchor="middle" className="fill-tinta text-rotulo font-semibold">{formatarValor(pontos[0].valor)}</text>
-                        </g>
-                    )}
-                    {foco !== null && pontos[foco] && (
-                        <g>
-                            <line x1={geometria.x(foco)} x2={geometria.x(foco)} y1={MARGEM.topo} y2={altura - MARGEM.base} className="stroke-linha-forte" strokeDasharray="3 3" />
-                            <circle cx={geometria.x(foco)} cy={geometria.y(pontos[foco].valor)} r={5} fill="currentColor" className="stroke-superficie" strokeWidth={2} />
-                        </g>
-                    )}
-                </svg>
-            )}
-            {foco !== null && pontos[foco] && (
-                <DicaGrafico x={geometria.x(foco)} y={geometria.y(pontos[foco].valor)} largura={largura}>
-                    <span className="block text-micro text-tinta-suave">{pontos[foco].rotulo}</span>
-                    <span className="font-semibold tabular-nums">{formatarValor(pontos[foco].valor)}</span>
-                    {pontos[foco].detalhe && <span className="block text-tinta-suave">{pontos[foco].detalhe}</span>}
-                </DicaGrafico>
-            )}
+                    <CartesianGrid vertical={false} horizontal={linhaGrade} />
+                    <XAxis dataKey="rotulo" axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={12} tick={marcaDia} height={26} />
+                    <YAxis width={larguraEixoY(marcas, formatarEixo)} axisLine={false} tickLine={false} domain={[0, marcas[marcas.length - 1]]} ticks={marcas} interval={0} tickFormatter={formatarEixo} tick={MARCA_Y} />
+                    <Tooltip
+                        cursor={<CursorVertical />}
+                        isAnimationActive={false}
+                        wrapperStyle={DICA.wrapperStyle}
+                        content={({ active, payload }) => {
+                            const p = active ? (payload?.[0]?.payload as (typeof pontos)[number] | undefined) : undefined;
+                            if (!p) return null;
+                            return (
+                                <CaixaDica titulo={p.rotulo}>
+                                    <span className="font-semibold tabular-nums">{formatarValor(p.valor)}</span>
+                                    {p.detalhe && <span className="block text-tinta-suave">{p.detalhe}</span>}
+                                </CaixaDica>
+                            );
+                        }}
+                    />
+                    <Area
+                        type="linear"
+                        dataKey="valor"
+                        stroke="currentColor"
+                        strokeWidth={2.25}
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        fill={`url(#${gradiente})`}
+                        dot={pontos.length === 1 ? ponto : false}
+                        activeDot={ponto}
+                        isAnimationActive={!semMovimento}
+                        animationDuration={450}
+                        label={
+                            pontos.length === 1
+                                ? (p: { x?: number | string; y?: number | string; value?: unknown }) => (
+                                      <text x={Number(p.x)} y={Number(p.y) - 14} textAnchor="middle" className="fill-tinta text-rotulo font-semibold">
+                                          {formatarValor(Number(p.value))}
+                                      </text>
+                                  )
+                                : false
+                        }
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
         </div>
+    );
+}
+
+function BarraGrupo({ forma, cor, ativa, hachura }: { forma: Forma; cor: Cor; ativa: boolean; hachura: string }) {
+    const { x, y, width, height, value } = forma;
+    const v = Array.isArray(value) ? value[1] - value[0] : value;
+    if (width <= 0 || v <= 0) return <g />;
+    const altura = Math.max(height, 2);
+    const topo = y + height - altura;
+    if (!ativa) return <rect x={x} y={topo} width={width} height={altura} rx={5} className="fill-grafico-inativo" />;
+    return (
+        <g>
+            <rect x={x} y={topo} width={width} height={altura} rx={5} className={cor.preenchimento} />
+            <rect x={x} y={topo} width={width} height={altura} rx={5} fill={`url(#${hachura})`} />
+        </g>
+    );
+}
+
+function DicaGrupo({ conteudo, categorias, series, formatarValor, aoMudar }: {
+    conteudo: TooltipContentProps;
+    categorias: string[];
+    series: { nome: string; cor: Cor; valores: number[] }[];
+    formatarValor: (v: number) => string;
+    aoMudar: (indice: number | null) => void;
+}) {
+    const indice = useIndiceAtivo(conteudo, aoMudar);
+    if (indice === null || categorias[indice] === undefined) return null;
+    return (
+        <CaixaDica titulo={categorias[indice]}>
+            {series.map((s) => <LinhaDica key={s.nome} nome={s.nome} cor={s.cor} valor={formatarValor(s.valores[indice] ?? 0)} />)}
+        </CaixaDica>
     );
 }
 
@@ -285,58 +367,40 @@ export function GraficoBarras({ categorias, series, formatarValor, formatarEixo,
     altura?: number;
     rotulo: string;
 }) {
-    const [ref, largura] = useLargura<HTMLDivElement>();
-    const [foco, setFoco] = useState<number | null>(null);
-    const idHachura = useId();
-    const maximo = Math.max(...series.flatMap((s) => s.valores), 0);
-    const marcas = escala(maximo);
-    const topo = marcas[marcas.length - 1] || 1;
-    const w = Math.max(largura - MARGEM.esquerda - MARGEM.direita, 1);
-    const h = altura - MARGEM.topo - MARGEM.base;
-    const grupo = w / Math.max(categorias.length, 1);
-    const barra = Math.min(36, (grupo * 0.7) / Math.max(series.length, 1));
-    const y = (v: number) => MARGEM.topo + h - (Math.max(v, 0) / topo) * h;
+    const hachura = useId();
+    const semMovimento = useSemMovimento();
+    const [ativo, setAtivo] = useState<number | null>(null);
+    const dados = useMemo(
+        () => categorias.map((c, i) => Object.fromEntries([["rotulo", c], ...series.map((s, j) => [`s${j}`, Math.max(s.valores[i] ?? 0, 0)])])),
+        [categorias, series],
+    );
+    const marcas = useMemo(() => escala(Math.max(0, ...series.flatMap((s) => s.valores))), [series]);
+    const marcaCategoria = useMemo(() => marcaX(() => "fill-tinta-suave", 18), []);
 
     return (
-        <div ref={ref} className="relative w-full" style={{ height: altura }}>
-            {largura > 0 && (
-                <svg width={largura} height={altura} role="img" aria-label={rotulo} onMouseLeave={() => setFoco(null)}>
-                    <defs><PadraoHachura id={idHachura} /></defs>
-                    <Grade marcas={marcas} y={y} largura={largura} formatarEixo={formatarEixo} />
-                    {categorias.map((c, i) => {
-                        const inicio = MARGEM.esquerda + grupo * i + (grupo - barra * series.length - 4 * (series.length - 1)) / 2;
-                        return (
-                            <g key={c} onMouseEnter={() => setFoco(i)}>
-                                <rect x={MARGEM.esquerda + grupo * i} y={MARGEM.topo} width={grupo} height={h} fill="transparent" />
-                                {series.map((s, j) => {
-                                    const v = s.valores[i] ?? 0;
-                                    const x = inicio + j * (barra + 4);
-                                    const alturaBarra = Math.max(y(0) - y(v), v > 0 ? 2 : 0);
-                                    return (
-                                        <g key={s.nome}>
-                                            <rect x={x} y={y(0) - alturaBarra} width={barra} height={alturaBarra} rx={5} className={foco === null || foco === i ? s.cor.preenchimento : "fill-grafico-inativo"} />
-                                            {(foco === null || foco === i) && <rect x={x} y={y(0) - alturaBarra} width={barra} height={alturaBarra} rx={5} fill={`url(#${idHachura})`} />}
-                                        </g>
-                                    );
-                                })}
-                                <text x={MARGEM.esquerda + grupo * i + grupo / 2} y={altura - 8} textAnchor="middle" className="fill-tinta-suave text-micro">{c}</text>
-                            </g>
-                        );
-                    })}
-                </svg>
-            )}
-            {foco !== null && (
-                <DicaGrafico x={MARGEM.esquerda + grupo * foco + grupo / 2} y={y(Math.max(...series.map((s) => s.valores[foco] ?? 0)))} largura={largura}>
-                    <span className="mb-1 block text-micro text-tinta-suave">{categorias[foco]}</span>
-                    {series.map((s) => (
-                        <span key={s.nome} className="flex items-center gap-2 py-px">
-                            <span className={cx("size-2 rounded-full", s.cor.fundo)} aria-hidden />
-                            <span className="flex-1 text-tinta-media">{s.nome}</span>
-                            <span className="ps-4 font-semibold tabular-nums">{formatarValor(s.valores[foco] ?? 0)}</span>
-                        </span>
+        <div className={SUPERFICIE} style={{ height: altura }} role="group" aria-label={rotulo} aria-roledescription="gráfico">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dados} margin={MARGEM} barGap={4} barCategoryGap="24%" onMouseLeave={() => setAtivo(null)}>
+                    <defs><PadraoHachura id={hachura} /></defs>
+                    <CartesianGrid vertical={false} horizontal={linhaGrade} />
+                    <XAxis dataKey="rotulo" axisLine={false} tickLine={false} interval={0} tick={marcaCategoria} height={26} />
+                    <YAxis width={larguraEixoY(marcas, formatarEixo)} axisLine={false} tickLine={false} domain={[0, marcas[marcas.length - 1]]} ticks={marcas} interval={0} tickFormatter={formatarEixo} tick={MARCA_Y} />
+                    <Tooltip {...DICA} content={(conteudo) => <DicaGrupo conteudo={conteudo} categorias={categorias} series={series} formatarValor={formatarValor} aoMudar={setAtivo} />} />
+                    {series.map((s, j) => (
+                        <Bar
+                            key={s.nome}
+                            dataKey={`s${j}`}
+                            maxBarSize={36}
+                            isAnimationActive={!semMovimento}
+                            animationDuration={450}
+                            shape={(forma: unknown) => {
+                                const f = forma as Forma;
+                                return <BarraGrupo forma={f} cor={s.cor} ativa={ativo === null || ativo === f.index} hachura={hachura} />;
+                            }}
+                        />
                     ))}
-                </DicaGrafico>
-            )}
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     );
 }
@@ -348,38 +412,27 @@ export function GraficoRosca({ fatias, formatarValor, centro, rotulo, tamanho = 
     rotulo: string;
     tamanho?: number;
 }) {
+    const semMovimento = useSemMovimento();
     const total = fatias.reduce((s, f) => s + Math.max(f.valor, 0), 0);
-    const raio = tamanho / 2 - 12;
-    const circunferencia = 2 * Math.PI * raio;
-    let acumulado = 0;
+    const visiveis = fatias.filter((f) => f.valor > 0);
 
     return (
         <div className="@container">
             <div className="flex flex-col items-center gap-5 @md:flex-row">
-                <div className="relative shrink-0" style={{ width: tamanho, height: tamanho }}>
-                    <svg width={tamanho} height={tamanho} role="img" aria-label={rotulo} className="-rotate-90">
-                        <circle cx={tamanho / 2} cy={tamanho / 2} r={raio} fill="none" strokeWidth={18} className="stroke-grafico-inativo" />
-                        {total > 0 && fatias.map((f) => {
-                            const parte = (Math.max(f.valor, 0) / total) * circunferencia;
-                            const deslocamento = -acumulado;
-                            acumulado += parte;
-                            return (
-                                <circle
-                                    key={f.rotulo}
-                                    cx={tamanho / 2}
-                                    cy={tamanho / 2}
-                                    r={raio}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={18}
-                                    strokeDasharray={`${Math.max(parte - 3, 0)} ${circunferencia}`}
-                                    strokeDashoffset={deslocamento}
-                                    className={f.cor.texto}
-                                />
-                            );
-                        })}
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div className="relative aspect-square w-full shrink-0" style={{ maxWidth: tamanho }} role="img" aria-label={`${rotulo}: ${visiveis.map((f) => `${f.rotulo} ${formatarValor(f.valor)}`).join(", ")}`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                            <Pie data={[{ valor: 1 }]} dataKey="valor" innerRadius="78%" outerRadius="100%" stroke="none" isAnimationActive={false}>
+                                <Cell className="fill-grafico-inativo" />
+                            </Pie>
+                            {total > 0 && (
+                                <Pie data={visiveis} dataKey="valor" nameKey="rotulo" innerRadius="78%" outerRadius="100%" startAngle={90} endAngle={-270} paddingAngle={visiveis.length > 1 ? 2 : 0} stroke="none" isAnimationActive={!semMovimento}>
+                                    {visiveis.map((f) => <Cell key={f.rotulo} className={f.cor.preenchimento} />)}
+                                </Pie>
+                            )}
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
                         <span className="text-titulo font-semibold tabular-nums text-tinta">{centro.valor}</span>
                         <span className="text-micro text-tinta-suave">{centro.rotulo}</span>
                     </div>
@@ -394,17 +447,15 @@ export function GraficoRosca({ fatias, formatarValor, centro, rotulo, tamanho = 
 }
 
 export function Sparkline({ valores, cor = CORES[0], altura = 32 }: { valores: number[]; cor?: Cor; altura?: number }) {
-    const [ref, largura] = useLargura<HTMLDivElement>();
+    const dados = useMemo(() => valores.map((valor) => ({ valor })), [valores]);
     if (valores.length < 2) return <div className="h-8" />;
-    const maximo = Math.max(...valores, 1);
-    const pontos = valores.map((v, i) => `${(i / (valores.length - 1)) * largura},${altura - 2 - (v / maximo) * (altura - 4)}`).join(" ");
     return (
-        <div ref={ref} className="w-full" style={{ height: altura }} aria-hidden>
-            {largura > 0 && (
-                <svg width={largura} height={altura} className={cor.texto}>
-                    <polyline points={pontos} fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-                </svg>
-            )}
+        <div className={cx("w-full", cor.texto)} style={{ height: altura }} aria-hidden>
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dados} margin={{ top: 2, right: 2, bottom: 2, left: 2 }} accessibilityLayer={false}>
+                    <Line type="linear" dataKey="valor" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" dot={false} isAnimationActive={false} />
+                </LineChart>
+            </ResponsiveContainer>
         </div>
     );
 }

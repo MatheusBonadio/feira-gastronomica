@@ -163,11 +163,16 @@ Espaço entre cartões: `gap-3`; dentro do cartão: `px-5`. Página: `px-4` (cel
 
 ## 7. Gráficos
 
-SVG/HTML próprios (`components/graficos/graficos.tsx`), medidos com `ResizeObserver`.
+Barras, área, rosca e sparkline usam **Recharts** por baixo (`components/graficos/graficos.tsx`): o contêiner
+acompanha a largura do cartão, a dica responde a mouse, toque e teclado e fica dentro do gráfico, e os
+rótulos do eixo X se encurtam ou se espaçam para não se sobrepor. As barras são desenhadas pelo kit
+(cor do token, `hachura`, cantos arredondados), então o visual é o mesmo do design system. Medidor,
+barra segmentada e barras horizontais são HTML/SVG próprios. As telas usam só estes componentes,
+nunca o Recharts direto.
 
 | Peça | Como na referência | Comportamento |
 | --- | --- | --- |
-| `GraficoBarrasDias` | "Balance overview" | Barras por dia empilhadas por canal; dias fora de foco em cinza, dia em foco colorido e hachurado com a dica (data, canais, total). Mouse ou setas mudam o foco; clique/Enter filtra o painel por aquele dia. |
+| `GraficoBarrasDias` | "Balance overview" | Barras por dia empilhadas por canal; dias fora de foco em cinza, dia em foco colorido e hachurado. A dica (data, canais, total) aparece com mouse, toque ou setas; clique, toque ou Enter filtra o painel por aquele dia. Sem interação, o foco volta ao dia filtrado ou ao último. |
 | `GraficoArea` | alternativa "linha" | Mesma série em linha com área degradê. |
 | `BarraSegmentada` | "Cost analysis" | Blocos hachurados proporcionais + legenda com % e valor. |
 | `Medidor` | "Financial health" | Meio-círculo de 11 blocos; os preenchidos vão do amarelo ao azul (mistura dos dois tokens) e são hachurados. |
