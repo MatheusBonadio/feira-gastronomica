@@ -87,7 +87,7 @@ class XlsxWriter
             return "<c r=\"{$ref}\" s=\"{$estilo}\"><v>{$valor}</v></c>";
         }
 
-        $texto = htmlspecialchars((string) $valor, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $texto = htmlspecialchars(self::textoXml((string) $valor), ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
         return "<c r=\"{$ref}\" s=\"{$estilo}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{$texto}</t></is></c>";
     }
@@ -104,14 +104,22 @@ class XlsxWriter
 
     private function nomeDeAbaValido(string $nome): string
     {
-        $nome = trim(mb_substr(preg_replace('/[\[\]\:\*\?\/\\\\]/', ' ', $nome), 0, 31)) ?: 'Planilha';
-        $existentes = array_column($this->abas, 'nome');
+        $nome = preg_replace('/[\[\]\:\*\?\/\\\\]/', ' ', self::textoXml($nome));
+        $nome = trim(mb_substr(trim($nome, " '"), 0, 31), " '") ?: 'Planilha';
+        $existentes = array_map('mb_strtolower', array_column($this->abas, 'nome'));
         $base = $nome;
-        for ($i = 2; in_array($nome, $existentes, true); $i++) {
-            $nome = mb_substr($base, 0, 27)." ({$i})";
+        for ($i = 2; in_array(mb_strtolower($nome), $existentes, true); $i++) {
+            $nome = trim(mb_substr($base, 0, 27), " '")." ({$i})";
         }
 
         return $nome;
+    }
+
+    private static function textoXml(string $texto): string
+    {
+        $texto = mb_scrub($texto, 'UTF-8');
+
+        return preg_replace('/[^\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $texto) ?? '';
     }
 
     private function contentTypes(): string

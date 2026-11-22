@@ -99,7 +99,16 @@ class Exportador
         return match (true) {
             is_float($valor) => Formato::numero($valor),
             $valor === null => '',
+            is_string($valor) => self::semFormula($valor),
             default => (string) $valor,
         };
+    }
+
+    public static function semFormula(string $texto): string
+    {
+        $pareceFormula = preg_match('/^[=+\-@\t\r]/', $texto) === 1;
+        $ehNumero = preg_match('/^[-+]?[\d.,]*%?$/', $texto) === 1;
+
+        return $pareceFormula && ! $ehNumero ? "'".$texto : $texto;
     }
 }

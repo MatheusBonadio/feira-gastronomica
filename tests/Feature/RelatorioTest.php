@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\Canal;
 use App\Enums\FormaPagamento;
+use App\Enums\LancamentoCategoria;
+use App\Enums\LancamentoTipo;
+use App\Models\Lancamento;
 use App\Services\Vendas\VendaService;
 use Tests\TestCase;
 
@@ -62,5 +65,76 @@ class RelatorioTest extends TestCase
         $pdf = $this->actingAs($admin)->get(route('admin.relatorios.exportar', ['tipo' => 'comparativo', 'formato' => 'pdf', 'feira_id' => $feira->id]));
         $pdf->assertOk();
         $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+    }
+
+    public function test_csv_neutraliza_formulas_mas_mantem_numeros_negativos(): void
+    {
+        $feira = $this->criarFeira();
+        [$barraquinha, $pastel] = $this->cenarioPastelaria($feira);
+        app(VendaService::class)->registrar($barraquinha, $this->usuarioDa($barraquinha), Canal::Feira, FormaPagamento::Pix, [$pastel->id => 1]);
+        foreach (['=1+1', '+SOMA(A1)', '@HOJE()', '-2+3', 'Gás de cozinha'] as $descricao) {
+            $this->lancamento($barraquinha, $descricao, 100);
+        }
+
+        $admin = $this->criarAdmin();
+        $csv = $this->actingAs($admin)
+            ->get(route('admin.relatorios.exportar', ['tipo' => 'entradas_saidas', 'formato' => 'csv', 'feira_id' => $feira->id]))
+            ->assertOk()->streamedContent();
+
+        foreach (["'=1+1", "'+SOMA(A1)", "'@HOJE()", "'-2+3", ';"Gás de cozinha";'] as $esperado) {
+            $this->assertStringContainsString($esperado, $csv);
+        }
+        $this->assertDoesNotMatchRegularExpression('/(^|;)"?[=+@]/m', $csv);
+
+        $comparativo = $this->actingAs($admin)
+            ->get(route('admin.relatorios.exportar', ['tipo' => 'comparativo', 'formato' => 'csv', 'feira_id' => $feira->id]))
+            ->assertOk()->streamedContent();
+
+        $this->assertMatchesRegularExpression('/;-[\d.,]+%;/', $comparativo);
+        $this->assertStringNotContainsString("'-", $comparativo);
+    }
+
+    public function test_xlsx_continua_valido_com_caracteres_de_controle_no_texto(): void
+    {
+        $barraquinha = $this->criarBarraquinha();
+        $this->lancamento($barraquinha, "Colado do WhatsApp \x0B\x01 fim", 10);
+
+        $xlsx = $this->actingAs($this->usuarioDa($barraquinha))
+            ->get(route('barraquinha.relatorios.exportar', ['tipo' => 'entradas_saidas', 'formato' => 'xlsx']))
+            ->assertOk();
+
+        $zip = new \ZipArchive;
+        $zip->open($xlsx->getFile()->getPathname());
+        $planilha = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+
+        $this->assertNotFalse(simplexml_load_string($planilha, options: LIBXML_NOERROR));
+        $this->assertStringContainsString('Colado do WhatsApp  fim', $planilha);
+    }
+
+    public function test_xlsx_nao_repete_nome_de_aba_nem_mudando_maiusculas(): void
+    {
+        $feira = $this->criarFeira();
+        $this->criarBarraquinha($feira, 'consolidado');
+        $this->criarBarraquinha($feira, "'Aspas'");
+
+        $xlsx = $this->actingAs($this->criarAdmin())
+            ->get(route('admin.relatorios.exportar', ['tipo' => 'fechamento', 'formato' => 'xlsx', 'feira_id' => $feira->id]))
+            ->assertOk();
+
+        $zip = new \ZipArchive;
+        $zip->open($xlsx->getFile()->getPathname());
+        preg_match_all('/<sheet name="([^"]+)"/', $zip->getFromName('xl/workbook.xml'), $abas);
+        $zip->close();
+
+        $this->assertSame(['Consolidado', 'consolidado (2)', 'Aspas'], array_map(fn ($n) => html_entity_decode($n, ENT_QUOTES | ENT_XML1), $abas[1]));
+    }
+
+    private function lancamento($barraquinha, string $descricao, float $valor): void
+    {
+        Lancamento::create([
+            'barraquinha_id' => $barraquinha->id, 'tipo' => LancamentoTipo::Saida, 'categoria' => LancamentoCategoria::Mercadoria,
+            'descricao' => $descricao, 'valor' => $valor, 'data' => '2027-10-15',
+        ]);
     }
 }
