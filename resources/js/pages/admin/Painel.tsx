@@ -173,6 +173,7 @@ export default function Painel(props: Props) {
 
                     <Cartao titulo={t("Comparativo das barraquinhas")} descricao={t("Clique numa barraquinha para abrir o painel dela.")} corpo="">
                         <Tabela
+                            cartoesAbaixo="media"
                             rotulo={t("Comparativo das barraquinhas")}
                             ordem={ordem}
                             direcao={direcao}
@@ -180,8 +181,8 @@ export default function Painel(props: Props) {
                             colunas={[
                                 { chave: "nome", rotulo: t("Barraquinha"), ordenavel: true },
                                 { chave: "vendas", rotulo: t("Vendas"), alinhar: "direita", ordenavel: true },
-                                { chave: "saidas", rotulo: t("Saídas"), alinhar: "direita", ordenavel: true },
-                                { chave: "saldo", rotulo: t("Saldo"), alinhar: "direita", ordenavel: true },
+                                { chave: "saidas", rotulo: t("Saídas"), alinhar: "direita", ordenavel: true, cartao: "oculta" },
+                                { chave: "saldo", rotulo: t("Saldo"), alinhar: "direita", ordenavel: true, cartao: "oculta" },
                                 { chave: "resultado", rotulo: t("Resultado"), alinhar: "direita", ordenavel: true },
                                 { chave: "margem", rotulo: t("Margem"), alinhar: "direita", ordenavel: true },
                                 { chave: "qtd", rotulo: t("Nº de vendas"), alinhar: "direita", ordenavel: true, cartao: "oculta", className: "max-2xl:hidden" },

@@ -23,12 +23,12 @@ const VARIANTES: Record<Variante, string> = {
 };
 
 const TAMANHOS: Record<Tamanho, string> = {
-    sm: "h-9 rounded-lg px-3 text-corpo md:h-8 md:px-2.5",
+    sm: "h-10 rounded-lg px-3 text-corpo md:h-8 md:px-2.5",
     md: "h-10 px-3.5 text-ui md:h-9 md:px-3",
     lg: "h-11 rounded-xl px-4 text-ui",
 };
 
-const SO_ICONE: Record<Tamanho, string> = { sm: "size-9 rounded-lg md:size-8", md: "size-10 md:size-9", lg: "size-11 rounded-xl" };
+const SO_ICONE: Record<Tamanho, string> = { sm: "size-10 rounded-lg md:size-8", md: "size-10 md:size-9", lg: "size-11 rounded-xl" };
 
 export function classesBotao(variante: Variante = "primario", tamanho: Tamanho = "md", soIcone = false) {
     return cx(BASE, VARIANTES[variante], soIcone ? SO_ICONE[tamanho] : TAMANHOS[tamanho]);

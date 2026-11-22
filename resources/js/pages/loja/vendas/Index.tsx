@@ -84,7 +84,7 @@ export default function Index({ vendas, filtro, canais, pagamentos, statusOpcoes
                                 <span className="font-medium tabular-nums text-tinta">#{v.numero}</span>
                             </Celula>
                             <Celula className="whitespace-nowrap">{dataHora(v.dataHora)}</Celula>
-                            <Celula className="md:max-w-72">
+                            <Celula className="larga:max-w-72">
                                 <span className="md:line-clamp-2">{v.resumo}</span>
                             </Celula>
                             <Celula><ChipStatus opcao={v.canal} /></Celula>

@@ -69,7 +69,7 @@ export function VendasPorDia({ serie, canais, filtro, total, rodape }: { serie: 
                 <ToggleGroup.Root type="single" value={modo} onValueChange={(v) => v && setModo(v as typeof modo)} aria-label={t("Tipo de gráfico")} className="flex gap-0.5 rounded-controle border border-linha p-0.5">
                     {([["barras", IconChartBar, t("Barras")], ["linha", IconChartLine, t("Linha")]] as const).map(([valor, I, rotulo]) => (
                         <Dica key={valor} rotulo={rotulo}>
-                            <ToggleGroup.Item value={valor} aria-label={rotulo} className="flex size-8 items-center justify-center rounded-lg text-tinta-suave outline-none hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=on]:bg-superficie-ativa data-[state=on]:text-tinta md:size-7">
+                            <ToggleGroup.Item value={valor} aria-label={rotulo} className="flex size-10 items-center justify-center rounded-lg text-tinta-suave outline-none hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=on]:bg-superficie-ativa data-[state=on]:text-tinta md:size-7">
                                 <I size={16} stroke={TRACO} aria-hidden />
                             </ToggleGroup.Item>
                         </Dica>
@@ -178,7 +178,7 @@ export function ProgressoMeta({ titulo, descricao, atual, meta, hrefEditar, rotu
             descricao={descricao}
             acoes={hrefEditar && (
                 <Dica rotulo={rotuloEditar}>
-                    <Link prefetch href={hrefEditar} aria-label={rotuloEditar} className="flex size-9 items-center justify-center rounded-lg text-tinta-suave outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco md:size-8">
+                    <Link prefetch href={hrefEditar} aria-label={rotuloEditar} className="flex size-10 items-center justify-center rounded-lg text-tinta-suave outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco md:size-8">
                         <IconPencil size={16} stroke={TRACO} aria-hidden />
                     </Link>
                 </Dica>

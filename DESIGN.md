@@ -150,7 +150,7 @@ Espaço entre cartões: `gap-3`; dentro do cartão: `px-5`. Página: `px-4` (cel
 | `avisar()` + `Avisos` | `ui/avisos.tsx` | `Toast` | Sucesso/erro das ações |
 | `Cartao`, `CabecalhoPagina`, `Estatistica`, `Variacao`, `Kpi`, `PilulaStats`, `Detalhe`, `Vazio`, `Faixa` | `ui/cartao.tsx` | - | `Estatistica` + `Variacao` = a coluna de totais com "↗ 5,1% vs. Feira 2026" |
 | `Chip`, `ChipStatus`, `TextoStatus`, `ChipTag`, `Avatar`, `Contador`, `Ponto`, `Kbd` | `ui/marcadores.tsx` | `Avatar` | `TextoStatus` = "Concluída/Cancelada" em texto colorido; `Contador` escuro como o "19" da referência |
-| `Tabela`, `Linha`, `Celula` | `ui/tabela.tsx` | `Select` (ordenação no celular) | Sem divisórias verticais; **modo cartão** abaixo de `md` |
+| `Tabela`, `Linha`, `Celula` | `ui/tabela.tsx` | `Select` (ordenação no celular) | Sem divisórias verticais; **modo cartão** pela largura do container (`cartoesAbaixo`) |
 | `VendasPorDia`, `SaidasPorCategoria`, `SaudeFinanceira`, `PorPagamento`, `ProgressoMeta`, `ProximoPasso` | `painel/blocos.tsx` | `ToggleGroup` (barras/linha) | Blocos dos dois painéis |
 | `ListaVendas`, `CartaoIdentidade`, `AcoesRapidas`, `AcessoRapido`, `CartaoDica`, `ListaPendencias`, `TabelaTags` | `painel/widgets.tsx` | `Tooltip` | Extrato, "meu cartão", ações quadradas, avatares, dica com bloquinhos |
 | `FiltrosVendas`, `BotaoFiltros` | `painel/filtros.tsx` | `Collapsible`, `Popover` | Em linha nas listas; em popover no topo dos painéis |

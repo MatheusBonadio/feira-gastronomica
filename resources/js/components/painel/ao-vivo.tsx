@@ -55,7 +55,7 @@ export function AoVivo({ estado, sincronizadoEm, aoTentar }: { estado: EstadoTem
                 type="button"
                 onClick={aoTentar}
                 aria-label={t("Atualizar agora")}
-                className="ms-0.5 flex size-8 items-center md:size-7 justify-center rounded-full text-tinta-suave outline-none transition-colors hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco"
+                className="ms-0.5 flex size-10 items-center md:size-7 justify-center rounded-full text-tinta-suave outline-none transition-colors hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco"
             >
                 <IconRefresh size={15} stroke={TRACO} className={cx(estado === "atualizando" && "animate-spin")} aria-hidden />
             </button>

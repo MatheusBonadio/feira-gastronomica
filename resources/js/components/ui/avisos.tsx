@@ -55,7 +55,7 @@ export function Avisos({ rotulo, rotuloFechar }: { rotulo: string; rotuloFechar:
                     >
                         <I size={20} stroke={TRACO} className={cx("mt-px shrink-0", CORES[a.tipo])} aria-hidden />
                         <Toast.Description className="flex-1 text-corpo text-tinta">{a.texto}</Toast.Description>
-                        <Toast.Close aria-label={rotuloFechar} className="-m-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-tinta-suave outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco">
+                        <Toast.Close aria-label={rotuloFechar} className="-m-1 flex size-10 shrink-0 items-center justify-center rounded-lg text-tinta-suave md:size-8 outline-none hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco">
                             <IconX size={16} stroke={TRACO} aria-hidden />
                         </Toast.Close>
                     </Toast.Root>

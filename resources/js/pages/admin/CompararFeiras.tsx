@@ -40,6 +40,7 @@ export default function CompararFeiras({ feiras }: { feiras: LinhaFeira[] }) {
 
                     <Cartao titulo={t("Comparação entre feiras")} icone={IconList} corpo="">
                         <Tabela
+                            cartoesAbaixo="extra"
                             rotulo={t("Comparação entre feiras")}
                             colunas={[
                                 { chave: "feira", rotulo: t("Feira"), icone: IconCalendarEvent },

@@ -72,9 +72,11 @@ function useMenuRecolhido(): [boolean, (valor: boolean) => void] {
     return [recolhido, definir];
 }
 
+const TELAS_SEM_ATALHO = ["loja/Configuracoes", "perfil/Index"];
+
 export function Shell({ children }: { children: ReactNode }) {
     const t = useT();
-    const { props: { loja, auth }, url } = usePage();
+    const { props: { loja, auth }, url, component } = usePage();
     const [gaveta, setGaveta] = useState(false);
     const [paleta, setPaleta] = useState(false);
     const [recolhida, setRecolhida] = useMenuRecolhido();
@@ -85,7 +87,8 @@ export function Shell({ children }: { children: ReactNode }) {
     useEffect(() => router.on("navigate", () => setGaveta(false)), []);
 
     const encerrada = loja?.encerrada ?? auth?.barraquinha?.feiraEncerrada ?? false;
-    const flutuante = acoes?.principal.flutuante && new URL(acoes.principal.href, window.location.origin).pathname !== url.split("?")[0] ? acoes.principal : null;
+    const telaDeFormulario = component.endsWith("/Form") || TELAS_SEM_ATALHO.includes(component);
+    const flutuante = acoes?.principal.flutuante && !telaDeFormulario && new URL(acoes.principal.href, window.location.origin).pathname !== url.split("?")[0] ? acoes.principal : null;
 
     return (
         <div className="min-h-dvh bg-fundo [view-transition-name:app]">
@@ -360,7 +363,7 @@ function CartaoPromo() {
                         } catch {
                         }
                     }}
-                    className="-me-1 -mt-1 flex size-8 items-center justify-center rounded-lg text-tinta-fraca outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco"
+                    className="-me-1 -mt-1 flex size-10 items-center justify-center rounded-lg text-tinta-fraca md:size-8 outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco"
                 >
                     <IconX size={15} stroke={TRACO} aria-hidden />
                 </button>

@@ -19,7 +19,13 @@ export interface Coluna {
 
 const ColunasContexto = createContext<Coluna[]>([]);
 
-export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, vazio }: {
+const CONTAINER = {
+    extra: "@container/tabela-extra",
+    larga: "@container/tabela",
+    media: "@container/tabela-media",
+};
+
+export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, vazio, cartoesAbaixo = "larga" }: {
     colunas: Coluna[];
     children: ReactNode;
     rotulo: string;
@@ -27,6 +33,7 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
     direcao?: "asc" | "desc";
     aoOrdenar?: (coluna: string) => void;
     vazio?: ReactNode;
+    cartoesAbaixo?: keyof typeof CONTAINER;
 }) {
     const t = useT();
     const semLinhas = Children.toArray(children).length === 0;
@@ -34,8 +41,9 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
 
     return (
         <ColunasContexto.Provider value={colunas}>
+            <div className={CONTAINER[cartoesAbaixo]}>
             {ordenaveis.length > 0 && !semLinhas && (
-                <div className="flex items-center gap-2 border-t border-linha px-3 pt-3 md:hidden">
+                <div className="flex items-center gap-2 border-t border-linha px-3 pt-3 larga:hidden">
                     <Selecao
                         className="min-w-0 flex-1"
                         tamanho="sm"
@@ -57,9 +65,9 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
                     </Dica>
                 </div>
             )}
-            <div className="rolagem-fina relative md:overflow-x-auto">
-                <table aria-label={rotulo} className="w-full border-collapse text-corpo max-md:block">
-                    <thead className="max-md:sr-only">
+            <div className="rolagem-fina relative larga:overflow-x-auto">
+                <table aria-label={rotulo} className="w-full border-collapse text-corpo compacta:block">
+                    <thead className="compacta:sr-only">
                         <tr className="border-y border-linha">
                             {colunas.map((c) => {
                                 const ativa = ordem === c.chave;
@@ -90,14 +98,15 @@ export function Tabela({ colunas, children, rotulo, ordem, direcao, aoOrdenar, v
                             })}
                         </tr>
                     </thead>
-                    <tbody className="max-md:flex max-md:flex-col max-md:gap-3 max-md:p-3">
+                    <tbody className="compacta:grid compacta:grid-cols-1 compacta:gap-3 compacta:p-3 @min-[40rem]/tabela:compacta:grid-cols-2 @min-[40rem]/tabela-extra:compacta:grid-cols-2">
                         {semLinhas && vazio ? (
-                            <tr className="max-md:block">
-                                <td colSpan={colunas.length} className="max-md:block">{vazio}</td>
+                            <tr className="compacta:col-span-full compacta:block">
+                                <td colSpan={colunas.length} className="compacta:block">{vazio}</td>
                             </tr>
                         ) : children}
                     </tbody>
                 </table>
+            </div>
             </div>
         </ColunasContexto.Provider>
     );
@@ -126,8 +135,8 @@ export function Linha({ children, href, apagada, className }: { children: ReactN
             onMouseEnter={preCarregar}
             onMouseLeave={cancelar}
             className={cx(
-                "border-b border-linha transition-colors md:last:border-b-0",
-                "max-md:flex max-md:flex-col max-md:overflow-hidden max-md:rounded-xl max-md:border max-md:bg-superficie",
+                "border-b border-linha transition-colors larga:last:border-b-0",
+                "compacta:flex compacta:flex-col compacta:overflow-hidden compacta:rounded-xl compacta:border compacta:bg-superficie",
                 href && "cursor-pointer hover:bg-superficie-hover",
                 apagada && "text-tinta-fraca",
                 className,
@@ -146,20 +155,20 @@ export function Celula({ children, direita, className, cabecalho, coluna }: Prop
         <Tag
             scope={cabecalho ? "row" : undefined}
             className={cx(
-                "h-12 px-4 py-2 font-normal md:first:ps-5 md:last:pe-5",
+                "h-12 px-4 py-2 font-normal larga:first:ps-5 larga:last:pe-5",
                 direita ? "text-end tabular-nums" : "text-start",
-                "max-md:flex max-md:h-auto max-md:min-w-0 max-md:items-center max-md:gap-3 max-md:px-3",
-                papel === "titulo" && "max-md:border-b max-md:bg-superficie-suave max-md:py-2.5 max-md:text-start max-md:text-ui max-md:font-medium",
-                papel === "campo" && "max-md:justify-between max-md:py-1.5",
-                papel === "acoes" && "max-md:mt-1 max-md:justify-end max-md:border-t max-md:py-2",
-                papel === "oculta" && "max-md:hidden",
+                "compacta:flex compacta:h-auto compacta:min-w-0 compacta:items-center compacta:gap-3 compacta:px-3",
+                papel === "titulo" && "compacta:border-b compacta:border-linha compacta:bg-superficie-suave compacta:py-2.5 compacta:text-start compacta:text-ui compacta:font-medium",
+                papel === "campo" && "compacta:justify-between compacta:py-1.5",
+                papel === "acoes" && "compacta:mt-auto compacta:justify-end compacta:border-t compacta:border-linha compacta:py-2",
+                papel === "oculta" && "compacta:hidden",
                 className,
             )}
         >
             {papel === "campo" && coluna && (
-                <span className="shrink-0 text-start text-rotulo text-tinta-suave md:hidden">{coluna.rotulo}</span>
+                <span className="shrink-0 text-start text-rotulo text-tinta-suave larga:hidden">{coluna.rotulo}</span>
             )}
-            <span className={cx("min-w-0 md:contents", papel === "campo" && "max-md:text-end", papel === "titulo" && "max-md:flex-1")}>{children}</span>
+            <span className={cx("min-w-0 larga:contents", papel === "campo" && "compacta:text-end", papel === "titulo" && "compacta:flex-1")}>{children}</span>
         </Tag>
     );
 }

@@ -329,12 +329,12 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
                         value={o.valor}
                         className={cx(
                             "inline-flex min-w-0 cursor-pointer items-center justify-center rounded-md font-medium whitespace-nowrap text-tinta-suave outline-none transition-colors hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=checked]:bg-superficie data-[state=checked]:text-tinta data-[state=checked]:shadow-botao",
-                            empilhado ? "h-16 flex-col gap-1 px-2 text-corpo" : grande ? "h-11 gap-2 px-3 text-ui" : "h-9 gap-2 px-3 text-corpo md:h-7",
+                            empilhado ? "h-16 flex-col gap-1 px-2 text-corpo" : grande ? "h-11 gap-2 px-2 text-ui sm:px-3" : "h-10 gap-2 px-3 text-corpo md:h-7",
                             cheio && "flex-1",
                         )}
                     >
                         {I && <I size={grande ? 20 : 16} className="shrink-0" aria-hidden />}
-                        {cores?.[o.valor] && <span className={cx("size-2.5 shrink-0 rounded-sm", cores[o.valor])} aria-hidden />}
+                        {cores?.[o.valor] && <span className={cx("size-2.5 shrink-0 rounded-sm", grande && "max-sm:hidden", cores[o.valor])} aria-hidden />}
                         <span className="truncate">{o.rotulo}</span>
                     </RadioGroup.Item>
                 );
