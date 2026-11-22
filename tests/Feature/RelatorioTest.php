@@ -8,6 +8,7 @@ use App\Enums\LancamentoCategoria;
 use App\Enums\LancamentoTipo;
 use App\Models\Lancamento;
 use App\Services\Vendas\VendaService;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class RelatorioTest extends TestCase
@@ -128,6 +129,37 @@ class RelatorioTest extends TestCase
         $zip->close();
 
         $this->assertSame(['Consolidado', 'consolidado (2)', 'Aspas'], array_map(fn ($n) => html_entity_decode($n, ENT_QUOTES | ENT_XML1), $abas[1]));
+    }
+
+    public function test_filtro_de_tag_mostra_os_combos_de_cada_feira_e_so_os_da_barraquinha(): void
+    {
+        $velha = $this->criarFeira(['nome' => 'Velha']);
+        [$antiga] = $this->cenarioPastelaria($velha);
+        $item = $this->criarItem($antiga, 'Batata', 5);
+        $this->criarCombo($antiga, 'Dupla', [[$item, 2]], 8);
+        $this->criarCombo($antiga, 'Tripla', [[$item, 3]], 12);
+
+        $nova = $this->criarFeira(['nome' => 'Nova']);
+        [$pastelaria] = $this->cenarioPastelaria($nova);
+        $outra = $this->criarBarraquinha($nova, 'Crepes');
+        $crepe = $this->criarItem($outra, 'Crepe', 10);
+        $this->criarCombo($outra, 'Dois crepes', [[$crepe, 2]], 18);
+        $this->criarCombo($outra, 'Três crepes', [[$crepe, 3]], 26);
+
+        $this->actingAs($this->criarAdmin())->withSession(['admin.feira_id' => $nova->id])
+            ->get(route('admin.relatorios.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('numerosCombo', 2)
+                ->where("numerosCombo.{$velha->id}", [1, 2, 3])
+                ->where("numerosCombo.{$nova->id}", [1, 2]));
+
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($this->usuarioDa($pastelaria))
+            ->get(route('barraquinha.relatorios.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('numerosCombo', 1)
+                ->where("numerosCombo.{$nova->id}", [1]));
     }
 
     private function lancamento($barraquinha, string $descricao, float $valor): void

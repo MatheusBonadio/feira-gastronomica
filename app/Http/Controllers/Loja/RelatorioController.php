@@ -28,11 +28,12 @@ class RelatorioController extends Controller
     {
         $admin = $request->user()->ehAdmin();
         $feira = $admin ? FeiraAtual::obter() : $request->user()->barraquinha->feira;
+        $feiras = $admin ? Feira::recentes()->get() : collect([$feira]);
 
         return Inertia::render('loja/Relatorios', [
             'admin' => $admin,
             'feiraAtual' => $feira?->id,
-            'feiras' => ($admin ? Feira::recentes()->get() : collect([$feira]))->map(fn (Feira $f) => ['id' => $f->id, 'nome' => $f->nome]),
+            'feiras' => $feiras->map(fn (Feira $f) => ['id' => $f->id, 'nome' => $f->nome]),
             'barraquinhas' => $admin
                 ? ($feira?->barraquinhas()->whereNotNull('nome')->get() ?? collect())->map(fn ($b) => ['id' => $b->id, 'nome' => $b->nomeExibicao()])->values()
                 : [],
@@ -40,7 +41,7 @@ class RelatorioController extends Controller
             'formatos' => Exportador::FORMATOS,
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(FormaPagamento::cases()),
-            'numerosCombo' => Combo::query()->distinct()->orderBy('numero')->pluck('numero'),
+            'numerosCombo' => (object) $this->numerosComboPorFeira($feiras->pluck('id')->all(), $admin ? null : $request->user()->barraquinha_id),
             'rotaExportar' => route($admin ? 'admin.relatorios.exportar' : 'barraquinha.relatorios.exportar'),
         ]);
     }
@@ -80,6 +81,21 @@ class RelatorioController extends Controller
         ]);
 
         return $exportador->responder($relatorio, $dados['formato']);
+    }
+
+    private function numerosComboPorFeira(array $feiraIds, ?int $barraquinhaId): array
+    {
+        return Combo::withoutGlobalScopes()
+            ->join('barraquinhas', 'barraquinhas.id', '=', 'combos.barraquinha_id')
+            ->whereIn('barraquinhas.feira_id', $feiraIds)
+            ->when($barraquinhaId, fn ($q) => $q->where('combos.barraquinha_id', $barraquinhaId))
+            ->distinct()
+            ->orderBy('combos.numero')
+            ->toBase()
+            ->get(['barraquinhas.feira_id', 'combos.numero'])
+            ->groupBy('feira_id')
+            ->map(fn ($linhas) => $linhas->pluck('numero')->map(fn ($n) => (int) $n)->values())
+            ->all();
     }
 
     private function escopoAdmin(int $feiraId, array $ids): array

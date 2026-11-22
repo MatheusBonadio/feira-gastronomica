@@ -21,7 +21,7 @@ interface Props {
     formatos: string[];
     canais: Opcao[];
     pagamentos: Opcao[];
-    numerosCombo: number[];
+    numerosCombo: Record<string, number[]>;
     rotaExportar: string;
 }
 
@@ -36,7 +36,12 @@ export default function Relatorios({ admin, feiraAtual, feiras, barraquinhas, ti
     const [filtro, setFiltro] = useState({ de: "", ate: "", canal: "", tag: "", pagamento: "" });
     const definir = (campo: keyof typeof filtro) => (valor: string) => setFiltro((f) => ({ ...f, [campo]: valor }));
 
-    const tags = [{ valor: "comum", rotulo: t("Comum") }, ...numerosCombo.map((n) => ({ valor: `combo:${n}`, rotulo: t("Combo :n", { n }) }))];
+    const combosDa = (idFeira: string) => numerosCombo[idFeira] ?? [];
+    const tags = [{ valor: "comum", rotulo: t("Comum") }, ...combosDa(feira).map((n) => ({ valor: `combo:${n}`, rotulo: t("Combo :n", { n }) }))];
+    const trocarFeira = (idFeira: string) => {
+        setFeira(idFeira);
+        setFiltro((f) => (f.tag.startsWith("combo:") && !combosDa(idFeira).includes(Number(f.tag.slice(6))) ? { ...f, tag: "" } : f));
+    };
     const formatosInfo: Record<string, { titulo: string; descricao: string }> = {
         xlsx: { titulo: "Excel (.xlsx)", descricao: t("Planilha para Excel ou Google Planilhas.") },
         csv: { titulo: "CSV", descricao: t("Texto simples, para outros sistemas.") },
@@ -100,7 +105,7 @@ export default function Relatorios({ admin, feiraAtual, feiras, barraquinhas, ti
                                     opcoes={feiras.map((f) => ({ valor: String(f.id), rotulo: f.nome }))}
                                     vazio={t("Escolha a feira")}
                                     valor={feira}
-                                    aoMudar={setFeira}
+                                    aoMudar={trocarFeira}
                                     erro={errors.feira_id}
                                 />
                             )}
