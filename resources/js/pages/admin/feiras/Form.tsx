@@ -50,7 +50,7 @@ export default function Form({ feira, statusOpcoes }: Props) {
                         <CampoNumero
                             className="max-w-xs"
                             rotulo={t("Quantidade de barraquinhas")}
-                            dica={t("Cria uma vaga em branco por barraquinha. Não pode ficar abaixo das que já têm vendas.")}
+                            dica={t("Cria uma vaga em branco por barraquinha. Não pode ficar abaixo das que já estão em uso (vendas, lançamentos, itens ou acesso).")}
                             min={1}
                             max={200}
                             required

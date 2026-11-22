@@ -95,6 +95,47 @@ class ClassificadorVendaTest extends TestCase
         $this->assertSame(2 * 5000 + 2500, $resultado->total());
     }
 
+    public function test_carrinho_grande_com_muitos_combos_sobrepostos_tem_custo_limitado(): void
+    {
+        $itens = [];
+        for ($i = 1; $i <= 8; $i++) {
+            $itens[$i] = ['nome' => "Item {$i}", 'preco' => 10.00];
+        }
+        $combos = [];
+        $numero = 1;
+        for ($a = 1; $a <= 8; $a++) {
+            for ($b = $a + 1; $b <= 8 && $numero <= 8; $b++, $numero++) {
+                $combos[] = $this->combo($numero, [$a => 1, $b => 1], 18.00 - ($numero % 3));
+            }
+        }
+
+        memory_reset_peak_usage();
+        $memoriaInicial = memory_get_usage();
+        $inicio = microtime(true);
+        $resultado = (new ClassificadorVenda)->classificar(array_fill_keys(array_keys($itens), 999), $itens, $combos);
+        $segundos = microtime(true) - $inicio;
+        $megabytes = (memory_get_peak_usage() - $memoriaInicial) / 1048576;
+
+        $this->assertLessThan(2.0, $segundos);
+        $this->assertLessThan(32, $megabytes);
+        $this->assertGreaterThan(0, $resultado->desconto());
+        $this->assertSame(8 * 999 * 1000, $resultado->subtotal());
+    }
+
+    public function test_acha_o_otimo_mesmo_quando_o_combo_mais_eficiente_nao_deve_ser_usado_ao_maximo(): void
+    {
+        $combos = [
+            $this->combo(1, [self::PASTEL => 1, self::REFRI => 1], 30.00),
+            $this->combo(2, [self::PASTEL => 1, self::SOBREMESA => 1], 34.00),
+            $this->combo(3, [self::REFRI => 1, self::SOBREMESA => 1], 15.00),
+        ];
+
+        $resultado = (new ClassificadorVenda)->classificar([self::PASTEL => 6, self::REFRI => 6, self::SOBREMESA => 6], self::ITENS, $combos);
+
+        $this->assertSame('Combo 1 × 3 + Combo 2 × 3 + Combo 3 × 3', $resultado->resumo());
+        $this->assertSame(3 * 100 + 3 * 600 + 3 * 600, $resultado->desconto());
+    }
+
     public function test_carrinho_vazio_nao_gera_linhas(): void
     {
         $this->assertTrue((new ClassificadorVenda)->classificar([], self::ITENS, [])->vazio());

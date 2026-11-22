@@ -6,16 +6,25 @@ use App\Models\VendaLinha;
 
 class ClassificadorVenda
 {
-    private array $memo = [];
+    private const ORCAMENTO_DE_NOS = 50_000;
 
     private array $combos = [];
+
+    private array $ordem = [];
+
+    private array $tetos = [];
+
+    private int $nos = 0;
+
+    private ?array $melhorSolucao = null;
+
+    private ?array $alvo = null;
 
     public function classificar(array $carrinho, array $itens, array $combos): ResultadoClassificacao
     {
         $carrinho = array_filter(array_map('intval', $carrinho), fn ($q) => $q > 0);
         $precos = array_map(fn ($i) => (int) round($i['preco'] * 100), $itens);
 
-        $this->memo = [];
         $this->combos = [];
         foreach ($combos as $combo) {
             $avulso = 0;
@@ -30,7 +39,7 @@ class ClassificadorVenda
         }
         usort($this->combos, fn ($a, $b) => $a['numero'] <=> $b['numero']);
 
-        [, , $quantidades] = $this->melhor(0, $carrinho);
+        [, , $quantidades] = $this->melhor($carrinho);
 
         $linhas = [];
         $restante = $carrinho;
@@ -71,41 +80,116 @@ class ClassificadorVenda
         return new ResultadoClassificacao($linhas);
     }
 
-    private function melhor(int $indice, array $restante): array
+    private function melhor(array $restante): array
     {
-        if ($indice >= count($this->combos)) {
-            return [0, 0, []];
+        $total = count($this->combos);
+        $zerado = array_fill(0, $total, 0);
+
+        $porEficiencia = array_keys($this->combos);
+        usort($porEficiencia, fn ($a, $b) => $this->combos[$b]['desconto'] * $this->combos[$a]['unidades'] <=> $this->combos[$a]['desconto'] * $this->combos[$b]['unidades'] ?: $a <=> $b);
+
+        $this->prepararOrdem($porEficiencia);
+        $this->melhorSolucao = null;
+        $this->buscar(0, $restante, 0, 0, $zerado, primeiraFase: true);
+        $otimo = $this->melhorSolucao ?? [0, 0, $zerado];
+
+        $this->prepararOrdem(array_keys($this->combos));
+        $this->melhorSolucao = null;
+        $this->alvo = $otimo;
+        $this->buscar(0, $restante, 0, 0, $zerado, primeiraFase: false);
+        $this->alvo = null;
+
+        return $this->melhorSolucao ?? $otimo;
+    }
+
+    private function prepararOrdem(array $ordem): void
+    {
+        $this->ordem = $ordem;
+        $this->nos = 0;
+        $this->tetos = [count($ordem) => []];
+        $teto = [];
+        for ($p = count($ordem) - 1; $p >= 0; $p--) {
+            $combo = $this->combos[$ordem[$p]];
+            foreach ($combo['composicao'] as $itemId => $qtd) {
+                $teto[$itemId] = max($teto[$itemId] ?? 0, $combo['desconto'] / $combo['unidades']);
+            }
+            $this->tetos[$p] = $teto;
+        }
+    }
+
+    private function buscar(int $posicao, array $restante, int $desconto, int $cobertas, array $vezesPorCombo, bool $primeiraFase): bool
+    {
+        if ($posicao >= count($this->ordem)) {
+            if ($primeiraFase) {
+                if ($this->melhorSolucao === null || [$desconto, $cobertas] > [$this->melhorSolucao[0], $this->melhorSolucao[1]]) {
+                    $this->melhorSolucao = [$desconto, $cobertas, $vezesPorCombo];
+                }
+
+                return false;
+            }
+
+            if ([$desconto, $cobertas] >= [$this->alvo[0], $this->alvo[1]]) {
+                $this->melhorSolucao = [$desconto, $cobertas, $vezesPorCombo];
+
+                return true;
+            }
+
+            return false;
         }
 
-        ksort($restante);
-        $chave = $indice.'|'.json_encode($restante);
-        if (isset($this->memo[$chave])) {
-            return $this->memo[$chave];
+        $referencia = $primeiraFase ? $this->melhorSolucao : $this->alvo;
+        if ($referencia !== null && ++$this->nos > self::ORCAMENTO_DE_NOS) {
+            return ! $primeiraFase;
         }
 
+        $indice = $this->ordem[$posicao];
         $combo = $this->combos[$indice];
         $cabem = PHP_INT_MAX;
         foreach ($combo['composicao'] as $itemId => $qtd) {
             $cabem = min($cabem, intdiv($restante[$itemId] ?? 0, max(1, $qtd)));
         }
 
-        $melhor = null;
         for ($vezes = $cabem; $vezes >= 0; $vezes--) {
             $proximo = $restante;
             foreach ($combo['composicao'] as $itemId => $qtd) {
-                if ($vezes > 0) {
-                    $proximo[$itemId] -= $qtd * $vezes;
+                $proximo[$itemId] = ($proximo[$itemId] ?? 0) - $qtd * $vezes;
+            }
+            $novoDesconto = $desconto + $combo['desconto'] * $vezes;
+            $novasCobertas = $cobertas + $combo['unidades'] * $vezes;
+
+            if ($referencia !== null) {
+                [$limiteDesconto, $limiteCobertas] = $this->limite($posicao + 1, $proximo, $novoDesconto, $novasCobertas);
+                $descartar = $primeiraFase
+                    ? [$limiteDesconto, $limiteCobertas] <= [$referencia[0], $referencia[1]]
+                    : [$limiteDesconto, $limiteCobertas] < [$referencia[0], $referencia[1]];
+
+                if ($descartar) {
+                    if ($primeiraFase) {
+                        break;
+                    }
+
+                    continue;
                 }
             }
 
-            [$desconto, $cobertas, $resto] = $this->melhor($indice + 1, $proximo);
-            $candidato = [$desconto + $combo['desconto'] * $vezes, $cobertas + $combo['unidades'] * $vezes, [$vezes, ...$resto]];
-
-            if ($melhor === null || $candidato[0] > $melhor[0] || ($candidato[0] === $melhor[0] && $candidato[1] > $melhor[1])) {
-                $melhor = $candidato;
+            $vezesPorCombo[$indice] = $vezes;
+            if ($this->buscar($posicao + 1, $proximo, $novoDesconto, $novasCobertas, $vezesPorCombo, $primeiraFase)) {
+                return true;
             }
+            $referencia = $primeiraFase ? $this->melhorSolucao : $this->alvo;
         }
 
-        return $this->memo[$chave] = $melhor;
+        return false;
+    }
+
+    private function limite(int $posicao, array $restante, int $desconto, int $cobertas): array
+    {
+        foreach ($this->tetos[$posicao] as $itemId => $porUnidade) {
+            $qtd = $restante[$itemId] ?? 0;
+            $desconto += $qtd * $porUnidade;
+            $cobertas += $qtd;
+        }
+
+        return [(int) floor($desconto + 1e-6), $cobertas];
     }
 }
