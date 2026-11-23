@@ -54,9 +54,11 @@ React 19 + Inertia v3 + **Radix Primitives** (`radix-ui`, comportamento e acessi
 ## Responsividade (obrigatória)
 
 - Toda tela funciona de 360px a 1920px sem rolagem horizontal da página.
-- Tabela sempre com `Tabela`/`Linha`/`Celula`: abaixo de `md` vira cartões
-  automaticamente (célula `cabecalho` = título, coluna `acoes` = rodapé; coluna
-  secundária com `cartao: "oculta"`).
+- Tabela sempre com `Tabela`/`Linha`/`Celula`: vira cartões pela largura do
+  container, não da tela (`cartoesAbaixo`: `larga` 56rem, padrão das listagens;
+  `media` 40rem, tabelas em widget; `extra` 71rem, tabelas muito largas). Célula
+  `cabecalho` = título, coluna `acoes` = rodapé; coluna secundária com
+  `cartao: "oculta"`. Para estilizar só um modo, use as variantes `compacta:` e `larga:`.
 - Grades com `grid-cols-1` no celular; formulários `lg:grid-cols-3` (form + ajuda).
 - Ações em `flex flex-wrap`; textos longos com `min-w-0` + `truncate` ou quebra.
 - Alvo de toque ≥ 40px no celular (≥ 44px no PDV). Componentes que dependem da largura

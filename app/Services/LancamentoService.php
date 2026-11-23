@@ -40,10 +40,15 @@ class LancamentoService
         $antes = $this->resumo($lancamento);
 
         $campos = $this->campos($dados);
+        $comprovanteAnterior = $lancamento->comprovante_path;
         if ($comprovante) {
             $campos['comprovante_path'] = $this->guardar($lancamento->barraquinha, $comprovante);
         }
         $lancamento->update($campos);
+
+        if ($comprovante && $comprovanteAnterior && $comprovanteAnterior !== $lancamento->comprovante_path) {
+            Storage::disk(self::DISCO)->delete($comprovanteAnterior);
+        }
 
         AuditoriaLog::registrar(AcaoAuditoria::LancamentoAlterado, $lancamento, detalhe: [
             'antes' => $antes,

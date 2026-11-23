@@ -46,6 +46,7 @@ export default function Show({ venda }: { venda: Venda }) {
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Cartao className="xl:col-span-2 xl:self-start" titulo={t("Itens da venda")} icone={IconListDetails} corpo="">
                     <Tabela
+                        cartoesAbaixo="media"
                         rotulo={t("Itens da venda")}
                         colunas={[
                             { chave: "item", rotulo: t("Item ou combo") },

@@ -40,7 +40,7 @@ function MolduraPublica({ children }: { children: ReactNode }) {
                     </div>
                     <div className="flex items-center gap-3 text-rotulo text-tinta-suave">
                         {Object.entries(app.idiomas).map(([codigo, nome]) => (
-                            <a key={codigo} href={rota("idioma", { idioma: codigo })} aria-current={app.idioma === codigo ? "true" : undefined} className={cx("rounded-md px-1 py-1 outline-none hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco", app.idioma === codigo && "font-semibold text-tinta")}>
+                            <a key={codigo} href={rota("idioma", { idioma: codigo })} aria-current={app.idioma === codigo ? "true" : undefined} className={cx("inline-flex min-h-10 items-center rounded-md px-2 outline-none hover:text-tinta md:min-h-0 md:px-1 md:py-1 focus-visible:ring-2 focus-visible:ring-foco", app.idioma === codigo && "font-semibold text-tinta")}>
                                 {nome}
                             </a>
                         ))}

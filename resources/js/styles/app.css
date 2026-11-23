@@ -6,6 +6,30 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@custom-variant compacta {
+  @container tabela-extra (width < 71rem) {
+    @slot;
+  }
+  @container tabela (width < 56rem) {
+    @slot;
+  }
+  @container tabela-media (width < 40rem) {
+    @slot;
+  }
+}
+
+@custom-variant larga {
+  @container tabela-extra (width >= 71rem) {
+    @slot;
+  }
+  @container tabela (width >= 56rem) {
+    @slot;
+  }
+  @container tabela-media (width >= 40rem) {
+    @slot;
+  }
+}
+
 @layer base {
   html {
     @apply bg-fundo font-sans text-tinta antialiased;

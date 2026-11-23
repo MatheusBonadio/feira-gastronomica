@@ -23,7 +23,7 @@ export function Cartao({ titulo, icone: I, descricao, acoes, children, className
                         {I && <I size={18} stroke={TRACO} className="shrink-0 text-tinta-suave" aria-hidden />}
                         <div className="min-w-0">
                             {titulo && <h2 className="truncate text-titulo font-semibold text-tinta">{titulo}</h2>}
-                            {descricao && <p className="truncate text-rotulo text-tinta-suave">{descricao}</p>}
+                            {descricao && <p className="text-pretty text-rotulo text-tinta-suave">{descricao}</p>}
                         </div>
                     </div>
                     {acoes && <div className="flex shrink-0 items-center gap-1.5">{acoes}</div>}

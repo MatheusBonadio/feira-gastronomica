@@ -45,7 +45,11 @@ class FeiraService
 
     public function ajustarQuantidade(Feira $feira, int $quantidade): void
     {
-        $barraquinhas = $feira->barraquinhas()->withCount('vendas')->get();
+        $semEscopo = fn ($q) => $q->withoutGlobalScopes();
+        $barraquinhas = $feira->barraquinhas()
+            ->withCount(['vendas' => $semEscopo, 'lancamentos' => $semEscopo, 'itens' => $semEscopo, 'combos' => $semEscopo])
+            ->withExists('usuario')
+            ->get();
         $atual = $barraquinhas->count();
 
         if ($quantidade > $atual) {
@@ -56,16 +60,15 @@ class FeiraService
         }
 
         if ($quantidade < $atual) {
-            $comVendas = $barraquinhas->where('vendas_count', '>', 0)->count();
-            if ($quantidade < $comVendas) {
+            [$removiveis, $emUso] = $barraquinhas->partition(fn (Barraquinha $b) => $this->podeRemover($b));
+            if ($quantidade < $emUso->count()) {
                 throw ValidationException::withMessages(['qtd_barraquinhas' => __(
-                    'Não é possível reduzir para :n: :com barraquinhas já têm vendas.',
-                    ['n' => $quantidade, 'com' => $comVendas],
+                    'Não é possível reduzir para :n: :com barraquinhas já têm vendas, lançamentos, itens, combos ou acesso.',
+                    ['n' => $quantidade, 'com' => $emUso->count()],
                 )]);
             }
 
-            $removiveis = $barraquinhas
-                ->where('vendas_count', 0)
+            $removiveis = $removiveis
                 ->sortBy([fn ($a, $b) => $b->ehVaga() <=> $a->ehVaga(), fn ($a, $b) => $b->posicao <=> $a->posicao])
                 ->take($atual - $quantidade);
 
@@ -73,6 +76,15 @@ class FeiraService
         }
 
         $feira->update(['qtd_barraquinhas' => $quantidade]);
+    }
+
+    private function podeRemover(Barraquinha $barraquinha): bool
+    {
+        return ! $barraquinha->usuario_exists
+            && $barraquinha->vendas_count === 0
+            && $barraquinha->lancamentos_count === 0
+            && $barraquinha->itens_count === 0
+            && $barraquinha->combos_count === 0;
     }
 
     public function encerrar(Feira $feira): void

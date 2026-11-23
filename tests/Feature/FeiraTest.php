@@ -10,6 +10,9 @@ use App\Services\FeiraService;
 use App\Services\Vendas\VendaService;
 use App\Enums\Canal;
 use App\Enums\FormaPagamento;
+use App\Enums\LancamentoCategoria;
+use App\Enums\LancamentoTipo;
+use App\Models\Lancamento;
 use Tests\TestCase;
 
 class FeiraTest extends TestCase
@@ -43,6 +46,43 @@ class FeiraTest extends TestCase
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);
         $servico->ajustarQuantidade($feira->fresh(), 0);
+    }
+
+    public function test_reduzir_vagas_nunca_apaga_barraquinha_com_lancamentos_itens_ou_acesso(): void
+    {
+        $feira = $this->criarFeira();
+        $comLancamento = $this->criarBarraquinha($feira, 'Com lançamento');
+        $lancamento = Lancamento::create([
+            'barraquinha_id' => $comLancamento->id, 'tipo' => LancamentoTipo::Saida, 'categoria' => LancamentoCategoria::Mercadoria,
+            'descricao' => 'Farinha', 'valor' => 150, 'data' => '2027-10-01',
+        ]);
+        $lancamento->delete();
+        $comItem = $this->criarBarraquinha($feira, 'Com item');
+        $this->criarItem($comItem, 'Pastel', 10);
+        $comAcesso = $this->criarBarraquinha($feira, 'Com acesso');
+        $this->usuarioDa($comAcesso);
+        $vazia = $this->criarBarraquinha($feira, 'Vazia');
+        $this->criarBarraquinha($feira);
+        Barraquinha::whereKey($feira->barraquinhas()->max('id'))->update(['nome' => null]);
+
+        $servico = app(FeiraService::class);
+        $servico->ajustarQuantidade($feira->fresh(), 3);
+
+        $this->assertEqualsCanonicalizing(
+            [$comLancamento->id, $comItem->id, $comAcesso->id],
+            $feira->barraquinhas()->pluck('id')->all(),
+        );
+        $this->assertNull(Barraquinha::find($vazia->id));
+        $this->assertSame(1, Lancamento::withoutGlobalScopes()->withTrashed()->count());
+
+        try {
+            $servico->ajustarQuantidade($feira->fresh(), 2);
+            $this->fail('Deveria recusar a redução.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertArrayHasKey('qtd_barraquinhas', $e->errors());
+        }
+        $this->assertSame(3, $feira->barraquinhas()->count());
+        $this->assertSame(3, $feira->fresh()->qtd_barraquinhas);
     }
 
     public function test_duplicar_copia_barraquinhas_e_itens_mas_nao_vendas(): void

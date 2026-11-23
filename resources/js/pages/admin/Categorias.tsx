@@ -30,6 +30,7 @@ export default function Categorias({ categorias }: { categorias: Categoria[] }) 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Cartao titulo={t("Categorias")} icone={IconCategory} corpo="" className="xl:col-span-2">
                     <Tabela
+                        cartoesAbaixo="media"
                         rotulo={t("Categorias de item")}
                         colunas={[
                             { chave: "nome", rotulo: t("Categoria"), icone: IconTag },
