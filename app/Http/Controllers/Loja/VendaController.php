@@ -64,7 +64,7 @@ class VendaController extends Controller
             'itens' => $itens->map(fn (Item $i) => Apresentacao::item($i, (int) ($vendidos[$i->id] ?? 0))),
             'combos' => Combo::with('itens.precos')->ativos()->orderBy('numero')->get()
                 ->filter->aplicavel()
-                ->map(fn (Combo $c) => Apresentacao::combo($c))
+                ->map(fn (Combo $c) => Apresentacao::combo($c, porCanal: true))
                 ->values(),
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(array_map(FormaPagamento::from(...), $checkout->pagamentos)),

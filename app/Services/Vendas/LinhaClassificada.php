@@ -38,6 +38,7 @@ final class LinhaClassificada
         return [
             'tag' => $this->tagLabel(),
             'combo' => $this->tag === VendaLinha::TAG_COMBO,
+            'combo_id' => $this->comboId,
             'descricao' => $this->descricao,
             'quantidade' => $this->quantidade,
             'preco_unitario' => $this->precoUnitario / 100,

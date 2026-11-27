@@ -75,9 +75,18 @@ class Apresentacao
         ];
     }
 
-    public static function combo(Combo $combo): array
+    public static function combo(Combo $combo, bool $porCanal = false): array
     {
+        $canais = [];
+        if ($porCanal) {
+            foreach (Canal::cases() as $canal) {
+                $canais['precos'][$canal->value] = $combo->precoPara($canal);
+                $canais['avulsos'][$canal->value] = $combo->somaAvulsa($canal);
+            }
+        }
+
         return [
+            ...$canais,
             'id' => $combo->id,
             'numero' => $combo->numero,
             'tag' => $combo->tag(),

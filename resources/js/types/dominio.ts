@@ -68,6 +68,9 @@ export interface Combo {
     preco: number;
     vendas: number;
     itens: { id: number; nome: string; quantidade: number; ativo: boolean }[];
+    /** Só no PDV: preço do combo e soma avulsa dos itens em cada canal. */
+    precos?: Record<string, number>;
+    avulsos?: Record<string, number>;
 }
 
 export interface Venda {
