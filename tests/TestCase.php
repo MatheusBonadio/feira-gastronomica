@@ -10,6 +10,7 @@ use App\Enums\TipoDesconto;
 use App\Models\Barraquinha;
 use App\Models\Categoria;
 use App\Models\Combo;
+use App\Models\ComboCanal;
 use App\Models\ComboItem;
 use App\Models\Feira;
 use App\Models\Item;
@@ -90,16 +91,18 @@ abstract class TestCase extends BaseTestCase
         return $item;
     }
 
-    protected function criarCombo(Barraquinha $barraquinha, string $nome, array $composicao, float $valor, TipoDesconto $tipo = TipoDesconto::PrecoFechado): Combo
+    /** Sem $canais, a mesma regra vale nos três canais. */
+    protected function criarCombo(Barraquinha $barraquinha, string $nome, array $composicao, float $valor, TipoDesconto $tipo = TipoDesconto::PrecoFechado, ?array $canais = null): Combo
     {
         $combo = Combo::create([
             'barraquinha_id' => $barraquinha->id,
             'nome' => $nome,
             'numero' => (int) Combo::withoutGlobalScopes()->where('barraquinha_id', $barraquinha->id)->max('numero') + 1,
-            'tipo_desconto' => $tipo,
-            'valor' => $valor,
             'ativo' => true,
         ]);
+        foreach ($canais ?? Canal::cases() as $canal) {
+            ComboCanal::create(['barraquinha_id' => $barraquinha->id, 'combo_id' => $combo->id, 'canal' => $canal, 'tipo_desconto' => $tipo, 'valor' => $valor]);
+        }
         foreach ($composicao as [$item, $quantidade]) {
             ComboItem::create(['barraquinha_id' => $barraquinha->id, 'combo_id' => $combo->id, 'item_id' => $item->id, 'quantidade' => $quantidade]);
         }

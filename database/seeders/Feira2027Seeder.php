@@ -12,6 +12,7 @@ use App\Enums\TipoDesconto;
 use App\Models\Barraquinha;
 use App\Models\Categoria;
 use App\Models\Combo;
+use App\Models\ComboCanal;
 use App\Models\ComboItem;
 use App\Models\Feira;
 use App\Models\Item;
@@ -142,10 +143,11 @@ class Feira2027Seeder extends Seeder
                     'barraquinha_id' => $barraquinha->id,
                     'nome' => $combo,
                     'numero' => $n + 1,
-                    'tipo_desconto' => TipoDesconto::from($tipo),
-                    'valor' => $valor,
                     'ativo' => true,
                 ]);
+                foreach (Canal::cases() as $canal) {
+                    ComboCanal::create(['barraquinha_id' => $barraquinha->id, 'combo_id' => $modelo->id, 'canal' => $canal, 'tipo_desconto' => TipoDesconto::from($tipo), 'valor' => $valor]);
+                }
                 foreach ($composicao as [$item, $qtd]) {
                     ComboItem::create(['barraquinha_id' => $barraquinha->id, 'combo_id' => $modelo->id, 'item_id' => $itens[$item]->id, 'quantidade' => $qtd]);
                 }
@@ -184,5 +186,8 @@ class Feira2027Seeder extends Seeder
                 collect($carrinho)->mapWithKeys(fn ($qtd, $item) => [$ids[$item] => $qtd])->all(),
             );
         }
+
+        // O corte entra depois das vendas de demonstração, que incluem pré-vendas.
+        $feira->update(['data_corte_pre_venda' => '2027-10-14 23:59:00']);
     }
 }

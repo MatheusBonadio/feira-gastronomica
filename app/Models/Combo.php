@@ -16,14 +16,12 @@ class Combo extends Model
 
     protected $attributes = ['ativo' => true];
 
-    protected $fillable = ['barraquinha_id', 'nome', 'numero', 'tipo_desconto', 'valor', 'ativo'];
+    protected $fillable = ['barraquinha_id', 'nome', 'numero', 'ativo'];
 
     protected function casts(): array
     {
         return [
             'numero' => 'integer',
-            'tipo_desconto' => TipoDesconto::class,
-            'valor' => 'decimal:2',
             'ativo' => 'boolean',
         ];
     }
@@ -31,6 +29,11 @@ class Combo extends Model
     public function componentes(): HasMany
     {
         return $this->hasMany(ComboItem::class);
+    }
+
+    public function canais(): HasMany
+    {
+        return $this->hasMany(ComboCanal::class);
     }
 
     public function itens(): BelongsToMany
@@ -63,14 +66,22 @@ class Combo extends Model
         return $this->ativo && ! $this->estaIncompleto() && $this->itens->isNotEmpty();
     }
 
-    public function somaAvulsa(Canal $canal = Canal::PADRAO): float
+    public function somaAvulsa(Canal $canal): float
     {
         return round($this->itens->sum(fn (Item $item) => $item->precoPara($canal) * $item->pivot->quantidade), 2);
     }
 
-    public function precoPara(Canal $canal = Canal::PADRAO): float
+    public function regraPara(Canal $canal): ?ComboCanal
     {
-        return self::calcularPreco($this->tipo_desconto, (float) $this->valor, $this->somaAvulsa($canal));
+        return $this->canais->first(fn (ComboCanal $regra) => $regra->canal === $canal);
+    }
+
+    /** Null quando o combo não vale no canal. */
+    public function precoPara(Canal $canal): ?float
+    {
+        $regra = $this->regraPara($canal);
+
+        return $regra ? self::calcularPreco($regra->tipo_desconto, (float) $regra->valor, $this->somaAvulsa($canal)) : null;
     }
 
     public static function calcularPreco(TipoDesconto $tipo, float $valor, float $somaAvulsa): float

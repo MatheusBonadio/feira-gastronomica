@@ -4,9 +4,9 @@ import { Checkbox } from "radix-ui";
 import { useMemo, useState } from "react";
 import { Botao, BotaoLink } from "@/components/ui/botao";
 import { CaixaSelecao, CampoMoeda, CampoNumero, Entrada, Segmentos } from "@/components/ui/campos";
-import { CabecalhoPagina, Cartao, Detalhe, Faixa, Vazio } from "@/components/ui/cartao";
+import { CabecalhoPagina, Cartao, Faixa, Vazio } from "@/components/ui/cartao";
 import { TRACO } from "@/components/ui/icone";
-import { Chip } from "@/components/ui/marcadores";
+import { Chip, COR_CANAL } from "@/components/ui/marcadores";
 import { cx } from "@/lib/cx";
 import { useFormato } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
@@ -18,9 +18,19 @@ interface Props {
     combo: Combo | null;
     itens: Item[];
     tiposDesconto: Opcao[];
+    canais: Opcao[];
+}
+
+interface RegraForm {
+    ativo: boolean;
+    tipo_desconto: string;
+    valor: number | null;
 }
 
 const QTD_MAXIMA = 99;
+
+const precoNoCanal = (item: Item, canal: string) => item.precos[canal] ?? item.precos.feira ?? item.precoFeira;
+const centavos = (valor: number) => Math.round(valor * 100) / 100;
 
 function Quantidade({ valor, aoMudar, rotulo }: { valor: number; aoMudar: (valor: number) => void; rotulo: string }) {
     const t = useT();
@@ -52,7 +62,7 @@ function Quantidade({ valor, aoMudar, rotulo }: { valor: number; aoMudar: (valor
     );
 }
 
-export default function Form({ combo, itens, tiposDesconto }: Props) {
+export default function Form({ combo, itens, tiposDesconto, canais }: Props) {
     const t = useT();
     const { moeda, numero, percentual } = useFormato();
     const rotaLoja = useRotaLoja();
@@ -60,8 +70,13 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
 
     const form = useForm({
         nome: combo?.nome ?? "",
-        tipo_desconto: combo?.tipoDesconto.valor ?? "preco_fechado",
-        valor: (combo?.valor ?? null) as number | null,
+        // Combo novo começa valendo só na Feira; os outros canais são escolha da barraquinha.
+        canais: Object.fromEntries(
+            canais.map((o) => {
+                const regra = combo?.canais[o.valor];
+                return [o.valor, regra ? { ativo: true, tipo_desconto: regra.tipoDesconto, valor: regra.valor } : { ativo: !combo && o.valor === "feira", tipo_desconto: "preco_fechado", valor: null }];
+            }),
+        ) as Record<string, RegraForm>,
         selecionado: Object.fromEntries((combo?.itens ?? []).map((i) => [i.id, true])) as Record<number, boolean>,
         quantidade: Object.fromEntries((combo?.itens ?? []).map((i) => [i.id, i.quantidade])) as Record<number, number>,
         confirmar_sem_desconto: false,
@@ -72,15 +87,21 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
     const qtd = (id: number) => form.data.quantidade[id] ?? 1;
     const marcados = itens.filter((i) => form.data.selecionado[i.id]);
     const unidades = marcados.reduce((soma, i) => soma + qtd(i.id), 0);
-    const somaAvulsa = marcados.reduce((soma, i) => soma + i.precoFeira * qtd(i.id), 0);
-    const fechado = form.data.tipo_desconto === "preco_fechado";
-    const valor = form.data.valor ?? 0;
-    const precoCombo = fechado ? valor : somaAvulsa * (1 - valor / 100);
-    const economia = somaAvulsa - precoCombo;
-    const descontoPct = somaAvulsa > 0 ? economia / somaAvulsa : null;
-    const calculado = marcados.length > 0 && valor > 0;
-    const semDesconto = calculado && precoCombo >= somaAvulsa;
-    const maisCaro = calculado && precoCombo > somaAvulsa;
+
+    const porCanal = canais.map((opcao) => {
+        const regra = form.data.canais[opcao.valor];
+        const somaAvulsa = centavos(marcados.reduce((soma, i) => soma + precoNoCanal(i, opcao.valor) * qtd(i.id), 0));
+        const valor = regra.valor ?? 0;
+        const preco = centavos(regra.tipo_desconto === "preco_fechado" ? valor : somaAvulsa * (1 - valor / 100));
+        const calculado = regra.ativo && marcados.length > 0 && valor > 0;
+        const economia = centavos(somaAvulsa - preco);
+        return { opcao, regra, somaAvulsa, preco, economia, pct: somaAvulsa > 0 ? economia / somaAvulsa : null, calculado, semDesconto: calculado && economia <= 0 };
+    });
+    const ativos = porCanal.filter((c) => c.regra.ativo);
+    const semDesconto = porCanal.filter((c) => c.semDesconto);
+
+    const mudarCanal = (canal: string, mudanca: Partial<RegraForm>) =>
+        form.setData((dados) => ({ ...dados, canais: { ...dados.canais, [canal]: { ...dados.canais[canal], ...mudanca } } }));
 
     const visiveis = useMemo(() => {
         const termo = busca.trim().toLocaleLowerCase();
@@ -208,108 +229,133 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
                         {erroItens && <p role="alert" className="mt-3 text-rotulo text-negativo">{erroItens}</p>}
                     </Cartao>
 
-                    <Cartao titulo={t("Desconto")} icone={IconDiscount}>
-                        <div className="flex flex-col gap-4">
-                            <Segmentos
-                                rotulo={t("Forma de desconto")}
-                                opcoes={tiposDesconto.map((tipo) => ({ valor: tipo.valor, rotulo: tipo.label }))}
-                                valor={form.data.tipo_desconto}
-                                aoMudar={(v) => form.setData("tipo_desconto", v)}
-                                cheio
-                                grande
-                            />
+                    <Cartao titulo={t("Canais e preços")} icone={IconDiscount} descricao={t("Marque em quais canais o combo vale e defina o desconto de cada um.")}>
+                        <ul className="flex flex-col gap-3">
+                            {porCanal.map(({ opcao, regra, somaAvulsa, preco, economia, pct, calculado, semDesconto: semDescontoNoCanal }) => {
+                                const fechado = regra.tipo_desconto === "preco_fechado";
+                                const erroValor = erros[`canais.${opcao.valor}.valor`];
+                                return (
+                                    <li key={opcao.valor} className={cx("@container flex flex-col gap-3 rounded-xl border p-3", regra.ativo ? "border-primaria" : "border-linha")}>
+                                        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                                            <CaixaSelecao
+                                                marcado={regra.ativo}
+                                                aoMudar={(ativo) => mudarCanal(opcao.valor, { ativo })}
+                                                descricao={marcados.length > 0 ? t("Itens avulsos: :valor", { valor: moeda(somaAvulsa) }) : undefined}
+                                            >
+                                                <span className="inline-flex items-center gap-2">
+                                                    <span className={cx("size-2.5 shrink-0 rounded-sm", COR_CANAL[opcao.valor])} aria-hidden />
+                                                    {opcao.label}
+                                                </span>
+                                            </CaixaSelecao>
+                                            {!regra.ativo && <span className="text-rotulo text-tinta-suave">{t("Não vale neste canal")}</span>}
+                                        </div>
 
-                            {fechado ? (
-                                <CampoMoeda
-                                    rotulo={t("Preço do combo")}
-                                    required
-                                    valor={form.data.valor}
-                                    aoMudar={(v) => form.setData("valor", v)}
-                                    erro={erros.valor}
-                                    className="sm:max-w-xs"
-                                />
-                            ) : (
-                                <CampoNumero
-                                    rotulo={t("Percentual de desconto (%)")}
-                                    dica={t("Sobre a soma avulsa (preço de Feira).")}
-                                    required
-                                    min={0.01}
-                                    max={99.99}
-                                    step={0.01}
-                                    inputMode="decimal"
-                                    valor={form.data.valor}
-                                    aoMudar={(v) => form.setData("valor", v)}
-                                    erro={erros.valor}
-                                    className="sm:max-w-xs"
-                                />
-                            )}
+                                        {regra.ativo && (
+                                            <>
+                                                <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @lg:items-start">
+                                                    <Segmentos
+                                                        rotulo={t("Forma de desconto (:canal)", { canal: opcao.label })}
+                                                        opcoes={tiposDesconto.map((tipo) => ({ valor: tipo.valor, rotulo: tipo.valor === "percentual" ? t("Percentual") : tipo.label }))}
+                                                        valor={regra.tipo_desconto}
+                                                        aoMudar={(tipo) => mudarCanal(opcao.valor, { tipo_desconto: tipo, valor: null })}
+                                                        cheio
+                                                    />
+                                                    {fechado ? (
+                                                        <CampoMoeda
+                                                            aria-label={t("Preço do combo (:canal)", { canal: opcao.label })}
+                                                            placeholder={t("Preço do combo")}
+                                                            required
+                                                            valor={regra.valor}
+                                                            aoMudar={(valor) => mudarCanal(opcao.valor, { valor })}
+                                                            erro={erroValor}
+                                                        />
+                                                    ) : (
+                                                        <CampoNumero
+                                                            aria-label={t("Percentual de desconto (:canal)", { canal: opcao.label })}
+                                                            placeholder={t("Percentual (%)")}
+                                                            required
+                                                            min={0.01}
+                                                            max={99.99}
+                                                            step={0.01}
+                                                            inputMode="decimal"
+                                                            valor={regra.valor}
+                                                            aoMudar={(valor) => mudarCanal(opcao.valor, { valor })}
+                                                            erro={erroValor}
+                                                        />
+                                                    )}
+                                                </div>
+                                                {calculado && (
+                                                    semDescontoNoCanal ? (
+                                                        <p className="flex items-start gap-1.5 text-rotulo text-negativo">
+                                                            <IconAlertTriangle size={14} stroke={TRACO} className="mt-0.5 shrink-0" aria-hidden />
+                                                            {t("Sem desconto neste canal: os itens avulsos saem por :valor.", { valor: moeda(somaAvulsa) })}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-rotulo text-tinta-media">
+                                                            {t("Combo por :preco · o cliente economiza :valor (:pct).", { preco: moeda(preco), valor: moeda(economia), pct: percentual(pct) })}
+                                                        </p>
+                                                    )
+                                                )}
+                                            </>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        {erros.canais && <p role="alert" className="mt-3 text-rotulo text-negativo">{erros.canais}</p>}
 
-                            {calculado && !semDesconto && (
-                                <p className="rounded-xl bg-superficie-suave px-4 py-3 text-corpo text-tinta">
-                                    {fechado
-                                        ? t("Preço fechado equivale a :pct de desconto sobre a soma avulsa.", { pct: percentual(descontoPct) })
-                                        : <>{t("Preço do combo:")} <span className="font-semibold tabular-nums">{moeda(precoCombo)}</span></>}
-                                </p>
-                            )}
-
-                            {(semDesconto || erros.confirmar_sem_desconto) && (
-                                <Faixa tom="aviso" icone={IconAlertTriangle} titulo={erros.confirmar_sem_desconto ?? t("O preço do combo não é menor que a soma avulsa: não há desconto.")}>
-                                    {maisCaro && <p className="mt-1">{t("Na venda, um combo mais caro que os itens separados nunca é aplicado: o cliente paga os itens avulsos.")}</p>}
+                        {(semDesconto.length > 0 || erros.confirmar_sem_desconto) && (
+                            <div className="mt-4">
+                                <Faixa
+                                    tom="aviso"
+                                    icone={IconAlertTriangle}
+                                    titulo={erros.confirmar_sem_desconto ?? t("Sem desconto em :canais: o preço do combo não é menor que a soma avulsa.", { canais: semDesconto.map((c) => c.opcao.label).join(", ") })}
+                                >
+                                    <p className="mt-1">{t("Na venda, um combo mais caro que os itens separados nunca é aplicado: o cliente paga os itens avulsos.")}</p>
                                     <div className="mt-2">
                                         <CaixaSelecao marcado={form.data.confirmar_sem_desconto} aoMudar={(v) => form.setData("confirmar_sem_desconto", v)}>
                                             {t("Salvar mesmo assim")}
                                         </CaixaSelecao>
                                     </div>
                                 </Faixa>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </Cartao>
                 </div>
 
                 <aside className="flex min-w-0 flex-col gap-4 lg:row-span-2 lg:self-start">
                     <section className="flex flex-col gap-3 rounded-cartao border border-primaria bg-primaria p-4 text-primaria-tinta">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-corpo font-medium text-primaria-tinta/80">{combo?.tag ?? t("Novo combo")}</span>
-                            {calculado && descontoPct !== null && descontoPct > 0 && (
-                                <span className="rounded-full bg-secundaria px-2 py-0.5 text-rotulo font-semibold text-secundaria-tinta">−{percentual(descontoPct)}</span>
-                            )}
-                        </div>
-                        <div>
-                            <p className="text-rotulo text-primaria-tinta/75">{t("Preço do combo")}</p>
-                            <p className="text-numero font-semibold tracking-tight tabular-nums">{calculado ? moeda(precoCombo) : "-"}</p>
-                        </div>
-                        <p className="text-rotulo text-primaria-tinta/75">
-                            {calculado && economia > 0
-                                ? t("O cliente economiza :valor em relação aos itens separados.", { valor: moeda(economia) })
-                                : t("Escolha os itens e o desconto para ver o preço final.")}
-                        </p>
+                        <span className="text-corpo font-medium text-primaria-tinta/80">{combo?.tag ?? t("Novo combo")}</span>
+                        {ativos.some((c) => c.calculado) ? (
+                            <dl className="flex flex-col gap-2">
+                                {ativos.map((c) => (
+                                    <div key={c.opcao.valor} className="flex items-baseline justify-between gap-3">
+                                        <dt className="text-rotulo text-primaria-tinta/75">{c.opcao.label}</dt>
+                                        <dd className="flex items-baseline gap-2">
+                                            {c.calculado && c.economia > 0 && <span className="text-rotulo tabular-nums text-primaria-tinta/75 line-through">{moeda(c.somaAvulsa)}</span>}
+                                            <span className="text-titulo font-semibold tabular-nums">{c.calculado ? moeda(c.preco) : "-"}</span>
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        ) : (
+                            <p className="text-rotulo text-primaria-tinta/75">{t("Escolha os itens, os canais e o desconto para ver o preço final.")}</p>
+                        )}
                     </section>
 
                     <Cartao titulo={t("Resumo do combo")} icone={IconStack2}>
                         {marcados.length === 0 ? (
                             <p className="text-corpo text-tinta-suave">{t("Nenhum item marcado.")}</p>
                         ) : (
-                            <ul className="mb-2 flex flex-col gap-1.5">
+                            <ul className="flex flex-col gap-1.5">
                                 {marcados.map((i) => (
                                     <li key={i.id} className="flex items-baseline gap-2 text-corpo">
                                         <span className="w-7 shrink-0 font-semibold tabular-nums text-tinta">{qtd(i.id)}×</span>
                                         <span className="min-w-0 flex-1 truncate text-tinta-media">{i.nome}</span>
-                                        <span className="shrink-0 tabular-nums text-tinta">{moeda(i.precoFeira * qtd(i.id))}</span>
                                     </li>
                                 ))}
                             </ul>
                         )}
-                        <dl className="divide-y divide-linha border-t border-linha">
-                            <Detalhe rotulo={t("Soma avulsa (preço de Feira)")}>{moeda(somaAvulsa)}</Detalhe>
-                            <Detalhe rotulo={t("Preço do combo")}>{calculado ? moeda(precoCombo) : "-"}</Detalhe>
-                            <Detalhe rotulo={t("Desconto para o cliente")}>
-                                {calculado ? (
-                                    <span className={cx("tabular-nums", economia > 0 ? "text-positivo" : "text-negativo")}>
-                                        {moeda(economia)} ({percentual(descontoPct)})
-                                    </span>
-                                ) : "-"}
-                            </Detalhe>
-                        </dl>
                         {marcados.length > 0 && unidades < 2 && (
                             <p className="mt-2 flex items-center gap-1.5 text-rotulo text-ambar-tinta">
                                 <IconAlertTriangle size={14} stroke={TRACO} aria-hidden />
@@ -321,6 +367,7 @@ export default function Form({ combo, itens, tiposDesconto }: Props) {
                     <Cartao titulo={t("Como funciona")} icone={IconInfoCircle}>
                         <ul className="flex list-disc flex-col gap-2 ps-4 text-corpo text-tinta-media">
                             <li>{t("Na venda, o carrinho vira Combo N sozinho quando fecha a composição.")}</li>
+                            <li>{t("O combo só vale nos canais marcados, cada um com o próprio desconto.")}</li>
                             <li>{t("Se houver mais de um jeito de montar combos, vale o que dá mais desconto ao cliente.")}</li>
                             <li>{t("Combo que já teve vendas não é excluído, só desativado.")}</li>
                         </ul>

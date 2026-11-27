@@ -1,5 +1,5 @@
 import { Head, router, usePage } from "@inertiajs/react";
-import { IconChevronUp, IconCopy, IconLock, IconMinus, IconPlus, IconSearch, IconShoppingCart, IconStack2, IconTrash, IconX } from "@tabler/icons-react";
+import { IconChevronUp, IconCopy, IconLock, IconMinus, IconPlus, IconSearch, IconShoppingCart, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { avisar } from "@/components/ui/avisos";
 import { Botao } from "@/components/ui/botao";
@@ -24,10 +24,11 @@ interface Props {
     pagamentos: Opcao[];
     canalInicial: string;
     checkout: PreferenciasCheckout;
+    preVenda: { aberta: boolean; corte: string | null };
 }
 
 interface Previa {
-    linhas: { tag: string; combo: boolean; descricao: string; quantidade: number; preco_unitario: number; desconto: number; total: number }[];
+    linhas: { tag: string; combo: boolean; combo_id: number | null; descricao: string; quantidade: number; preco_unitario: number; desconto: number; total: number }[];
     resumo: string;
     subtotal: number;
     desconto: number;
@@ -38,12 +39,18 @@ type Carrinho = Record<number, number>;
 
 const precoNoCanal = (item: Item, canal: string) => item.precos[canal] ?? item.precos.feira ?? item.precoFeira;
 
+/** Null quando o combo não vale no canal. */
+const comboNoCanal = (combo: Combo, canal: string) => {
+    const regra = combo.canais[canal];
+    return regra ? { preco: regra.preco, economia: Math.round((regra.somaAvulsa - regra.preco) * 100) / 100 } : null;
+};
+
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout }: Props) {
+export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout, preVenda }: Props) {
     const desktop = useMidia("(min-width: 64rem)");
     const t = useT();
-    const { moeda } = useFormato();
+    const { moeda, dataHora } = useFormato();
     const rotaLoja = useRotaLoja();
     const { loja } = usePage().props;
 
@@ -58,6 +65,7 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
     const [enviando, setEnviando] = useState(false);
     const [busca, setBusca] = useState("");
     const [folhaAberta, setFolhaAberta] = useState(false);
+    const [preVendaAberta, setPreVendaAberta] = useState(preVenda.aberta);
 
     const quantidade = Object.values(carrinho).reduce((a, b) => a + b, 0);
 
@@ -72,12 +80,60 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
         return [...grupos.entries()];
     }, [itens, busca, checkout.agruparCategorias]);
 
+    // O classificador só aplica o combo nos canais em que ele vale e quando sai mais barato que os itens avulsos.
+    const combosVisiveis = useMemo(() => {
+        if (!checkout.mostrarCombos) return [];
+        const termo = normalizar(busca.trim());
+        return combos.flatMap((combo) => {
+            const noCanal = comboNoCanal(combo, canal);
+            if (!noCanal || noCanal.economia < 0) return [];
+            if (termo && ![combo.tag, combo.nome, ...combo.itens.map((i) => i.nome)].some((texto) => normalizar(texto).includes(termo))) return [];
+            return [{ combo, ...noCanal }];
+        });
+    }, [combos, canal, busca, checkout.mostrarCombos]);
+
+    const combosNoCarrinho = useMemo(() => {
+        const vezes = new Map<number, number>();
+        for (const linha of previa?.linhas ?? []) {
+            if (linha.combo_id !== null) vezes.set(linha.combo_id, (vezes.get(linha.combo_id) ?? 0) + linha.quantidade);
+        }
+        return vezes;
+    }, [previa]);
+
     const alterar = (item: Item, delta: number) =>
         setCarrinho((atual) => {
             const proxima = Math.max(0, Math.min(999, (atual[item.id] ?? 0) + delta));
             const { [item.id]: _removido, ...resto } = atual;
             return proxima > 0 ? { ...resto, [item.id]: proxima } : resto;
         });
+
+    // Lançar um combo põe todos os itens dele no carrinho; o servidor reconhece o combo e aplica o desconto.
+    const alterarCombo = (combo: Combo, delta: 1 | -1) =>
+        setCarrinho((atual) => {
+            if (delta < 0 && combo.itens.some((i) => (atual[i.id] ?? 0) < i.quantidade)) return atual;
+            const proximo = { ...atual };
+            for (const i of combo.itens) {
+                const quantidade = Math.max(0, Math.min(999, (proximo[i.id] ?? 0) + i.quantidade * delta));
+                if (quantidade > 0) proximo[i.id] = quantidade;
+                else delete proximo[i.id];
+            }
+            return proximo;
+        });
+
+    // Fecha a pré-venda na tela se o corte passar com o PDV aberto; o servidor confere de novo ao registrar.
+    useEffect(() => {
+        if (!preVendaAberta || !preVenda.corte) return;
+        const restante = Date.parse(preVenda.corte) - Date.now();
+        if (restante > 2 ** 31 - 1) return;
+        const espera = window.setTimeout(() => setPreVendaAberta(false), Math.max(0, restante + 1000));
+        return () => window.clearTimeout(espera);
+    }, [preVendaAberta, preVenda.corte]);
+
+    useEffect(() => {
+        if (preVendaAberta || canal !== "pre_venda") return;
+        setCanal("feira");
+        avisar(t("A pré-venda encerrou. A venda passou para o canal Feira."), "info");
+    }, [preVendaAberta, canal, t]);
 
     useEffect(() => {
         if (quantidade === 0) {
@@ -180,8 +236,21 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                 <div className="min-w-0">
                     <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <h1 className="text-cabecalho font-medium tracking-tight text-tinta">{t("Nova venda")}</h1>
-                        <div className="md:w-[26rem]">
-                            <Segmentos rotulo={t("Canal da venda")} opcoes={canais.map((o) => ({ valor: o.valor, rotulo: o.label }))} valor={canal} aoMudar={setCanal} cores={COR_CANAL} cheio grande />
+                        <div className="flex flex-col gap-2 md:w-[26rem]">
+                            <Segmentos
+                                rotulo={t("Canal da venda")}
+                                opcoes={canais.map((o) => ({ valor: o.valor, rotulo: o.label, desabilitado: o.valor === "pre_venda" && !preVendaAberta }))}
+                                valor={canal}
+                                aoMudar={setCanal}
+                                cores={COR_CANAL}
+                                cheio
+                                grande
+                            />
+                            {!preVendaAberta && (
+                                <Faixa icone={IconLock}>
+                                    {t("Pré-venda encerrada em :data. Registre as vendas pelos canais Feira ou Pós-evento.", { data: dataHora(preVenda.corte) })}
+                                </Faixa>
+                            )}
                         </div>
                     </div>
 
@@ -203,8 +272,26 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                         </Cartao>
                     )}
 
-                    {itens.length > 0 && porCategoria.length === 0 && (
+                    {itens.length > 0 && porCategoria.length === 0 && combosVisiveis.length === 0 && (
                         <p className="mb-5 text-corpo text-tinta-suave">{t("Nenhum item encontrado para “:busca”.", { busca })}</p>
+                    )}
+
+                    {combosVisiveis.length > 0 && (
+                        <section className="@container mb-6" aria-label={t("Combos")}>
+                            <h2 className="mb-2 text-micro font-semibold tracking-wide text-tinta-suave uppercase">{t("Combos")}</h2>
+                            <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4">
+                                {combosVisiveis.map(({ combo, preco, economia }) => (
+                                    <CartaoCombo
+                                        key={combo.id}
+                                        combo={combo}
+                                        preco={preco}
+                                        economia={economia}
+                                        vezes={combosNoCarrinho.get(combo.id) ?? 0}
+                                        aoAlterar={(delta) => alterarCombo(combo, delta)}
+                                    />
+                                ))}
+                            </div>
+                        </section>
                     )}
 
                     {porCategoria.map(([categoria, lista]) => (
@@ -237,20 +324,6 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                             )}
                         </section>
                     ))}
-
-                    {checkout.mostrarCombos && combos.length > 0 && (
-                        <Cartao titulo={t("Combos aplicados automaticamente")} icone={IconStack2} descricao={t("Não precisa escolher: o sistema monta o combo mais vantajoso.")}>
-                            <ul className="flex flex-col gap-2">
-                                {combos.map((c) => (
-                                    <li key={c.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-corpo text-tinta-media">
-                                        <ChipTag rotulo={c.tag} combo />
-                                        <span className="min-w-0">{c.itens.map((i) => `${i.quantidade}× ${i.nome}`).join(" + ")}</span>
-                                        <span className="ms-auto font-medium tabular-nums text-tinta">{moeda(c.preco)}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </Cartao>
-                    )}
                 </div>
 
                 <aside className="sticky top-[calc(var(--spacing-topbar)+1.5rem)] hidden max-h-[calc(100dvh-var(--spacing-topbar)-3rem)] flex-col overflow-hidden rounded-cartao border border-linha bg-superficie lg:flex">
@@ -379,6 +452,63 @@ function CartaoItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco:
                         type="button"
                         onClick={() => aoAlterar(1)}
                         aria-label={t("Adicionar um :nome", { nome: item.nome })}
+                        className="flex size-11 items-center justify-center rounded-controle text-tinta-media outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
+                    >
+                        <IconPlus size={20} stroke={TRACO} aria-hidden />
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function CartaoCombo({ combo, preco, economia, vezes, aoAlterar }: { combo: Combo; preco: number; economia: number; vezes: number; aoAlterar: (delta: 1 | -1) => void }) {
+    const t = useT();
+    const { moeda } = useFormato();
+
+    return (
+        <div
+            className={cx(
+                "relative flex min-w-0 flex-col overflow-hidden rounded-cartao border bg-superficie transition-colors",
+                vezes > 0 ? "border-primaria ring-1 ring-primaria" : "border-linha",
+            )}
+        >
+            <button
+                type="button"
+                onClick={() => aoAlterar(1)}
+                className="flex min-h-28 flex-1 flex-col items-start gap-1.5 p-3 text-start outline-none transition-colors hover:bg-superficie-hover focus-visible:ring-2 focus-visible:ring-foco focus-visible:ring-inset active:bg-superficie-ativa sm:p-4"
+            >
+                <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pe-7">
+                    <ChipTag rotulo={combo.tag} combo />
+                    <span className="min-w-0 text-ui font-medium text-tinta">{combo.nome}</span>
+                </span>
+                <span className="text-rotulo text-tinta-suave">{combo.itens.map((i) => `${i.quantidade}× ${i.nome}`).join(" + ")}</span>
+                <span className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
+                    <span className="text-titulo font-semibold tabular-nums text-tinta">{moeda(preco)}</span>
+                    {economia > 0 && <span className="text-rotulo tabular-nums text-positivo">{t("Economia de :valor", { valor: moeda(economia) })}</span>}
+                </span>
+                {vezes > 0 && (
+                    <span className="absolute top-2 inset-e-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-secundaria px-1.5 text-rotulo font-semibold tabular-nums text-secundaria-tinta">
+                        <span className="sr-only">{t("No carrinho:")} </span>
+                        {vezes}
+                    </span>
+                )}
+            </button>
+            {vezes > 0 && (
+                <div className="flex items-center justify-between border-t border-linha p-1">
+                    <button
+                        type="button"
+                        onClick={() => aoAlterar(-1)}
+                        aria-label={t("Remover um :nome", { nome: combo.nome })}
+                        className="flex size-11 items-center justify-center rounded-controle text-tinta-media outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
+                    >
+                        {vezes === 1 ? <IconTrash size={18} stroke={TRACO} aria-hidden /> : <IconMinus size={20} stroke={TRACO} aria-hidden />}
+                    </button>
+                    <span className="text-titulo font-semibold tabular-nums text-tinta" aria-live="polite">{vezes}</span>
+                    <button
+                        type="button"
+                        onClick={() => aoAlterar(1)}
+                        aria-label={t("Adicionar um :nome", { nome: combo.nome })}
                         className="flex size-11 items-center justify-center rounded-controle text-tinta-media outline-none hover:bg-superficie-hover hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco active:bg-superficie-ativa"
                     >
                         <IconPlus size={20} stroke={TRACO} aria-hidden />

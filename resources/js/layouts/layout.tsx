@@ -1,5 +1,6 @@
 import { usePage } from "@inertiajs/react";
 import type { ReactNode } from "react";
+import { FalhaNaTela, LimiteDeErro } from "@/components/app/limite-de-erro";
 import { LogoUnaerpBranca, Marca } from "@/components/app/marca";
 import { Provedores } from "@/components/app/provedores";
 import { Shell } from "@/components/app/shell";
@@ -9,9 +10,15 @@ import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
 export function Layout({ children }: { children: ReactNode }) {
-    const { auth } = usePage().props;
+    const { props, url } = usePage();
+    const t = useT();
+    const tela = (
+        <LimiteDeErro chave={url} fallback={<FalhaNaTela titulo={t("Algo deu errado nesta tela")} descricao={t("Recarregue a página para continuar.")} rotuloRecarregar={t("Recarregar")} />}>
+            {children}
+        </LimiteDeErro>
+    );
 
-    return <Provedores>{auth ? <Shell>{children}</Shell> : <MolduraPublica>{children}</MolduraPublica>}</Provedores>;
+    return <Provedores>{props.auth ? <Shell>{tela}</Shell> : <MolduraPublica>{tela}</MolduraPublica>}</Provedores>;
 }
 
 function MolduraPublica({ children }: { children: ReactNode }) {

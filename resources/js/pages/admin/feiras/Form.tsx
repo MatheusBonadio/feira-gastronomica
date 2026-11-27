@@ -1,14 +1,15 @@
 import { useForm } from "@inertiajs/react";
 import { IconArrowLeft, IconBuildingStore, IconCalendarEvent, IconInfoCircle } from "@tabler/icons-react";
 import { Botao, BotaoLink } from "@/components/ui/botao";
-import { CampoData, CampoNumero, Entrada, Selecao } from "@/components/ui/campos";
+import { CampoData, CampoDataHora, CampoNumero, Entrada, Selecao } from "@/components/ui/campos";
 import { CabecalhoPagina, Cartao } from "@/components/ui/cartao";
+import { diaAnterior } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 import type { Opcao } from "@/types/inertia";
 
 interface Props {
-    feira: { id: number | null; nome: string; dataInicio: string; dataFim: string; status: Opcao; qtdBarraquinhas: number };
+    feira: { id: number | null; nome: string; dataInicio: string; dataFim: string; dataCortePreVenda: string; status: Opcao; qtdBarraquinhas: number };
     statusOpcoes: Opcao[];
 }
 
@@ -19,6 +20,7 @@ export default function Form({ feira, statusOpcoes }: Props) {
         nome: feira.nome,
         data_inicio: feira.dataInicio,
         data_fim: feira.dataFim,
+        data_corte_pre_venda: feira.dataCortePreVenda,
         status: feira.status.valor,
         qtd_barraquinhas: feira.qtdBarraquinhas as number | null,
     });
@@ -41,8 +43,17 @@ export default function Form({ feira, statusOpcoes }: Props) {
                     <Cartao titulo={t("Edição")} icone={IconCalendarEvent}>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <Entrada className="md:col-span-2" rotulo={t("Nome")} placeholder={t("Ex.: Feira Gastronômica 2027")} required valor={form.data.nome} aoMudar={(v) => form.setData("nome", v)} erro={form.errors.nome} />
-                            <CampoData rotulo={t("Início")} required valor={form.data.data_inicio} aoMudar={(v) => form.setData("data_inicio", v)} erro={form.errors.data_inicio} />
+                            <CampoData rotulo={t("Início")} required valor={form.data.data_inicio} aoMudar={(v) => form.setData((d) => ({ ...d, data_inicio: v, data_corte_pre_venda: d.data_corte_pre_venda || (v ? `${diaAnterior(v)}T23:59` : "") }))} erro={form.errors.data_inicio} />
                             <CampoData rotulo={t("Fim")} required valor={form.data.data_fim} aoMudar={(v) => form.setData("data_fim", v)} erro={form.errors.data_fim} />
+                            <CampoDataHora
+                                rotulo={t("Fim da pré-venda")}
+                                dica={t("Até esta data e hora as barraquinhas podem vender pelo canal Pré-venda. Não pode passar do dia de início da feira.")}
+                                required
+                                max={form.data.data_inicio ? `${form.data.data_inicio}T23:59` : undefined}
+                                valor={form.data.data_corte_pre_venda}
+                                aoMudar={(v) => form.setData("data_corte_pre_venda", v)}
+                                erro={form.errors.data_corte_pre_venda}
+                            />
                             <Selecao rotulo={t("Status")} opcoes={statusOpcoes.map((o) => ({ valor: o.valor, rotulo: o.label }))} valor={form.data.status} aoMudar={(v) => form.setData("status", v)} erro={form.errors.status} />
                         </div>
                     </Cartao>
@@ -68,6 +79,7 @@ export default function Form({ feira, statusOpcoes }: Props) {
                     <ul className="flex list-disc flex-col gap-2 ps-4 text-corpo text-tinta-media">
                         <li>{t("Cada edição é independente: barraquinhas, itens, vendas e saldos não se misturam.")}</li>
                         <li>{t("Aberta: as barraquinhas registram vendas e lançamentos.")}</li>
+                        <li>{t("Pré-venda: aceita vendas até o fim da pré-venda; depois disso, só pelos canais Feira e Pós-evento.")}</li>
                         <li>{t("Encerrada: lançamentos bloqueados e relatórios congelados; dá para reabrir.")}</li>
                     </ul>
                 </Cartao>

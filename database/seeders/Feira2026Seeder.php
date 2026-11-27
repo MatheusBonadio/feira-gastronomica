@@ -39,6 +39,7 @@ class Feira2026Seeder extends Seeder
             'nome' => 'Feira Gastronômica 2026',
             'data_inicio' => '2026-10-16',
             'data_fim' => '2026-10-17',
+            'data_corte_pre_venda' => '2026-10-15 23:59:00',
             'status' => FeiraStatus::Encerrada,
             'qtd_barraquinhas' => count(self::RELATORIO),
         ]);

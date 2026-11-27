@@ -16,6 +16,7 @@ interface Feira {
     nome: string;
     dataInicio: string;
     dataFim: string;
+    dataCortePreVenda: string;
     status: Opcao;
     qtdBarraquinhas: number;
     encerrada: boolean;
@@ -25,7 +26,7 @@ interface Feira {
 
 export default function Index({ feiras }: { feiras: Feira[] }) {
     const t = useT();
-    const { data, numero } = useFormato();
+    const { data, dataHora, numero } = useFormato();
     const [encerrando, setEncerrando] = useState<Feira | null>(null);
 
     return (
@@ -42,6 +43,7 @@ export default function Index({ feiras }: { feiras: Feira[] }) {
                     colunas={[
                         { chave: "feira", rotulo: t("Feira"), icone: IconCalendarEvent },
                         { chave: "periodo", rotulo: t("Período"), icone: IconCalendar },
+                        { chave: "preVenda", rotulo: t("Pré-venda até") },
                         { chave: "status", rotulo: t("Status") },
                         { chave: "barraquinhas", rotulo: t("Barraquinhas"), alinhar: "direita" },
                         { chave: "vendas", rotulo: t("Vendas"), icone: IconReceipt, alinhar: "direita" },
@@ -58,6 +60,7 @@ export default function Index({ feiras }: { feiras: Feira[] }) {
                                 </span>
                             </Celula>
                             <Celula>{data(f.dataInicio)} – {data(f.dataFim)}</Celula>
+                            <Celula>{dataHora(f.dataCortePreVenda || null)}</Celula>
                             <Celula><ChipStatus opcao={f.status} /></Celula>
                             <Celula direita>{numero(f.qtdBarraquinhas)}</Celula>
                             <Celula direita>{numero(f.vendas)}</Celula>

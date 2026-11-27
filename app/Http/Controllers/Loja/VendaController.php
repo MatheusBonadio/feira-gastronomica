@@ -51,7 +51,12 @@ class VendaController extends Controller
 
     public function create(): Response
     {
+        $feira = $this->loja->barraquinha()->feira;
         $checkout = $this->loja->barraquinha()->preferenciasCheckout();
+        $canalInicial = session('canal', $checkout->canalPadrao ?? Canal::PADRAO->value);
+        if ($canalInicial === Canal::PreVenda->value && ! $feira->preVendaAberta()) {
+            $canalInicial = Canal::PADRAO->value;
+        }
         $vendidos = VendaItem::whereHas('venda', fn ($q) => $q->concluidas())
             ->selectRaw('item_id, SUM(quantidade) as qtd')->groupBy('item_id')->toBase()->pluck('qtd', 'item_id');
 
@@ -62,13 +67,17 @@ class VendaController extends Controller
 
         return Inertia::render('loja/vendas/Pdv', [
             'itens' => $itens->map(fn (Item $i) => Apresentacao::item($i, (int) ($vendidos[$i->id] ?? 0))),
-            'combos' => Combo::with('itens.precos')->ativos()->orderBy('numero')->get()
+            'combos' => Combo::with(['itens.precos', 'canais'])->ativos()->orderBy('numero')->get()
                 ->filter->aplicavel()
                 ->map(fn (Combo $c) => Apresentacao::combo($c))
                 ->values(),
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(array_map(FormaPagamento::from(...), $checkout->pagamentos)),
-            'canalInicial' => session('canal', $checkout->canalPadrao ?? Canal::PADRAO->value),
+            'canalInicial' => $canalInicial,
+            'preVenda' => [
+                'aberta' => $feira->preVendaAberta(),
+                'corte' => $feira->data_corte_pre_venda?->toIso8601String(),
+            ],
             'checkout' => $checkout->paraTela(),
         ]);
     }

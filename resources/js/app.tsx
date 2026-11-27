@@ -1,7 +1,10 @@
 import { createInertiaApp, router } from "@inertiajs/react";
 import type { ComponentType, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import { FalhaNaTela, LimiteDeErro } from "@/components/app/limite-de-erro";
 import { Layout } from "@/layouts/layout";
+import { traduzir } from "@/lib/i18n";
+import { registrarRespostasInertia } from "@/lib/respostas-inertia";
 import { definirRotas } from "@/lib/rotas";
 
 type Pagina = { default: ComponentType & { layout?: (pagina: ReactNode) => ReactNode } };
@@ -44,7 +47,22 @@ createInertiaApp({
         return pagina.default;
     },
     setup({ el, App, props }) {
-        createRoot(el).render(<App {...props} />);
+        const traducoes = props.initialPage.props.traducoes;
+        registrarRespostasInertia(traducoes);
+        // Rede de segurança se o próprio layout falhar; erros das telas ficam no limite do Layout.
+        const t = (texto: string) => traduzir(traducoes ?? {}, texto);
+        const falha = (
+            <div className="flex min-h-dvh items-center justify-center bg-fundo p-4">
+                <div className="w-full max-w-md">
+                    <FalhaNaTela titulo={t("Algo deu errado nesta tela")} descricao={t("Recarregue a página para continuar.")} rotuloRecarregar={t("Recarregar")} />
+                </div>
+            </div>
+        );
+        createRoot(el).render(
+            <LimiteDeErro fallback={falha}>
+                <App {...props} />
+            </LimiteDeErro>,
+        );
         baixarTelasDoPerfil(props.initialPage.props.auth?.usuario.perfil);
     },
     defaults: {

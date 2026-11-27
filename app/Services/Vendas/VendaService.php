@@ -36,6 +36,7 @@ class VendaService
         array $carrinho,
     ): Venda {
         $this->garantirFeiraAberta($barraquinha);
+        $this->garantirCanalAberto($barraquinha, $canal);
 
         return DB::transaction(function () use ($barraquinha, $operador, $canal, $pagamento, $carrinho) {
             [$itens, $combos] = $this->catalogo($barraquinha, $canal);
@@ -132,6 +133,19 @@ class VendaService
         }
     }
 
+    public function garantirCanalAberto(Barraquinha $barraquinha, Canal $canal): void
+    {
+        $feira = $barraquinha->feira;
+
+        if ($canal === Canal::PreVenda && ! $feira->preVendaAberta()) {
+            throw ValidationException::withMessages([
+                'canal' => __('A pré-venda encerrou em :data. Registre a venda pelo canal Feira ou Pós-evento.', [
+                    'data' => data_formatada($feira->data_corte_pre_venda, comHora: true),
+                ]),
+            ]);
+        }
+    }
+
     private function catalogo(Barraquinha $barraquinha, Canal $canal): array
     {
         $itens = Item::withoutGlobalScopes()
@@ -143,11 +157,11 @@ class VendaService
             ->all();
 
         $combos = Combo::withoutGlobalScopes()
-            ->with('itens.precos')
+            ->with(['itens.precos', 'canais'])
             ->where('barraquinha_id', $barraquinha->id)
             ->ativos()
             ->get()
-            ->filter(fn (Combo $c) => $c->aplicavel())
+            ->filter(fn (Combo $c) => $c->aplicavel() && $c->regraPara($canal) !== null)
             ->map(fn (Combo $c) => [
                 'id' => $c->id,
                 'numero' => $c->numero,

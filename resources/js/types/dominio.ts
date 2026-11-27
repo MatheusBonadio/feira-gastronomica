@@ -55,17 +55,22 @@ export interface Item {
     precoFeira: number;
 }
 
+export interface RegraCombo {
+    tipoDesconto: "preco_fechado" | "percentual";
+    valor: number;
+    preco: number;
+    somaAvulsa: number;
+}
+
 export interface Combo {
     id: number;
     numero: number;
     tag: string;
     nome: string;
-    tipoDesconto: Opcao;
-    valor: number;
     ativo: boolean;
     incompleto: boolean;
-    somaAvulsa: number;
-    preco: number;
+    /** Regra de cada canal (pre_venda, feira, pos_evento); null quando o combo não vale nele. */
+    canais: Record<string, RegraCombo | null>;
     vendas: number;
     itens: { id: number; nome: string; quantidade: number; ativo: boolean }[];
 }
