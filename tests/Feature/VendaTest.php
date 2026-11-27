@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Canal;
 use App\Enums\FeiraStatus;
 use App\Models\Venda;
 use App\Models\VendaItem;
@@ -80,16 +81,18 @@ class VendaTest extends TestCase
     public function test_pdv_recebe_o_preco_de_cada_combo_por_canal(): void
     {
         [$barraquinha, , , $combo] = $this->cenarioPastelaria();
+        $combo->canais()->where('canal', Canal::PosEvento)->delete();
 
         $this->actingAs($this->usuarioDa($barraquinha))
             ->get(route('barraquinha.vendas.create'))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('loja/vendas/Pdv')
                 ->where('combos.0.id', $combo->id)
-                ->where('combos.0.precos.feira', 28)
-                ->where('combos.0.avulsos.feira', 31)
-                ->where('combos.0.precos.pre_venda', 28)
-                ->where('combos.0.avulsos.pre_venda', 24));
+                ->where('combos.0.canais.feira.preco', 28)
+                ->where('combos.0.canais.feira.somaAvulsa', 31)
+                ->where('combos.0.canais.pre_venda.preco', 28)
+                ->where('combos.0.canais.pre_venda.somaAvulsa', 24)
+                ->where('combos.0.canais.pos_evento', null));
     }
 
     public function test_lancar_um_combo_no_pdv_aplica_o_desconto_e_identifica_o_combo(): void

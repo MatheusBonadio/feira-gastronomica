@@ -67,9 +67,9 @@ class VendaController extends Controller
 
         return Inertia::render('loja/vendas/Pdv', [
             'itens' => $itens->map(fn (Item $i) => Apresentacao::item($i, (int) ($vendidos[$i->id] ?? 0))),
-            'combos' => Combo::with('itens.precos')->ativos()->orderBy('numero')->get()
+            'combos' => Combo::with(['itens.precos', 'canais'])->ativos()->orderBy('numero')->get()
                 ->filter->aplicavel()
-                ->map(fn (Combo $c) => Apresentacao::combo($c, porCanal: true))
+                ->map(fn (Combo $c) => Apresentacao::combo($c))
                 ->values(),
             'canais' => Apresentacao::opcoes(Canal::cases()),
             'pagamentos' => Apresentacao::opcoes(array_map(FormaPagamento::from(...), $checkout->pagamentos)),

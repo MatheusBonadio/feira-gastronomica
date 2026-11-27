@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Enums\AcaoAuditoria;
+use App\Enums\Canal;
 use App\Enums\TipoDesconto;
 use App\Models\AuditoriaLog;
 use App\Models\Barraquinha;
 use App\Models\Combo;
+use App\Models\ComboCanal;
 use App\Models\ComboItem;
 use App\Models\Item;
 use App\Services\Vendas\VendaService;
@@ -22,8 +24,7 @@ class ComboService
         $this->vendas->garantirFeiraAberta($barraquinha);
 
         $composicao = $this->composicao($dados['itens'] ?? []);
-        $tipo = TipoDesconto::from($dados['tipo_desconto']);
-        $valor = round((float) $dados['valor'], 2);
+        $regras = $this->regras($dados['canais'] ?? []);
 
         $itens = Item::withoutGlobalScopes()
             ->with('precos')
@@ -32,9 +33,9 @@ class ComboService
             ->get()
             ->keyBy('id');
 
-        $this->validar($barraquinha, $combo, $composicao, $itens, $tipo, $valor, (bool) ($dados['confirmar_sem_desconto'] ?? false));
+        $this->validar($barraquinha, $combo, $composicao, $itens, $regras, (bool) ($dados['confirmar_sem_desconto'] ?? false));
 
-        return DB::transaction(function () use ($barraquinha, $combo, $dados, $composicao, $tipo, $valor) {
+        return DB::transaction(function () use ($barraquinha, $combo, $dados, $composicao, $regras) {
             $novo = $combo === null;
 
             if ($novo) {
@@ -48,13 +49,12 @@ class ComboService
                     'barraquinha_id' => $barraquinha->id,
                     'numero' => (int) $ultimo + 1,
                     'nome' => trim($dados['nome']),
-                    'tipo_desconto' => $tipo,
-                    'valor' => $valor,
                     'ativo' => true,
                 ]);
             } else {
-                $combo->update(['nome' => trim($dados['nome']), 'tipo_desconto' => $tipo, 'valor' => $valor]);
+                $combo->update(['nome' => trim($dados['nome'])]);
                 ComboItem::withoutGlobalScopes()->where('combo_id', $combo->id)->delete();
+                ComboCanal::withoutGlobalScopes()->where('combo_id', $combo->id)->delete();
             }
 
             foreach ($composicao as $itemId => $quantidade) {
@@ -66,14 +66,23 @@ class ComboService
                 ]);
             }
 
+            foreach ($regras as $regra) {
+                ComboCanal::create([
+                    'barraquinha_id' => $barraquinha->id,
+                    'combo_id' => $combo->id,
+                    'canal' => $regra['canal'],
+                    'tipo_desconto' => $regra['tipo'],
+                    'valor' => $regra['valor'],
+                ]);
+            }
+
             AuditoriaLog::registrar($novo ? AcaoAuditoria::ComboCriado : AcaoAuditoria::ComboAlterado, $combo, detalhe: [
                 'numero' => $combo->numero,
                 'composicao' => $composicao,
-                'tipo_desconto' => $tipo->value,
-                'valor' => $valor,
+                'canais' => array_map(fn (array $r) => ['tipo_desconto' => $r['tipo']->value, 'valor' => $r['valor']], $regras),
             ], barraquinhaId: $barraquinha->id);
 
-            return $combo->load('itens.precos');
+            return $combo->load(['itens.precos', 'canais']);
         });
     }
 
@@ -120,7 +129,25 @@ class ComboService
         return $composicao;
     }
 
-    private function validar(Barraquinha $barraquinha, ?Combo $combo, array $composicao, $itens, TipoDesconto $tipo, float $valor, bool $confirmado): void
+    /** @return array<string, array{canal: Canal, tipo: TipoDesconto, valor: float}> canais marcados, pela ordem dos canais */
+    private function regras(array $canais): array
+    {
+        $regras = [];
+        foreach (Canal::cases() as $canal) {
+            $dados = $canais[$canal->value] ?? [];
+            if (! empty($dados['ativo'])) {
+                $regras[$canal->value] = [
+                    'canal' => $canal,
+                    'tipo' => TipoDesconto::from($dados['tipo_desconto']),
+                    'valor' => round((float) $dados['valor'], 2),
+                ];
+            }
+        }
+
+        return $regras;
+    }
+
+    private function validar(Barraquinha $barraquinha, ?Combo $combo, array $composicao, $itens, array $regras, bool $confirmado): void
     {
         if (array_sum($composicao) < 2) {
             throw ValidationException::withMessages(['itens' => __('O combo precisa de pelo menos 2 itens (ou 2 unidades).')]);
@@ -133,23 +160,34 @@ class ComboService
             }
         }
 
-        if ($tipo === TipoDesconto::Percentual && ($valor <= 0 || $valor >= 100)) {
-            throw ValidationException::withMessages(['valor' => __('O percentual de desconto deve ficar entre 0 e 100.')]);
+        if ($regras === []) {
+            throw ValidationException::withMessages(['canais' => __('Marque ao menos um canal em que o combo vale.')]);
         }
 
-        if ($tipo === TipoDesconto::PrecoFechado && $valor <= 0) {
-            throw ValidationException::withMessages(['valor' => __('O preço do combo deve ser maior que zero.')]);
+        $semDesconto = [];
+        foreach ($regras as $chave => ['canal' => $canal, 'tipo' => $tipo, 'valor' => $valor]) {
+            if ($tipo === TipoDesconto::Percentual && ($valor <= 0 || $valor >= 100)) {
+                throw ValidationException::withMessages(["canais.{$chave}.valor" => __('O percentual de desconto deve ficar entre 0 e 100.')]);
+            }
+
+            if ($tipo === TipoDesconto::PrecoFechado && $valor <= 0) {
+                throw ValidationException::withMessages(["canais.{$chave}.valor" => __('O preço do combo deve ser maior que zero.')]);
+            }
+
+            $somaAvulsa = 0.0;
+            foreach ($composicao as $itemId => $quantidade) {
+                $somaAvulsa += $itens[$itemId]->precoPara($canal) * $quantidade;
+            }
+
+            if (Combo::calcularPreco($tipo, $valor, $somaAvulsa) >= round($somaAvulsa, 2)) {
+                $semDesconto[] = __(':canal (soma avulsa :soma)', ['canal' => $canal->label(), 'soma' => moeda($somaAvulsa)]);
+            }
         }
 
-        $somaAvulsa = 0.0;
-        foreach ($composicao as $itemId => $quantidade) {
-            $somaAvulsa += $itens[$itemId]->precoPara(\App\Enums\Canal::PADRAO) * $quantidade;
-        }
-
-        if (Combo::calcularPreco($tipo, $valor, $somaAvulsa) >= round($somaAvulsa, 2) && ! $confirmado) {
+        if ($semDesconto !== [] && ! $confirmado) {
             throw ValidationException::withMessages(['confirmar_sem_desconto' => __(
-                'O preço do combo não é menor que a soma avulsa (:soma): não há desconto. Confirme para salvar mesmo assim. O cliente nunca paga mais do que pagaria avulso, então um combo mais caro não é aplicado.',
-                ['soma' => moeda($somaAvulsa)],
+                'Sem desconto em :canais: o preço do combo não é menor que a soma avulsa. Confirme para salvar mesmo assim. O cliente nunca paga mais do que pagaria avulso, então um combo mais caro não é aplicado.',
+                ['canais' => implode(', ', $semDesconto)],
             )]);
         }
 

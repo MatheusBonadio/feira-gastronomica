@@ -157,11 +157,11 @@ class VendaService
             ->all();
 
         $combos = Combo::withoutGlobalScopes()
-            ->with('itens.precos')
+            ->with(['itens.precos', 'canais'])
             ->where('barraquinha_id', $barraquinha->id)
             ->ativos()
             ->get()
-            ->filter(fn (Combo $c) => $c->aplicavel())
+            ->filter(fn (Combo $c) => $c->aplicavel() && $c->regraPara($canal) !== null)
             ->map(fn (Combo $c) => [
                 'id' => $c->id,
                 'numero' => $c->numero,

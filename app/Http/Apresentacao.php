@@ -75,28 +75,27 @@ class Apresentacao
         ];
     }
 
-    public static function combo(Combo $combo, bool $porCanal = false): array
+    public static function combo(Combo $combo): array
     {
         $canais = [];
-        if ($porCanal) {
-            foreach (Canal::cases() as $canal) {
-                $canais['precos'][$canal->value] = $combo->precoPara($canal);
-                $canais['avulsos'][$canal->value] = $combo->somaAvulsa($canal);
-            }
+        foreach (Canal::cases() as $canal) {
+            $regra = $combo->regraPara($canal);
+            $canais[$canal->value] = $regra ? [
+                'tipoDesconto' => $regra->tipo_desconto->value,
+                'valor' => (float) $regra->valor,
+                'preco' => $combo->precoPara($canal),
+                'somaAvulsa' => $combo->somaAvulsa($canal),
+            ] : null;
         }
 
         return [
-            ...$canais,
             'id' => $combo->id,
             'numero' => $combo->numero,
             'tag' => $combo->tag(),
             'nome' => $combo->nome,
-            'tipoDesconto' => self::enum($combo->tipo_desconto),
-            'valor' => (float) $combo->valor,
             'ativo' => $combo->ativo,
             'incompleto' => $combo->estaIncompleto(),
-            'somaAvulsa' => $combo->somaAvulsa(),
-            'preco' => $combo->precoPara(),
+            'canais' => $canais,
             'vendas' => (int) ($combo->vendas_count ?? 0),
             'itens' => $combo->itens->map(fn (Item $i) => [
                 'id' => $i->id,

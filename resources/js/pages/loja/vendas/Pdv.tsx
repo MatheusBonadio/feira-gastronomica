@@ -39,10 +39,10 @@ type Carrinho = Record<number, number>;
 
 const precoNoCanal = (item: Item, canal: string) => item.precos[canal] ?? item.precos.feira ?? item.precoFeira;
 
+/** Null quando o combo não vale no canal. */
 const comboNoCanal = (combo: Combo, canal: string) => {
-    const preco = combo.precos?.[canal] ?? combo.preco;
-    const avulso = combo.avulsos?.[canal] ?? combo.somaAvulsa;
-    return { preco, economia: Math.round((avulso - preco) * 100) / 100 };
+    const regra = combo.canais[canal];
+    return regra ? { preco: regra.preco, economia: Math.round((regra.somaAvulsa - regra.preco) * 100) / 100 } : null;
 };
 
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -80,15 +80,16 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
         return [...grupos.entries()];
     }, [itens, busca, checkout.agruparCategorias]);
 
-    // O classificador só aplica o combo quando ele sai mais barato que os itens avulsos no canal.
+    // O classificador só aplica o combo nos canais em que ele vale e quando sai mais barato que os itens avulsos.
     const combosVisiveis = useMemo(() => {
         if (!checkout.mostrarCombos) return [];
         const termo = normalizar(busca.trim());
-        return combos.filter(
-            (c) =>
-                comboNoCanal(c, canal).economia >= 0 &&
-                (!termo || [c.tag, c.nome, ...c.itens.map((i) => i.nome)].some((texto) => normalizar(texto).includes(termo))),
-        );
+        return combos.flatMap((combo) => {
+            const noCanal = comboNoCanal(combo, canal);
+            if (!noCanal || noCanal.economia < 0) return [];
+            if (termo && ![combo.tag, combo.nome, ...combo.itens.map((i) => i.nome)].some((texto) => normalizar(texto).includes(termo))) return [];
+            return [{ combo, ...noCanal }];
+        });
     }, [combos, canal, busca, checkout.mostrarCombos]);
 
     const combosNoCarrinho = useMemo(() => {
@@ -279,11 +280,12 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                         <section className="@container mb-6" aria-label={t("Combos")}>
                             <h2 className="mb-2 text-micro font-semibold tracking-wide text-tinta-suave uppercase">{t("Combos")}</h2>
                             <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4">
-                                {combosVisiveis.map((combo) => (
+                                {combosVisiveis.map(({ combo, preco, economia }) => (
                                     <CartaoCombo
                                         key={combo.id}
                                         combo={combo}
-                                        canal={canal}
+                                        preco={preco}
+                                        economia={economia}
                                         vezes={combosNoCarrinho.get(combo.id) ?? 0}
                                         aoAlterar={(delta) => alterarCombo(combo, delta)}
                                     />
@@ -460,10 +462,9 @@ function CartaoItem({ item, preco, quantidade, aoAlterar }: { item: Item; preco:
     );
 }
 
-function CartaoCombo({ combo, canal, vezes, aoAlterar }: { combo: Combo; canal: string; vezes: number; aoAlterar: (delta: 1 | -1) => void }) {
+function CartaoCombo({ combo, preco, economia, vezes, aoAlterar }: { combo: Combo; preco: number; economia: number; vezes: number; aoAlterar: (delta: 1 | -1) => void }) {
     const t = useT();
     const { moeda } = useFormato();
-    const { preco, economia } = comboNoCanal(combo, canal);
 
     return (
         <div

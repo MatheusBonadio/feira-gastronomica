@@ -1,20 +1,21 @@
 import { router, usePage } from "@inertiajs/react";
-import { IconAlertTriangle, IconCoins, IconPencil, IconPlayerPause, IconPlayerPlay, IconPlus, IconReceipt, IconStack2, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconPencil, IconPlayerPause, IconPlayerPlay, IconPlus, IconReceipt, IconStack2, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { Botao, BotaoLink } from "@/components/ui/botao";
 import { CabecalhoPagina, Cartao, Faixa, PilulaStats, Vazio } from "@/components/ui/cartao";
 import { Confirmar } from "@/components/ui/dialogo";
 import { TRACO } from "@/components/ui/icone";
-import { Chip } from "@/components/ui/marcadores";
+import { Chip, COR_CANAL } from "@/components/ui/marcadores";
 import { cx } from "@/lib/cx";
 import { useFormato } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
 import { useRotaLoja } from "@/lib/rotas";
 import type { Combo } from "@/types/dominio";
+import type { Opcao } from "@/types/inertia";
 
-export default function Index({ combos }: { combos: Combo[] }) {
+export default function Index({ combos, canais }: { combos: Combo[]; canais: Opcao[] }) {
     const t = useT();
-    const { moeda, numero, percentual } = useFormato();
+    const { moeda, numero } = useFormato();
     const rotaLoja = useRotaLoja();
     const { loja, errors } = usePage().props;
     const [excluindo, setExcluindo] = useState<Combo | null>(null);
@@ -62,8 +63,10 @@ export default function Index({ combos }: { combos: Combo[] }) {
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {combos.map((combo) => {
-                        const desconto = combo.somaAvulsa > 0 ? 1 - combo.preco / combo.somaAvulsa : null;
-                        const economia = combo.somaAvulsa - combo.preco;
+                        const semDesconto = canais.filter((o) => {
+                            const regra = combo.canais[o.valor];
+                            return regra && regra.preco >= regra.somaAvulsa;
+                        });
                         return (
                             <article
                                 key={combo.id}
@@ -97,24 +100,34 @@ export default function Index({ combos }: { combos: Combo[] }) {
                                 </ul>
 
                                 <div className="mt-auto px-4 pt-4 pb-4">
-                                    <div className="flex items-end justify-between gap-3 rounded-xl bg-superficie-suave px-3 py-2.5">
-                                        <div className="min-w-0">
-                                            <p className="text-rotulo text-tinta-suave">{t("Separado")}</p>
-                                            <p className="text-corpo tabular-nums text-tinta-suave line-through">{moeda(combo.somaAvulsa)}</p>
-                                        </div>
-                                        <div className="min-w-0 text-end">
-                                            <p className="text-rotulo text-tinta-suave">{t("No combo")}</p>
-                                            <p className="text-numero font-semibold tracking-tight tabular-nums text-tinta">{moeda(combo.preco)}</p>
-                                        </div>
-                                    </div>
+                                    <dl className="flex flex-col gap-1.5 rounded-xl bg-superficie-suave px-3 py-2.5">
+                                        {canais.map((o) => {
+                                            const regra = combo.canais[o.valor];
+                                            return (
+                                                <div key={o.valor} className="flex items-baseline justify-between gap-3">
+                                                    <dt className="flex min-w-0 items-center gap-2 text-corpo text-tinta-media">
+                                                        <span className={cx("size-2.5 shrink-0 rounded-sm", COR_CANAL[o.valor])} aria-hidden />
+                                                        <span className="truncate">{o.label}</span>
+                                                    </dt>
+                                                    <dd className="flex shrink-0 items-baseline gap-2">
+                                                        {regra ? (
+                                                            <>
+                                                                {regra.preco < regra.somaAvulsa && (
+                                                                    <span className="text-rotulo tabular-nums text-tinta-suave line-through">{moeda(regra.somaAvulsa)}</span>
+                                                                )}
+                                                                <span className="text-ui font-semibold tabular-nums text-tinta">{moeda(regra.preco)}</span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-rotulo text-tinta-suave">{t("Não vale")}</span>
+                                                        )}
+                                                    </dd>
+                                                </div>
+                                            );
+                                        })}
+                                    </dl>
                                     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-rotulo text-tinta-suave">
-                                        {desconto !== null && desconto > 0 ? (
-                                            <Chip tom="secundaria">
-                                                <IconCoins size={12} stroke={TRACO} aria-hidden />
-                                                {t("−:pct · economiza :valor", { pct: percentual(desconto), valor: moeda(economia) })}
-                                            </Chip>
-                                        ) : (
-                                            <Chip tom="vermelho">{t("Sem desconto")}</Chip>
+                                        {semDesconto.length > 0 && (
+                                            <Chip tom="vermelho">{t("Sem desconto em :canais", { canais: semDesconto.map((o) => o.label).join(", ") })}</Chip>
                                         )}
                                         <span>{t(":n vendas", { n: numero(combo.vendas) })}</span>
                                     </p>
