@@ -787,5 +787,14 @@
     "Combo por :preco · o cliente economiza :valor (:pct).": "Combo for :preco · the customer saves :valor (:pct).",
     "Sem desconto em :canais: o preço do combo não é menor que a soma avulsa.": "No discount in :canais: the combo price is not lower than the items bought separately.",
     "Escolha os itens, os canais e o desconto para ver o preço final.": "Choose the items, channels and discount to see the final price.",
-    "O combo só vale nos canais marcados, cada um com o próprio desconto.": "The combo only applies in the selected channels, each with its own discount."
+    "O combo só vale nos canais marcados, cada um com o próprio desconto.": "The combo only applies in the selected channels, each with its own discount.",
+    "A conexão com o servidor precisa ser renovada. Recarregando a página…": "The connection to the server needs to be renewed. Reloading the page…",
+    "Não foi possível concluir (erro :status). Tente de novo.": "Could not complete (error :status). Please try again.",
+    "Sem conexão com o servidor. Confira a internet e tente de novo.": "No connection to the server. Check your internet and try again.",
+    "Algo deu errado nesta tela": "Something went wrong on this screen",
+    "Recarregue a página para continuar.": "Reload the page to continue.",
+    "Ação indisponível aqui": "Action not available here",
+    "Esta ação não vale para esta página. Volte e tente pelo botão da tela.": "This action does not apply to this page. Go back and try using the button on the screen.",
+    "Arquivo grande demais": "File too large",
+    "Envie um arquivo menor e tente de novo.": "Upload a smaller file and try again."
 }

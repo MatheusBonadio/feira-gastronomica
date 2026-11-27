@@ -2,14 +2,18 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Barraquinha;
 use App\Support\Loja;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\ExceptionResponse;
 use Inertia\Inertia;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,17 +50,24 @@ class AppServiceProvider extends ServiceProvider
                 return back()->with('error', __('A página expirou. Tente novamente.'));
             }
 
-            $sempre = [403, 404, 422, 429];
-            $semDebug = [500, 503];
-
-            if (in_array($status, $sempre, true) || (! config('app.debug') && in_array($status, $semDebug, true))) {
-                return $resposta->render('Erro', [
-                    'status' => $status,
-                    'mensagem' => $status === 422 ? $resposta->exception->getMessage() : null,
-                ])->withSharedData();
+            // Em desenvolvimento, erro 5xx continua mostrando a página de debug do Laravel.
+            if ($status < 400 || (config('app.debug') && $status >= 500)) {
+                return null;
             }
 
-            return null;
+            // Toda falha vira a página Erro: HTML numa visita Inertia abriria o diálogo de erro por cima da tela.
+            $props = ['status' => $status, 'mensagem' => $status === 422 ? $resposta->exception->getMessage() : null];
+
+            try {
+                return $resposta->render('Erro', $props)->withSharedData()->toResponse($request);
+            } catch (Throwable) {
+                // Os dados compartilhados consultam o banco; se ele caiu no meio da requisição, a página sai só com o essencial.
+                Inertia::flushShared();
+
+                return (new ExceptionResponse($resposta->exception, $request, $resposta->response, app(Router::class), app(Kernel::class)))
+                    ->render('Erro', [...$props, ...HandleInertiaRequests::essenciais()])
+                    ->toResponse($request);
+            }
         });
     }
 }

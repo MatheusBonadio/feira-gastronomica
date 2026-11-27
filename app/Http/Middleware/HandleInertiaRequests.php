@@ -22,11 +22,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
-            'app' => [
-                'nome' => config('app.name'),
-                'idioma' => app()->getLocale(),
-                'idiomas' => config('feira.idiomas'),
-            ],
+            'app' => self::dadosDoApp(),
             'auth' => fn () => $user ? [
                 'usuario' => [
                     'id' => $user->id,
@@ -66,11 +62,26 @@ class HandleInertiaRequests extends Middleware
     public function shareOnce(Request $request): array
     {
         return [
-            'traducoes' => Inertia::once(fn () => $this->traducoes()),
+            'traducoes' => Inertia::once(fn () => self::traducoes()),
         ];
     }
 
-    private function traducoes(): array
+    /** O mínimo para o layout e a página de erro, sem depender do banco nem da sessão. */
+    public static function essenciais(): array
+    {
+        return ['app' => self::dadosDoApp(), 'auth' => null, 'traducoes' => self::traducoes()];
+    }
+
+    private static function dadosDoApp(): array
+    {
+        return [
+            'nome' => config('app.name'),
+            'idioma' => app()->getLocale(),
+            'idiomas' => config('feira.idiomas'),
+        ];
+    }
+
+    private static function traducoes(): array
     {
         $arquivo = lang_path(app()->getLocale().'.json');
 

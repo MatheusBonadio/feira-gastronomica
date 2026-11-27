@@ -12,14 +12,23 @@ export default function Erro({ status, mensagem }: { status: number; mensagem?: 
     const conteudo: Record<number, { titulo: string; descricao: string; icone: Icone }> = {
         403: { titulo: t("Acesso negado"), descricao: t("Você não tem permissão para ver isto. A tentativa foi registrada."), icone: IconLock },
         404: { titulo: t("Página não encontrada"), descricao: t("O endereço não existe ou o registro foi removido."), icone: IconMapSearch },
+        405: { titulo: t("Ação indisponível aqui"), descricao: t("Esta ação não vale para esta página. Volte e tente pelo botão da tela."), icone: IconAlertCircle },
+        413: { titulo: t("Arquivo grande demais"), descricao: t("Envie um arquivo menor e tente de novo."), icone: IconAlertCircle },
         419: { titulo: t("Sessão expirada"), descricao: t("A página ficou aberta por muito tempo. Recarregue e tente de novo."), icone: IconRefresh },
         422: { titulo: t("Não foi possível continuar"), descricao: mensagem || t("Verifique os dados e tente de novo."), icone: IconAlertCircle },
         429: { titulo: t("Muitas tentativas"), descricao: t("Espere alguns instantes e tente de novo."), icone: IconClockPause },
         500: { titulo: t("Erro no servidor"), descricao: t("Algo deu errado do nosso lado. Tente de novo em instantes."), icone: IconAlertCircle },
         503: { titulo: t("Sistema em manutenção"), descricao: t("Voltamos em instantes."), icone: IconTool },
     };
-    const { titulo, descricao, icone: I } = conteudo[status] ?? conteudo[500];
-    const inicio = auth ? rota(auth.usuario.perfil === "admin" ? "admin.painel" : "barraquinha.painel") : rota("login");
+    const { titulo, descricao, icone: I } = conteudo[status] ?? (status < 500 ? { ...conteudo[422], descricao: t("Verifique os dados e tente de novo.") } : conteudo[500]);
+    // A lista de rotas do Ziggy é a do perfil carregado na página; a do login pode não estar nela.
+    const inicio = (() => {
+        try {
+            return auth ? rota(auth.usuario.perfil === "admin" ? "admin.painel" : "barraquinha.painel") : rota("login");
+        } catch {
+            return "/";
+        }
+    })();
 
     return (
         <>
