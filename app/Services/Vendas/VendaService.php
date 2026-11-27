@@ -36,6 +36,7 @@ class VendaService
         array $carrinho,
     ): Venda {
         $this->garantirFeiraAberta($barraquinha);
+        $this->garantirCanalAberto($barraquinha, $canal);
 
         return DB::transaction(function () use ($barraquinha, $operador, $canal, $pagamento, $carrinho) {
             [$itens, $combos] = $this->catalogo($barraquinha, $canal);
@@ -128,6 +129,19 @@ class VendaService
         if ($barraquinha->feira->estaEncerrada()) {
             throw ValidationException::withMessages([
                 'feira' => __('A feira está encerrada: novos lançamentos estão bloqueados.'),
+            ]);
+        }
+    }
+
+    public function garantirCanalAberto(Barraquinha $barraquinha, Canal $canal): void
+    {
+        $feira = $barraquinha->feira;
+
+        if ($canal === Canal::PreVenda && ! $feira->preVendaAberta()) {
+            throw ValidationException::withMessages([
+                'canal' => __('A pré-venda encerrou em :data. Registre a venda pelo canal Feira ou Pós-evento.', [
+                    'data' => data_formatada($feira->data_corte_pre_venda, comHora: true),
+                ]),
             ]);
         }
     }

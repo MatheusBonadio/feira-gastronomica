@@ -1,14 +1,15 @@
 import { useForm } from "@inertiajs/react";
 import { IconArrowLeft, IconCopy, IconInfoCircle } from "@tabler/icons-react";
 import { Botao, BotaoLink } from "@/components/ui/botao";
-import { CampoData, Entrada } from "@/components/ui/campos";
+import { CampoData, CampoDataHora, Entrada } from "@/components/ui/campos";
 import { CabecalhoPagina, Cartao } from "@/components/ui/cartao";
+import { diaAnterior } from "@/lib/formato";
 import { useT } from "@/lib/i18n";
 import { rota } from "@/lib/rotas";
 
 export default function Duplicar({ origem }: { origem: { id: number; nome: string } }) {
     const t = useT();
-    const form = useForm({ nome: "", data_inicio: "", data_fim: "" });
+    const form = useForm({ nome: "", data_inicio: "", data_fim: "", data_corte_pre_venda: "" });
 
     return (
         <>
@@ -27,8 +28,17 @@ export default function Duplicar({ origem }: { origem: { id: number; nome: strin
                     <Cartao titulo={t("Nova edição")} icone={IconCopy}>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <Entrada className="md:col-span-2" rotulo={t("Nome da nova feira")} required valor={form.data.nome} aoMudar={(v) => form.setData("nome", v)} erro={form.errors.nome} />
-                            <CampoData rotulo={t("Início")} required valor={form.data.data_inicio} aoMudar={(v) => form.setData("data_inicio", v)} erro={form.errors.data_inicio} />
+                            <CampoData rotulo={t("Início")} required valor={form.data.data_inicio} aoMudar={(v) => form.setData((d) => ({ ...d, data_inicio: v, data_corte_pre_venda: d.data_corte_pre_venda || (v ? `${diaAnterior(v)}T23:59` : "") }))} erro={form.errors.data_inicio} />
                             <CampoData rotulo={t("Fim")} required valor={form.data.data_fim} aoMudar={(v) => form.setData("data_fim", v)} erro={form.errors.data_fim} />
+                            <CampoDataHora
+                                rotulo={t("Fim da pré-venda")}
+                                dica={t("Até esta data e hora as barraquinhas podem vender pelo canal Pré-venda. Não pode passar do dia de início da feira.")}
+                                required
+                                max={form.data.data_inicio ? `${form.data.data_inicio}T23:59` : undefined}
+                                valor={form.data.data_corte_pre_venda}
+                                aoMudar={(v) => form.setData("data_corte_pre_venda", v)}
+                                erro={form.errors.data_corte_pre_venda}
+                            />
                         </div>
                     </Cartao>
                     <div className="flex justify-end">

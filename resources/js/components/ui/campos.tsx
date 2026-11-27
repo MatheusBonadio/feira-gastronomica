@@ -126,6 +126,11 @@ export function CampoData(props: Omit<PropsEntrada, "type">) {
     return <Entrada {...props} type="date" />;
 }
 
+/** Valor no formato do `datetime-local`: `2027-10-14T23:59`, no fuso do servidor. */
+export function CampoDataHora(props: Omit<PropsEntrada, "type">) {
+    return <Entrada {...props} type="datetime-local" />;
+}
+
 export function AreaTexto({ rotulo, dica, erro, valor, aoMudar, className, required, ...props }: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange" | "value"> & {
     rotulo?: ReactNode;
     dica?: ReactNode;
@@ -152,6 +157,7 @@ export function AreaTexto({ rotulo, dica, erro, valor, aoMudar, className, requi
 export interface OpcaoSelecao {
     valor: string;
     rotulo: string;
+    desabilitado?: boolean;
 }
 
 const VAZIO = "__vazio__";
@@ -160,6 +166,7 @@ function ItemSelecao({ opcao }: { opcao: OpcaoSelecao }) {
     return (
         <Select.Item
             value={opcao.valor}
+            disabled={opcao.desabilitado}
             className="flex h-11 cursor-pointer items-center gap-2 rounded-lg ps-2.5 pe-2 text-ui text-tinta outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-superficie-hover data-[state=checked]:font-medium md:h-9"
         >
             <Select.ItemText>{opcao.rotulo}</Select.ItemText>
@@ -327,8 +334,9 @@ export function Segmentos({ rotulo, opcoes, valor, aoMudar, cheio, grande, cores
                     <RadioGroup.Item
                         key={o.valor}
                         value={o.valor}
+                        disabled={o.desabilitado}
                         className={cx(
-                            "inline-flex min-w-0 cursor-pointer items-center justify-center rounded-md font-medium whitespace-nowrap text-tinta-suave outline-none transition-colors hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=checked]:bg-superficie data-[state=checked]:text-tinta data-[state=checked]:shadow-botao",
+                            "inline-flex min-w-0 cursor-pointer items-center justify-center rounded-md font-medium whitespace-nowrap text-tinta-suave outline-none transition-colors hover:text-tinta focus-visible:ring-2 focus-visible:ring-foco data-[state=checked]:bg-superficie data-[state=checked]:text-tinta data-[state=checked]:shadow-botao data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[disabled]:hover:text-tinta-suave",
                             empilhado ? "h-16 flex-col gap-1 px-2 text-corpo" : grande ? "h-11 gap-2 px-2 text-ui sm:px-3" : "h-10 gap-2 px-3 text-corpo md:h-7",
                             cheio && "flex-1",
                         )}

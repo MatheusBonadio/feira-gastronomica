@@ -11,6 +11,12 @@ export function isoDia(data: Date): string {
     return d.toISOString().slice(0, 10);
 }
 
+export function diaAnterior(iso: string): string {
+    const data = paraData(iso);
+    data.setDate(data.getDate() - 1);
+    return isoDia(data);
+}
+
 export function useFormato() {
     const locale = useLocale();
 

@@ -24,6 +24,7 @@ interface Props {
     pagamentos: Opcao[];
     canalInicial: string;
     checkout: PreferenciasCheckout;
+    preVenda: { aberta: boolean; corte: string | null };
 }
 
 interface Previa {
@@ -46,10 +47,10 @@ const comboNoCanal = (combo: Combo, canal: string) => {
 
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout }: Props) {
+export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, checkout, preVenda }: Props) {
     const desktop = useMidia("(min-width: 64rem)");
     const t = useT();
-    const { moeda } = useFormato();
+    const { moeda, dataHora } = useFormato();
     const rotaLoja = useRotaLoja();
     const { loja } = usePage().props;
 
@@ -64,6 +65,7 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
     const [enviando, setEnviando] = useState(false);
     const [busca, setBusca] = useState("");
     const [folhaAberta, setFolhaAberta] = useState(false);
+    const [preVendaAberta, setPreVendaAberta] = useState(preVenda.aberta);
 
     const quantidade = Object.values(carrinho).reduce((a, b) => a + b, 0);
 
@@ -116,6 +118,21 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
             }
             return proximo;
         });
+
+    // Fecha a pré-venda na tela se o corte passar com o PDV aberto; o servidor confere de novo ao registrar.
+    useEffect(() => {
+        if (!preVendaAberta || !preVenda.corte) return;
+        const restante = Date.parse(preVenda.corte) - Date.now();
+        if (restante > 2 ** 31 - 1) return;
+        const espera = window.setTimeout(() => setPreVendaAberta(false), Math.max(0, restante + 1000));
+        return () => window.clearTimeout(espera);
+    }, [preVendaAberta, preVenda.corte]);
+
+    useEffect(() => {
+        if (preVendaAberta || canal !== "pre_venda") return;
+        setCanal("feira");
+        avisar(t("A pré-venda encerrou. A venda passou para o canal Feira."), "info");
+    }, [preVendaAberta, canal, t]);
 
     useEffect(() => {
         if (quantidade === 0) {
@@ -218,8 +235,21 @@ export default function Pdv({ itens, combos, canais, pagamentos, canalInicial, c
                 <div className="min-w-0">
                     <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <h1 className="text-cabecalho font-medium tracking-tight text-tinta">{t("Nova venda")}</h1>
-                        <div className="md:w-[26rem]">
-                            <Segmentos rotulo={t("Canal da venda")} opcoes={canais.map((o) => ({ valor: o.valor, rotulo: o.label }))} valor={canal} aoMudar={setCanal} cores={COR_CANAL} cheio grande />
+                        <div className="flex flex-col gap-2 md:w-[26rem]">
+                            <Segmentos
+                                rotulo={t("Canal da venda")}
+                                opcoes={canais.map((o) => ({ valor: o.valor, rotulo: o.label, desabilitado: o.valor === "pre_venda" && !preVendaAberta }))}
+                                valor={canal}
+                                aoMudar={setCanal}
+                                cores={COR_CANAL}
+                                cheio
+                                grande
+                            />
+                            {!preVendaAberta && (
+                                <Faixa icone={IconLock}>
+                                    {t("Pré-venda encerrada em :data. Registre as vendas pelos canais Feira ou Pós-evento.", { data: dataHora(preVenda.corte) })}
+                                </Faixa>
+                            )}
                         </div>
                     </div>
 

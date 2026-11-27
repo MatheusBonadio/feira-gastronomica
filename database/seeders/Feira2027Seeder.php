@@ -184,5 +184,8 @@ class Feira2027Seeder extends Seeder
                 collect($carrinho)->mapWithKeys(fn ($qtd, $item) => [$ids[$item] => $qtd])->all(),
             );
         }
+
+        // O corte entra depois das vendas de demonstração, que incluem pré-vendas.
+        $feira->update(['data_corte_pre_venda' => '2027-10-14 23:59:00']);
     }
 }

@@ -43,6 +43,40 @@ class VendaTest extends TestCase
             ->assertJsonPath('total', 36);
     }
 
+    public function test_pre_venda_aceita_ate_o_corte_e_bloqueia_depois(): void
+    {
+        $corte = now()->addDay()->setTime(23, 59);
+        [$barraquinha, $pastel] = $this->cenarioPastelaria($this->criarFeira(['data_corte_pre_venda' => $corte]));
+        $user = $this->usuarioDa($barraquinha);
+        $venda = fn (string $canal) => $this->actingAs($user)->post(route('barraquinha.vendas.store'), [
+            'canal' => $canal, 'pagamento' => 'pix', 'itens' => [$pastel->id => 1],
+        ]);
+
+        $this->travelTo($corte);
+        $venda('pre_venda')->assertSessionHasNoErrors();
+
+        $this->travelTo($corte->copy()->addSecond());
+        $venda('pre_venda')->assertSessionHasErrors('canal');
+        $venda('feira')->assertSessionHasNoErrors();
+
+        $this->assertSame(['pre_venda', 'feira'], Venda::withoutGlobalScopes()->orderBy('id')->pluck('canal')->map(fn ($c) => $c->value)->all());
+    }
+
+    public function test_pdv_desabilita_a_pre_venda_depois_do_corte(): void
+    {
+        $corte = now()->subMinute();
+        [$barraquinha] = $this->cenarioPastelaria($this->criarFeira(['data_corte_pre_venda' => $corte]));
+
+        $this->actingAs($this->usuarioDa($barraquinha))
+            ->withSession(['canal' => 'pre_venda'])
+            ->get(route('barraquinha.vendas.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('loja/vendas/Pdv')
+                ->where('preVenda.aberta', false)
+                ->where('preVenda.corte', $corte->toIso8601String())
+                ->where('canalInicial', 'feira'));
+    }
+
     public function test_pdv_recebe_o_preco_de_cada_combo_por_canal(): void
     {
         [$barraquinha, , , $combo] = $this->cenarioPastelaria();

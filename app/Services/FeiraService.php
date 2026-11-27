@@ -138,6 +138,7 @@ class FeiraService
             'nome' => $dados['nome'] ?? null,
             'data_inicio' => $dados['data_inicio'] ?? null,
             'data_fim' => $dados['data_fim'] ?? null,
+            'data_corte_pre_venda' => $dados['data_corte_pre_venda'] ?? null,
             'status' => $dados['status'] ?? null,
         ], fn ($v) => $v !== null);
     }

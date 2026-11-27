@@ -772,5 +772,14 @@
     "Preferências": "Preferences",
     "Valem só neste aparelho (tema) e na sua conta (idioma).": "Apply to this device only (theme) and to your account (language).",
     "Segurança": "Security",
-    "Feira UNAERP": "UNAERP Fair"
+    "Feira UNAERP": "UNAERP Fair",
+    "O fim da pré-venda não pode passar do dia de início da feira.": "The pre-sale end cannot be later than the fair's first day.",
+    "fim da pré-venda": "pre-sale end",
+    "A pré-venda encerrou em :data. Registre a venda pelo canal Feira ou Pós-evento.": "Pre-sale closed on :data. Register the sale through the Fair or Post-event channel.",
+    "Fim da pré-venda": "Pre-sale ends",
+    "Até esta data e hora as barraquinhas podem vender pelo canal Pré-venda. Não pode passar do dia de início da feira.": "Until this date and time, stalls can sell through the Pre-sale channel. It cannot be later than the fair's first day.",
+    "Pré-venda: aceita vendas até o fim da pré-venda; depois disso, só pelos canais Feira e Pós-evento.": "Pre-sale: accepts sales until the pre-sale ends; after that, only through the Fair and Post-event channels.",
+    "A pré-venda encerrou. A venda passou para o canal Feira.": "Pre-sale has closed. The sale was moved to the Fair channel.",
+    "Pré-venda encerrada em :data. Registre as vendas pelos canais Feira ou Pós-evento.": "Pre-sale closed on :data. Register sales through the Fair or Post-event channels.",
+    "Pré-venda até": "Pre-sale until"
 }

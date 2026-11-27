@@ -23,6 +23,7 @@ class FeiraTest extends TestCase
             'nome' => 'Feira Gastronômica 2028',
             'data_inicio' => '2028-10-10',
             'data_fim' => '2028-10-11',
+            'data_corte_pre_venda' => '2028-10-09T23:59',
             'status' => 'planejada',
             'qtd_barraquinhas' => 12,
         ])->assertRedirect(route('admin.barraquinhas.index'));
@@ -30,6 +31,22 @@ class FeiraTest extends TestCase
         $feira = Feira::sole();
         $this->assertSame(12, $feira->barraquinhas()->count());
         $this->assertTrue($feira->barraquinhas()->first()->ehVaga());
+        $this->assertSame('2028-10-09 23:59', $feira->data_corte_pre_venda->format('Y-m-d H:i'));
+    }
+
+    public function test_fim_da_pre_venda_e_obrigatorio_e_nao_passa_do_dia_de_inicio(): void
+    {
+        $admin = $this->criarAdmin();
+        $dados = ['nome' => 'Feira 2028', 'data_inicio' => '2028-10-10', 'data_fim' => '2028-10-11', 'status' => 'planejada', 'qtd_barraquinhas' => 3];
+
+        $this->actingAs($admin)->post(route('admin.feiras.store'), $dados)->assertSessionHasErrors('data_corte_pre_venda');
+        $this->actingAs($admin)->post(route('admin.feiras.store'), [...$dados, 'data_corte_pre_venda' => '2028-10-11T08:00'])
+            ->assertSessionHasErrors(['data_corte_pre_venda' => 'O fim da pré-venda não pode passar do dia de início da feira.']);
+        $this->assertSame(0, Feira::count());
+
+        $this->actingAs($admin)->post(route('admin.feiras.store'), [...$dados, 'data_corte_pre_venda' => '2028-10-10T09:00'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('2028-10-10 09:00', Feira::sole()->data_corte_pre_venda->format('Y-m-d H:i'));
     }
 
     public function test_nao_reduz_abaixo_das_barraquinhas_com_vendas(): void
@@ -92,7 +109,7 @@ class FeiraTest extends TestCase
         app(VendaService::class)->registrar($barraquinha, $this->usuarioDa($barraquinha), Canal::Feira, FormaPagamento::Pix, [$pastel->id => 1]);
 
         $this->actingAs($this->criarAdmin())->post(route('admin.feiras.duplicar.store', $feira), [
-            'nome' => 'Feira 2028', 'data_inicio' => '2028-10-10', 'data_fim' => '2028-10-11',
+            'nome' => 'Feira 2028', 'data_inicio' => '2028-10-10', 'data_fim' => '2028-10-11', 'data_corte_pre_venda' => '2028-10-09T23:59',
         ])->assertRedirect();
 
         $nova = Feira::where('nome', 'Feira 2028')->sole();

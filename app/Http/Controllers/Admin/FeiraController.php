@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Feira;
 use App\Services\FeiraService;
 use App\Support\FeiraAtual;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use App\Http\Apresentacao;
 use Inertia\Inertia;
@@ -90,8 +92,7 @@ class FeiraController extends Controller
     {
         $dados = $request->validate([
             'nome' => ['required', 'string', 'max:120'],
-            'data_inicio' => ['required', 'date'],
-            'data_fim' => ['required', 'date', 'after_or_equal:data_inicio'],
+            ...$this->regrasDeData($request),
         ], attributes: $this->atributos());
 
         $nova = $this->feiras->duplicar($feira, $dados);
@@ -104,7 +105,7 @@ class FeiraController extends Controller
     {
         return Inertia::render('admin/feiras/Form', [
             'feira' => $feira->exists ? $this->dados($feira) : [
-                'id' => null, 'nome' => '', 'dataInicio' => '', 'dataFim' => '',
+                'id' => null, 'nome' => '', 'dataInicio' => '', 'dataFim' => '', 'dataCortePreVenda' => '',
                 'status' => Apresentacao::enum($feira->status), 'qtdBarraquinhas' => $feira->qtd_barraquinhas,
             ],
             'statusOpcoes' => Apresentacao::opcoes(FeiraStatus::cases()),
@@ -118,6 +119,7 @@ class FeiraController extends Controller
             'nome' => $f->nome,
             'dataInicio' => $f->data_inicio->toDateString(),
             'dataFim' => $f->data_fim->toDateString(),
+            'dataCortePreVenda' => $f->data_corte_pre_venda?->format('Y-m-d\\TH:i') ?? '',
             'status' => Apresentacao::enum($f->status),
             'qtdBarraquinhas' => $f->qtd_barraquinhas,
             'encerrada' => $f->estaEncerrada(),
@@ -128,11 +130,25 @@ class FeiraController extends Controller
     {
         return $request->validate([
             'nome' => ['required', 'string', 'max:120'],
-            'data_inicio' => ['required', 'date'],
-            'data_fim' => ['required', 'date', 'after_or_equal:data_inicio'],
+            ...$this->regrasDeData($request),
             'status' => ['required', Rule::enum(FeiraStatus::class)],
             'qtd_barraquinhas' => ['required', 'integer', 'min:1', 'max:200'],
         ], attributes: $this->atributos());
+    }
+
+    private function regrasDeData(Request $request): array
+    {
+        return [
+            'data_inicio' => ['required', 'date'],
+            'data_fim' => ['required', 'date', 'after_or_equal:data_inicio'],
+            // O corte pode cair no próprio primeiro dia (ex.: até a abertura), nunca depois dele.
+            'data_corte_pre_venda' => ['bail', 'required', 'date', function (string $atributo, mixed $valor, Closure $falhar) use ($request) {
+                $inicio = (string) $request->input('data_inicio');
+                if (strtotime($inicio) !== false && Carbon::parse($valor)->toDateString() > Carbon::parse($inicio)->toDateString()) {
+                    $falhar(__('O fim da pré-venda não pode passar do dia de início da feira.'));
+                }
+            }],
+        ];
     }
 
     private function atributos(): array
@@ -141,6 +157,7 @@ class FeiraController extends Controller
             'nome' => __('nome'),
             'data_inicio' => __('data de início'),
             'data_fim' => __('data de fim'),
+            'data_corte_pre_venda' => __('fim da pré-venda'),
             'status' => __('status'),
             'qtd_barraquinhas' => __('quantidade de barraquinhas'),
         ];
